@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Setting Global Body - KEMBALI NORMAL */
 body {
-  background-color: #f8fafc; /* Warna background abu-abu muda bersih */
+    font-family: 'Poppins', sans-serif;
+    
+    /* Warna Teks Default: Hitam Arang (tsa-dark) agar terbaca di dashboard */
+    color: #282F2C; 
+
+    /* Background: Putih bersih / Abu sangat muda (Standar Web App) */
+    background-color: #F8FAFC; 
+    
+    min-height: 100vh;
+    margin: 0;
 }

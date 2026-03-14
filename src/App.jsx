@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ManageUsers from './pages/ManageUsers';
 import InputAssessment from './pages/InputAssessment';
+import InputAttendance from './pages/InputAttendance'; 
 import Voting from './pages/Voting';
 import Results from './pages/Results';
 import { useAuth } from './context/AuthContext';
@@ -19,6 +20,7 @@ function App() {
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/manage-users" element={<PrivateRoute><ManageUsers /></PrivateRoute>} />
       <Route path="/input-assessment" element={<PrivateRoute><InputAssessment /></PrivateRoute>} />
+      <Route path="/input-attendance" element={<PrivateRoute><InputAttendance /></PrivateRoute>} />
       <Route path="/voting" element={<PrivateRoute><Voting /></PrivateRoute>} />
       <Route path="/results" element={<PrivateRoute><Results /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/login" />} />

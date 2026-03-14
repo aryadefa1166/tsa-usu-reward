@@ -26,7 +26,7 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto p-6 mt-6">
         <div className="mb-10">
           <h1 className="text-3xl font-black text-tsa-dark tracking-tight">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Welcome back, <span className="font-bold text-tsa-green">{user?.full_name || 'Admin'}</span></p>
+          <p className="text-gray-500 mt-1">Welcome back, <span className="font-bold text-tsa-green">{user?.full_name || user?.email || 'Pengurus'}</span></p>
         </div>
 
         {(user?.role === 'admin' || user?.role === 'bph' || user?.role === 'adv') && (

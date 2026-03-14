@@ -1,66 +1,56 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, Users, CheckSquare, ClipboardList, Trophy, LogOut, Vote } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
-  const navLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
-    { name: 'Manage Users', path: '/manage-users', icon: Users, show: user?.role === 'bph' || user?.role === 'adv' },
-    { name: 'Input Penilaian', path: '/input-assessment', icon: CheckSquare, show: user?.role !== 'member' },
-    { name: 'Input Absensi', path: '/input-attendance', icon: ClipboardList, show: user?.position === 'Secretary' },
-    { name: 'Voting', path: '/voting', icon: Vote, show: true },
-    { name: 'Leaderboard', path: '/results', icon: Trophy, show: true },
-  ];
-
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <span className="text-xl font-black text-tsa-dark tracking-tighter">
-              TSA<span className="text-tsa-green">REWARD</span>
-            </span>
+    <nav className="bg-white shadow-sm border-b border-gray-100 py-3">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex justify-between items-center h-12">
+          
+          {/* BAGIAN KIRI: Logo Asli */}
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
+            <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center border border-green-100 overflow-hidden">
+                <img src="/logo-tsa.png" alt="TSA Logo" className="w-full h-full object-contain" onError={(e) => e.target.style.display='none'} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-black text-tsa-dark tracking-tight leading-none">
+                TSA USU R.E.W.A.R.D
+              </span>
+              <span className="text-[9px] font-bold text-gray-400 tracking-widest mt-1">
+                REVIEW, EVALUATION, AND AWARD
+              </span>
+            </div>
           </div>
           
-          <div className="hidden md:flex items-center space-x-2">
-            {navLinks.filter(link => link.show).map((link) => {
-              const Icon = link.icon;
-              const isActive = location.pathname === link.path;
-              return (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold transition-all ${
-                    isActive 
-                      ? 'bg-tsa-green text-white shadow-sm' 
-                      : 'text-gray-500 hover:bg-gray-50 hover:text-tsa-green'
-                  }`}
-                >
-                  <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
-                  {link.name}
-                </Link>
-              );
-            })}
+          {/* BAGIAN KANAN: Profil & Logout */}
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col items-end">
+              <span className="text-sm font-black text-tsa-dark uppercase">{user?.role || 'USER'}</span>
+              <span className="text-[9px] font-bold text-tsa-green bg-green-50 px-2 py-0.5 rounded-full uppercase mt-0.5 tracking-wider">
+                {user?.position || 'MEMBER'}
+              </span>
+            </div>
             
-            <div className="w-px h-6 bg-gray-200 mx-2"></div>
+            <div className="w-px h-8 bg-gray-200"></div>
             
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-all"
+              className="flex items-center gap-2 text-xs font-bold text-red-500 hover:text-red-700 transition-all uppercase tracking-wider"
             >
               <LogOut size={16} strokeWidth={2.5} />
               Logout
             </button>
           </div>
+
         </div>
       </div>
     </nav>

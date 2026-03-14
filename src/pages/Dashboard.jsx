@@ -1,125 +1,131 @@
-import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { ROLES, PERMISSIONS } from '../utils/constants';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Lock, Users, CalendarClock, Trophy, Star } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Lock, Unlock, Users, Trophy, ClipboardList, CheckSquare } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  // 1. ADMIN PANEL (ENGLISH)
-  const AdminPanel = () => (
-    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl mb-8">
-      <h2 className="text-xl font-bold text-tsa-dark mb-2 flex items-center gap-2">
-        <div className="p-2 bg-tsa-green/10 rounded-lg text-tsa-green"><Users size={20}/></div>
-        Admin Control Center
-      </h2>
-      <p className="text-sm text-gray-500 mb-6 ml-11">Manage users, database, and evaluation periods.</p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <Link 
-          to="/manage-users" 
-          className="p-5 bg-gray-50 border border-gray-200 rounded-2xl text-left hover:bg-green-50 hover:border-tsa-green transition-all group relative overflow-hidden"
-        >
-          <div className="relative z-10">
-            <h3 className="font-bold text-tsa-dark group-hover:text-tsa-green transition-colors">User Management</h3>
-            <p className="text-xs text-gray-500 mt-2">Add, Edit, or Delete Members</p>
-          </div>
-        </Link>
-
-        <button className="p-5 bg-gray-50 border border-gray-200 rounded-2xl text-left opacity-60 cursor-not-allowed">
-          <h3 className="font-bold text-gray-400 flex items-center gap-2">
-            Period Settings <CalendarClock size={16}/>
-          </h3>
-          <p className="text-xs text-gray-400 mt-2">Coming Soon</p>
-        </button>
-      </div>
-    </div>
-  );
-
-  // 2. RESULT BOARD (ENGLISH)
-  const ResultBoard = () => (
-    <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl mt-6 relative overflow-hidden">
-      {/* Dekorasi Background */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-tsa-gold/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-
-      <div className="flex justify-between items-center mb-6 relative z-10">
-        <h2 className="text-xl font-bold text-tsa-dark flex items-center gap-2">
-            <div className="p-2 bg-tsa-gold/10 rounded-lg text-tsa-gold"><Trophy size={20}/></div>
-            Hall of Fame (Quarter 1)
-        </h2>
-        
-        <Link 
-            to="/results" 
-            className="text-sm font-bold text-tsa-green hover:text-emerald-800 hover:underline flex items-center gap-1"
-        >
-            View Details <ArrowRight size={16} />
-        </Link>
-      </div>
-      
-      {PERMISSIONS.CAN_VIEW_REALTIME_RESULTS.includes(user.role) ? (
-        <div className="p-6 bg-green-50 border border-green-100 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 relative z-10">
-          <div>
-             <strong className="text-tsa-green flex items-center gap-2"><Lock size={16}/> Status: Real-time Access</strong>
-             <p className="text-xs text-green-800 mt-1 opacity-80">You have privileged access to view temporary recapitulation.</p>
-          </div>
-          <Link to="/results" className="bg-tsa-green text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-emerald-900 shadow-lg shadow-green-900/10 transition-all">
-             Open Recap
-          </Link>
+  // Komponen Card Periode Evaluasi
+  const PeriodCard = ({ title, status, description, icon: Icon, isLocked, onClick }) => (
+    <div 
+      onClick={!isLocked ? onClick : undefined}
+      className={`relative p-6 rounded-2xl border transition-all ${
+        isLocked 
+          ? 'bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed' 
+          : 'bg-white border-tsa-green shadow-sm hover:shadow-md cursor-pointer'
+      }`}
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div className={`p-3 rounded-xl ${isLocked ? 'bg-gray-200 text-gray-500' : 'bg-green-50 text-tsa-green'}`}>
+          <Icon size={24} />
         </div>
-      ) : (
-        <div className="p-10 text-center bg-gray-50 rounded-2xl border border-gray-200 border-dashed relative z-10">
-          <p className="text-gray-500 font-medium">✨ Results have not been published yet.</p>
-          <p className="text-xs text-gray-400 mt-1">Please wait for the Awarding Night!</p>
+        <div className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full ${isLocked ? 'bg-gray-200 text-gray-500' : 'bg-tsa-green text-white'}`}>
+          {isLocked ? <Lock size={12} /> : <Unlock size={12} />}
+          {status}
         </div>
-      )}
+      </div>
+      <h3 className="font-bold text-tsa-dark text-lg">{title}</h3>
+      <p className="text-xs text-gray-500 mt-2">{description}</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      <main className="max-w-6xl mx-auto p-6 space-y-8">
-        {/* HEADER DASHBOARD */}
-        <div className="mt-4">
-          <h1 className="text-3xl font-bold text-tsa-dark">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Welcome back, <span className="font-bold text-tsa-green capitalize">{user.username}</span></p>
+      <main className="max-w-7xl mx-auto p-6 mt-6">
+        <div className="mb-10">
+          <h1 className="text-3xl font-black text-tsa-dark tracking-tight">Dashboard</h1>
+          <p className="text-gray-500 mt-1">Welcome back, <span className="font-bold text-tsa-green">{user?.full_name || 'Admin'}</span></p>
         </div>
 
-        {/* --- AREA KONTEN BERDASARKAN ROLE --- */}
-
-        {user.role === ROLES.ADMIN && <AdminPanel />}
-
-        {PERMISSIONS.CAN_JUDGE_ATTITUDE.includes(user.role) && (
-          <Link to="/input-assessment">
-            <div className="bg-gradient-to-r from-tsa-green to-emerald-900 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all border border-emerald-800">
-              <div className="relative z-10">
-                <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                    Start Assessment <ArrowRight className="group-hover:translate-x-2 transition-transform"/>
-                </h2>
-                <p className="text-emerald-100 text-sm max-w-lg">Input Attitude & Teamwork scores for your members in this active period.</p>
+        {/* 1. ADMIN CONTROL CENTER (Hanya untuk Admin/BPH/ADV) */}
+        {(user?.role === 'admin' || user?.role === 'bph' || user?.role === 'adv') && (
+          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm mb-8">
+            <h2 className="text-lg font-bold text-tsa-dark mb-4 flex items-center gap-2">
+              <Users size={20} className="text-tsa-green" /> Admin Control Center
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div onClick={() => navigate('/manage-users')} className="p-4 border border-gray-100 rounded-xl hover:bg-gray-50 cursor-pointer transition-all">
+                <h3 className="font-bold text-sm">User Management</h3>
+                <p className="text-xs text-gray-500 mt-1">Add, Edit, or Delete Members</p>
               </div>
-              <div className="absolute right-0 top-0 h-40 w-40 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-white/20 transition-all"></div>
+              <div className="p-4 border border-gray-100 rounded-xl bg-gray-50 opacity-70">
+                <h3 className="font-bold text-sm text-gray-500 flex items-center gap-2">Period Settings <Lock size={14} /></h3>
+                <p className="text-xs text-gray-500 mt-1">Lock/Unlock evaluation periods (Coming Soon)</p>
+              </div>
             </div>
-          </Link>
+          </div>
         )}
 
-        {user.role === ROLES.MEMBER && (
-          <Link to="/voting">
-            <div className="bg-gradient-to-r from-tsa-gold to-amber-500 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden cursor-pointer hover:shadow-2xl transition-all group border border-amber-400">
-              <div className="relative z-10">
-                <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                    <Star className="fill-white text-white"/> Voting The Spark
+        {/* 2. SHORTCUT KHUSUS SEKRETARIS (Hanya muncul untuk Secretary) */}
+        {user?.position === 'Secretary' && (
+           <div className="bg-blue-50 border border-blue-200 p-6 rounded-2xl mb-8 flex justify-between items-center cursor-pointer hover:bg-blue-100 transition-all" onClick={() => navigate('/input-attendance')}>
+              <div>
+                <h2 className="text-lg font-bold text-blue-900 flex items-center gap-2">
+                  <ClipboardList size={20} /> Secretary Access: Input Attendance
                 </h2>
-                <p className="text-white/90 text-sm max-w-lg">Cast your vote for the most fun member and favorite executive board!</p>
+                <p className="text-xs text-blue-700 mt-1">Input data kehadiran riil member untuk metrik Blueprint.</p>
               </div>
-              <div className="absolute right-0 bottom-0 h-32 w-32 bg-white/20 rounded-full blur-2xl -mr-6 -mb-6 group-hover:scale-150 transition-transform duration-500"></div>
-            </div>
-          </Link>
+           </div>
         )}
 
-        <ResultBoard />
+        {/* 3. ROADMAP EVALUASI BLUEPRINT */}
+        <h2 className="text-xl font-bold text-tsa-dark mb-4">Evaluation Roadmap</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          
+          <PeriodCard 
+            title="Quarter 1" 
+            status="ACTIVE" 
+            description="Penilaian kinerja awal berbasis skala 1-5." 
+            icon={CheckSquare} 
+            isLocked={false} 
+            onClick={() => navigate('/input-assessment')}
+          />
+          <PeriodCard 
+            title="Quarter 2" 
+            status="LOCKED" 
+            description="Terkunci. Menunggu periode evaluasi." 
+            icon={CheckSquare} 
+            isLocked={true} 
+          />
+          <PeriodCard 
+            title="Quarter 3" 
+            status="LOCKED" 
+            description="Terkunci. Menunggu periode evaluasi." 
+            icon={CheckSquare} 
+            isLocked={true} 
+          />
+          <PeriodCard 
+            title="Quarter 4" 
+            status="LOCKED" 
+            description="Terkunci. Menunggu periode evaluasi." 
+            icon={CheckSquare} 
+            isLocked={true} 
+          />
+
+        </div>
+
+        {/* 4. REWARD AKHIR KEPENGURUSAN */}
+        <div className="bg-gradient-to-r from-tsa-dark to-gray-900 p-8 rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden mb-12">
+            <Trophy size={160} className="absolute -left-10 -bottom-10 text-white opacity-5 transform -rotate-12" />
+            <div className="z-10">
+                <h2 className="text-2xl font-black text-white">End of Term Awards</h2>
+                <p className="text-sm text-gray-400 mt-2 max-w-xl">
+                    Kalkulasi kumulatif Q1-Q4, Evaluasi BPH, dan sistem <strong>Voting Berbobot</strong> untuk Most Favorite EB, Best Project, dll sesuai Blueprint.
+                </p>
+            </div>
+            <div className="z-10 flex flex-col gap-3 min-w-[200px]">
+                <button disabled className="bg-gray-800 text-gray-500 py-3 px-6 rounded-xl font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-not-allowed border border-gray-700">
+                    <Lock size={16} /> Voting Locked
+                </button>
+                <button onClick={() => navigate('/results')} className="bg-tsa-gold text-tsa-dark py-3 px-6 rounded-xl font-bold text-sm uppercase tracking-wider hover:bg-yellow-500 transition-all flex items-center justify-center gap-2">
+                    View Q1 Leaderboard
+                </button>
+            </div>
+        </div>
 
       </main>
     </div>

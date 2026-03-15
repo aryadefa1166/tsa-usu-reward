@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
-  Users, CalendarDays, Activity, Eye, ShieldCheck, Download 
+  Users, CalendarDays, Activity, Eye, ShieldCheck, Download, ImagePlus, UploadCloud 
 } from 'lucide-react';
 
 const ShieldIcon = () => (
@@ -14,7 +14,7 @@ const ShieldIcon = () => (
 );
 
 const ManageUsers = () => {
-  const [activeTab, setActiveTab] = useState('periods');
+  const [activeTab, setActiveTab] = useState('assets'); // Di-set default ke assets untuk testing
   
   // State User Database
   const [usersList, setUsersList] = useState([]);
@@ -32,23 +32,32 @@ const ManageUsers = () => {
     position: 'Staff', photo_url: ''
   });
 
-  // State Pengaturan Periode & Voting
+  // State Pengaturan Periode
   const [appSettings, setAppSettings] = useState({ 
     q1_status: 'LOCKED', q2_status: 'LOCKED', q3_status: 'LOCKED', q4_status: 'LOCKED', voting_status: 'LOCKED' 
   });
   const [savingPeriod, setSavingPeriod] = useState(false);
 
+  // State Organization Assets (Foto Dept/Project)
+  const [assetsList, setAssetsList] = useState([]);
+  const [uploadingAsset, setUploadingAsset] = useState(null);
+
   const adminTabs = [
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'periods', label: 'Period Settings & Export', icon: CalendarDays },
+    { id: 'assets', label: 'Organization Assets', icon: ImagePlus },
     { id: 'tracker', label: 'Evaluation Tracker', icon: Activity },
   ];
 
   useEffect(() => {
     fetchUsers();
     fetchSettings();
+    fetchAssets();
   }, []);
 
+  // ==========================================
+  // FETCHING LOGIC
+  // ==========================================
   const fetchUsers = async () => {
     setLoading(true);
     const { data, error } = await supabase.from('users').select('*').order('sort_order', { ascending: true });
@@ -61,6 +70,44 @@ const ManageUsers = () => {
     if (!error && data) setAppSettings(data);
   };
 
+  const fetchAssets = async () => {
+    const { data, error } = await supabase.from('organization_assets').select('*').order('entity_name', { ascending: true });
+    if (!error && data) setAssetsList(data);
+  };
+
+  // ==========================================
+  // ASSET UPLOAD LOGIC (NEW)
+  // ==========================================
+  const handleAssetUpload = async (e, entityName) => {
+    try {
+      setUploadingAsset(entityName);
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `asset_${entityName.toLowerCase().replace(/\s+/g, '_')}_${Math.random()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage.from('photos').upload(fileName, file);
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('photos').getPublicUrl(fileName);
+      
+      // Update tabel organization_assets
+      const { error: dbError } = await supabase.from('organization_assets').update({ photo_url: data.publicUrl }).eq('entity_name', entityName);
+      if (dbError) throw dbError;
+
+      alert(`Foto untuk ${entityName} berhasil diperbarui!`);
+      fetchAssets(); // Refresh list asset
+    } catch (error) {
+      alert('Error uploading asset: ' + error.message);
+    } finally {
+      setUploadingAsset(null);
+    }
+  };
+
+  // ==========================================
+  // PERIOD & CSV LOGIC
+  // ==========================================
   const handleUpdatePeriod = async (column, value) => {
     setSavingPeriod(true);
     try {
@@ -109,6 +156,9 @@ const ManageUsers = () => {
     }
   };
 
+  // ==========================================
+  // USER CRUD LOGIC
+  // ==========================================
   const handleFileUpload = async (e) => {
     try {
       setUploading(true);
@@ -135,7 +185,7 @@ const ManageUsers = () => {
     e.preventDefault();
     if (!formData.username) return alert('Username is required!');
 
-    // PENTING: Konversi role menjadi Integer agar sinkron dengan database
+    // Konversi role menjadi Integer agar sinkron dengan database
     const payload = { ...formData, role: parseInt(formData.role) };
 
     let error;
@@ -225,7 +275,7 @@ const ManageUsers = () => {
           <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight flex items-center gap-3">
             <ShieldIcon /> Admin Center
           </h1>
-          <p className="text-sm text-gray-500 mt-1 font-medium">Control panel for database, periods, and tracking.</p>
+          <p className="text-sm text-gray-500 mt-1 font-medium">Control panel for database, periods, assets, and tracking.</p>
         </div>
 
         <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-8 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm inline-flex">
@@ -288,7 +338,6 @@ const ManageUsers = () => {
                     <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} />
                   </div>
                   
-                  {/* SELECT ROLE MENGGUNAKAN INTEGER VALUE */}
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-tsa-green uppercase">Role</label>
                     <select className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
@@ -336,7 +385,6 @@ const ManageUsers = () => {
               </div>
             )}
 
-            {/* SEARCH BAR & TABEL DATA UTUH */}
             <div className="relative mb-6">
                 <Search size={20} className="absolute left-4 top-3.5 text-gray-400" />
                 <input 
@@ -386,7 +434,6 @@ const ManageUsers = () => {
                                 </div>
                             </td>
                             <td className="p-5">
-                                {/* PERBAIKAN: Array kini mendeteksi Steering Committee agar warnanya Emas */}
                                 <div className={`text-xs font-bold uppercase ${['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Department', 'Head of Division', 'Steering Committee'].includes(u.position) ? 'text-tsa-gold' : 'text-tsa-green'}`}>
                                     {u.position}
                                 </div>
@@ -475,18 +522,65 @@ const ManageUsers = () => {
                   </select>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ========================================== */}
+        {/* TAB 3: ORGANIZATION ASSETS (NEW) */}
+        {/* ========================================== */}
+        {activeTab === 'assets' && (
+          <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
+            <h2 className="text-lg font-black text-tsa-dark mb-2">Organization Assets</h2>
+            <p className="text-sm text-gray-500 mb-8">Upload department or project photos to be displayed on the Dashboard Awards.</p>
             
-            <div className="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3">
-              <Eye className="text-blue-500 shrink-0 mt-0.5" size={18} />
-              <p className="text-xs text-blue-800 leading-relaxed font-medium">
-                <strong>Logika Sync:</strong> Apabila Anda merubah status menjadi <span className="bg-white px-1.5 py-0.5 rounded border border-blue-200">🏆 Published</span>, sistem akan otomatis melakukan kalkulasi akhir dan membuka gembok nama pemenang di layar Dashboard seluruh pengurus.
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {assetsList.map((asset) => (
+                <div key={asset.entity_name} className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-tsa-green transition-all">
+                  
+                  {/* Image Preview (Landscape 16:9) */}
+                  <div className="aspect-video bg-gray-100 relative group flex items-center justify-center">
+                    {asset.photo_url ? (
+                      <img src={asset.photo_url} alt={asset.entity_name} className="w-full h-full object-cover" />
+                    ) : (
+                      <ImagePlus size={40} className="text-gray-300" />
+                    )}
+                    
+                    {/* Hover Overlay for Uploading */}
+                    <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center transition-opacity ${uploadingAsset === asset.entity_name ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                      {uploadingAsset === asset.entity_name ? (
+                        <Loader2 className="animate-spin text-white" size={30} />
+                      ) : (
+                        <label className="cursor-pointer flex flex-col items-center gap-2 text-white">
+                          <UploadCloud size={30} />
+                          <span className="text-xs font-bold tracking-widest uppercase">Upload Photo</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => handleAssetUpload(e, asset.entity_name)}
+                            disabled={uploadingAsset !== null}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="p-4 bg-white border-t border-gray-100 flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-tsa-dark">{asset.entity_name}</h3>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{asset.entity_type}</p>
+                    </div>
+                  </div>
+
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {/* ========================================== */}
-        {/* TAB 3: EVALUATION TRACKER */}
+        {/* TAB 4: EVALUATION TRACKER */}
         {/* ========================================== */}
         {activeTab === 'tracker' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">

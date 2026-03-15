@@ -97,13 +97,20 @@ export const calculateQuarterlyResults = async (quarter) => {
       score: deptMap[dept].totalMVP / deptMap[dept].count
     }));
 
-    // 6. SORTING & OUTPUT (Mencari Nilai Tertinggi)
+    // 6. SORTING & OUTPUT (Mencari Nilai Tertinggi dengan Syarat > 0)
+    
+    // Helper function: Hanya ambil juara pertama JIKA skornya lebih dari 0
+    const getWinner = (arr, scoreKey) => {
+      const sorted = [...arr].sort((a, b) => b[scoreKey] - a[scoreKey]);
+      return sorted.length > 0 && sorted[0][scoreKey] > 0 ? sorted[0] : null;
+    };
+
     return {
-      reliable: [...results].sort((a,b) => b.theReliableOne - a.theReliableOne)[0] || null,
-      achiever: [...results].sort((a,b) => b.theHighAchiever - a.theHighAchiever)[0] || null,
-      spark: [...results].sort((a,b) => b.theSpark - a.theSpark)[0] || null,
-      mvp: [...results].sort((a,b) => b.theUltimateMVP - a.theUltimateMVP)[0] || null,
-      bestDept: deptResults.sort((a,b) => b.score - a.score)[0] || null,
+      reliable: getWinner(results, 'theReliableOne'),
+      achiever: getWinner(results, 'theHighAchiever'),
+      spark: getWinner(results, 'theSpark'),
+      mvp: getWinner(results, 'theUltimateMVP'),
+      bestDept: getWinner(deptResults, 'score'),
       allScores: results // Data mentah ini akan dipakai untuk Report Pribadi Staff & Export CSV
     };
 

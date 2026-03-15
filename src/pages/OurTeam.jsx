@@ -15,7 +15,7 @@ const THEMES = {
 };
 
 // ==========================================
-// KOMPONEN CARD MEMBER (DINAMIS SESUAI TEMA)
+// KOMPONEN CARD MEMBER
 // ==========================================
 const MemberCard = ({ member, deptCode }) => {
   if (!member) return null;
@@ -57,7 +57,6 @@ const MemberCard = ({ member, deptCode }) => {
 // ==========================================
 // KONEKTOR GARIS (UI HELPERS)
 // ==========================================
-// Garis Vertikal
 const VLine = ({ height = 'h-8', color = 'bg-gray-200' }) => <div className={`w-px ${height} ${color} mx-auto`}></div>;
 
 const OurTeam = () => {
@@ -118,20 +117,22 @@ const OurTeam = () => {
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-6 mt-10">
+        
+        {/* HEADER YANG SUDAH DIBENARKAN */}
         <div className="text-center mb-16 animate-fade-in-up">
-          <h1 className="text-3xl md:text-5xl font-black text-tsa-dark tracking-tight mb-2">TSA USU</h1>
+          <h1 className="text-3xl md:text-5xl font-black text-tsa-dark tracking-tight mb-2">Organizational Structure</h1>
           <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">TSA USU • Executive Board & Staff</p>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-32"><Loader2 className="animate-spin text-tsa-green" size={40} /></div>
         ) : (
-          <div className="space-y-24 animate-fade-in-up">
+          <div className="space-y-16 animate-fade-in-up">
             
             {/* ========================================== */}
             {/* TIER 1: BOARD OF DIRECTORS (BPH) */}
             {/* ========================================== */}
-            <section className="relative">
+            <section className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-10">
               <div className="flex flex-col items-center mb-10">
                 <Crown size={32} className={THEMES.BPH.text} />
                 <h2 className={`text-xl font-black uppercase tracking-widest mt-2 ${THEMES.BPH.text}`}>Board of Directors</h2>
@@ -144,15 +145,15 @@ const OurTeam = () => {
                 <VLine height="h-6" color={THEMES.BPH.line} />
                 
                 {/* Percabangan Rapi Sec & Treas */}
-                <div className={`w-[260px] h-px ${THEMES.BPH.line}`}></div>
-                <div className="flex justify-between w-[260px]">
+                <div className={`w-64 h-px ${THEMES.BPH.line} hidden md:block`}></div>
+                <div className="hidden md:flex justify-between w-64">
                   <VLine height="h-6" color={THEMES.BPH.line} />
                   <VLine height="h-6" color={THEMES.BPH.line} />
                 </div>
                 
-                <div className="flex justify-center gap-10 w-full max-w-lg">
-                  <div className="w-[200px]"><MemberCard member={secretary} deptCode="BPH" /></div>
-                  <div className="w-[200px]"><MemberCard member={treasurer} deptCode="BPH" /></div>
+                <div className="flex justify-center gap-10 w-full max-w-md mt-6 md:mt-0">
+                  <div className="w-1/2"><MemberCard member={secretary} deptCode="BPH" /></div>
+                  <div className="w-1/2"><MemberCard member={treasurer} deptCode="BPH" /></div>
                 </div>
               </div>
             </section>
@@ -160,38 +161,37 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 2: ADVISORY BOARD (ADV) */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-10 mt-10">
+            <section className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-10">
               <div className="flex flex-col items-center mb-10">
                 <ShieldCheck size={32} className={THEMES.ADV.text} />
                 <h2 className={`text-xl font-black uppercase tracking-widest mt-2 ${THEMES.ADV.text}`}>Advisory Board</h2>
               </div>
               
-              <div className="flex flex-col lg:flex-row justify-center items-start gap-16 lg:gap-32">
-                {/* KIRI: Steering Committee */}
-                <div className="flex flex-col items-center w-full lg:w-auto">
-                  <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Steering Committee</h3>
-                  <div className="flex flex-wrap justify-center gap-6">
-                    {advSC.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
-                  </div>
+              <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
+                {/* Lapis 1: Steering Committee */}
+                <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Steering Committee</h3>
+                <div className="flex flex-wrap justify-center gap-6 z-10">
+                  {advSC.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
                 </div>
                 
-                {/* KANAN: MONEV */}
-                <div className="flex flex-col items-center w-full lg:w-auto">
-                  <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
-                  <MemberCard member={advMonevHead} deptCode="ADV" />
+                {/* Konektor dari SC ke MONEV Head */}
+                <VLine height="h-8" color={THEMES.ADV.line} />
+                
+                {/* Lapis 2: MONEV Head */}
+                <h3 className={`text-sm font-black uppercase tracking-widest mt-4 mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
+                <MemberCard member={advMonevHead} deptCode="ADV" />
+                <VLine height="h-6" color={THEMES.ADV.line} />
+                
+                {/* Lapis 3: Percabangan ke 3 Staff Monev */}
+                <div className={`w-[80%] max-w-[400px] h-px ${THEMES.ADV.line} hidden md:block`}></div>
+                <div className="hidden md:flex justify-between w-[80%] max-w-[400px]">
                   <VLine height="h-6" color={THEMES.ADV.line} />
-                  
-                  {/* Percabangan ke 3 Staff Monev */}
-                  <div className={`w-[80%] max-w-[400px] h-px ${THEMES.ADV.line}`}></div>
-                  <div className="flex justify-between w-[80%] max-w-[400px] mb-2">
-                    <VLine height="h-6" color={THEMES.ADV.line} />
-                    <VLine height="h-6" color={THEMES.ADV.line} />
-                    <VLine height="h-6" color={THEMES.ADV.line} />
-                  </div>
+                  <VLine height="h-6" color={THEMES.ADV.line} />
+                  <VLine height="h-6" color={THEMES.ADV.line} />
+                </div>
 
-                  <div className="flex flex-wrap justify-center gap-4">
-                    {advMonevStaff.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
-                  </div>
+                <div className="flex flex-wrap justify-center gap-4 mt-6 md:mt-0">
+                  {advMonevStaff.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
                 </div>
               </div>
             </section>
@@ -203,7 +203,7 @@ const OurTeam = () => {
               <div className="flex flex-col items-center mb-10">
                 <Building2 size={32} className={THEMES.ERBD.text} />
                 <h2 className={`text-xl font-black uppercase tracking-widest mt-2 ${THEMES.ERBD.text}`}>ERBD Department</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">External Relations & Business Development</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">External Relations & Business Development</p>
               </div>
 
               <div className="flex flex-col items-center">
@@ -213,15 +213,15 @@ const OurTeam = () => {
                 <VLine height="h-6" color={THEMES.ERBD.line} />
                 
                 {/* Garis Horizontal ke 4 Divisi */}
-                <div className={`w-[75%] h-px ${THEMES.ERBD.line} hidden lg:block`}></div>
-                <div className="hidden lg:flex justify-between w-[75%]">
+                <div className={`w-[85%] h-px ${THEMES.ERBD.line} hidden lg:block`}></div>
+                <div className="hidden lg:flex justify-between w-[85%]">
                   <VLine height="h-6" color={THEMES.ERBD.line} />
                   <VLine height="h-6" color={THEMES.ERBD.line} />
                   <VLine height="h-6" color={THEMES.ERBD.line} />
                   <VLine height="h-6" color={THEMES.ERBD.line} />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-6 lg:mt-0">
                   {erbdTeams.map(team => (
                     <div key={team.name} className="flex flex-col items-center">
                       <MemberCard member={team.tl} deptCode="ERBD" />
@@ -242,7 +242,7 @@ const OurTeam = () => {
               <div className="flex flex-col items-center mb-10">
                 <Building2 size={32} className={THEMES.MD.text} />
                 <h2 className={`text-xl font-black uppercase tracking-widest mt-2 ${THEMES.MD.text}`}>MD Department</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Media & Education</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Media Education</p>
               </div>
 
               <div className="flex flex-col items-center">
@@ -250,19 +250,17 @@ const OurTeam = () => {
                 <VLine height="h-6" color={THEMES.MD.line} />
                 
                 {/* Garis Horizontal ke 2 Divisi */}
-                <div className={`w-[50%] h-px ${THEMES.MD.line} hidden md:block`}></div>
-                <div className="hidden md:flex justify-between w-[50%]">
+                <div className={`w-[60%] h-px ${THEMES.MD.line} hidden md:block`}></div>
+                <div className="hidden md:flex justify-between w-[60%]">
                   <VLine height="h-6" color={THEMES.MD.line} />
                   <VLine height="h-6" color={THEMES.MD.line} />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-2 max-w-4xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-4xl">
                   {mdStruct.divs.map(div => (
                     <div key={div.name} className="flex flex-col items-center">
                       <MemberCard member={div.kadiv} deptCode="MD" />
                       {div.staff.length > 0 && <VLine height="h-6" color={THEMES.MD.line} />}
-                      
-                      {/* Grid Staff Berdampingan (Max 2 Kolom per Divisi) */}
                       <div className="grid grid-cols-2 gap-4 w-full">
                         {div.staff.map(member => <MemberCard key={member.id} member={member} deptCode="MD" />)}
                       </div>
@@ -279,20 +277,20 @@ const OurTeam = () => {
               <div className="flex flex-col items-center mb-10">
                 <Building2 size={32} className={THEMES.STD.text} />
                 <h2 className={`text-xl font-black uppercase tracking-widest mt-2 ${THEMES.STD.text}`}>STD Department</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Staff & Talent Development</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Staff & Talent Development</p>
               </div>
 
               <div className="flex flex-col items-center">
                 <MemberCard member={stdStruct.kadep} deptCode="STD" />
                 <VLine height="h-6" color={THEMES.STD.line} />
                 
-                <div className={`w-[50%] h-px ${THEMES.STD.line} hidden md:block`}></div>
-                <div className="hidden md:flex justify-between w-[50%]">
+                <div className={`w-[60%] h-px ${THEMES.STD.line} hidden md:block`}></div>
+                <div className="hidden md:flex justify-between w-[60%]">
                   <VLine height="h-6" color={THEMES.STD.line} />
                   <VLine height="h-6" color={THEMES.STD.line} />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-2 max-w-4xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-4xl">
                   {stdStruct.divs.map(div => (
                     <div key={div.name} className="flex flex-col items-center">
                       <MemberCard member={div.kadiv} deptCode="STD" />

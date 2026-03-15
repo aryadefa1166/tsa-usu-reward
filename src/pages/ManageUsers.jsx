@@ -4,35 +4,8 @@ import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
-  Users, CalendarDays, Activity, Eye, CheckCircle2, AlertCircle, ShieldCheck, Download 
+  Users, CalendarDays, Activity, Eye, ShieldCheck, Download 
 } from 'lucide-react';
-
-// --- KOMPONEN BANTUAN UNTUK TRACKER TAB ---
-const TrackerRow = ({ name, position, dept, progress, total }) => {
-  const percentage = total > 0 ? (progress / total) * 100 : 0;
-  return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-50 hover:bg-gray-50 transition-all">
-      <div>
-        <h4 className="font-bold text-sm text-tsa-dark">{name}</h4>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-          {position} • {dept}
-        </p>
-      </div>
-      <div className="flex items-center gap-4 w-1/3">
-        <div className="flex-grow bg-gray-100 rounded-full h-2 overflow-hidden">
-          <div 
-            className={`h-2 rounded-full transition-all duration-500 ${percentage === 100 ? 'bg-emerald-500' : 'bg-amber-500'}`}
-            style={{ width: `${percentage}%` }}
-          ></div>
-        </div>
-        <div className="flex items-center gap-1 min-w-[60px] justify-end">
-          <span className="text-xs font-black text-tsa-dark">{progress}/{total}</span>
-          {percentage === 100 ? <CheckCircle2 size={16} className="text-emerald-500" /> : <AlertCircle size={16} className="text-amber-500" />}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ShieldIcon = () => (
   <div className="w-10 h-10 bg-tsa-dark rounded-xl flex items-center justify-center shadow-md">
@@ -40,28 +13,26 @@ const ShieldIcon = () => (
   </div>
 );
 
-// --- KOMPONEN UTAMA ---
 const ManageUsers = () => {
-  // State Navigasi Tab
-  const [activeTab, setActiveTab] = useState('periods'); // Di-set default ke periods untuk testing
-
-  // State Bawaan Databasemu (CRUD User)
-  const [users, setUsers] = useState([]);
+  const [activeTab, setActiveTab] = useState('periods');
+  
+  // State User Database
+  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // State Form Databasemu
+  // State Form Input
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     id: null, username: '', password: '', full_name: '', 
-    role: 'member', dept: '-', division: '-', cohort: '-', 
+    role: 6, dept: '-', division: '-', cohort: '-', 
     position: 'Staff', photo_url: ''
   });
 
-  // State Pengaturan Admin (Backend Tahap 3)
+  // State Pengaturan Periode & Voting
   const [appSettings, setAppSettings] = useState({ 
     q1_status: 'LOCKED', q2_status: 'LOCKED', q3_status: 'LOCKED', q4_status: 'LOCKED', voting_status: 'LOCKED' 
   });
@@ -78,16 +49,10 @@ const ManageUsers = () => {
     fetchSettings();
   }, []);
 
-  // --- LOGIKA FETCHING ---
   const fetchUsers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .order('sort_order', { ascending: true });
-    
-    if (error) console.error(error);
-    else setUsers(data);
+    const { data, error } = await supabase.from('users').select('*').order('sort_order', { ascending: true });
+    if (!error) setUsersList(data);
     setLoading(false);
   };
 
@@ -96,7 +61,6 @@ const ManageUsers = () => {
     if (!error && data) setAppSettings(data);
   };
 
-  // --- LOGIKA UPDATE STATUS PERIODE (SYNC DATABASE) ---
   const handleUpdatePeriod = async (column, value) => {
     setSavingPeriod(true);
     try {
@@ -110,7 +74,6 @@ const ManageUsers = () => {
     }
   };
 
-  // --- LOGIKA EXPORT CSV (OTAK KALKULATOR) ---
   const handleExportCSV = async (quarter) => {
     try {
       const result = await calculateQuarterlyResults(quarter);
@@ -123,9 +86,7 @@ const ManageUsers = () => {
       
       result.allScores.forEach(u => {
         const row = [
-          `"${u.full_name || '-'}"`, 
-          `"${u.dept || '-'}"`, 
-          `"${u.position || '-'}"`,
+          `"${u.full_name || '-'}"`, `"${u.dept || '-'}"`, `"${u.position || '-'}"`,
           u.attendanceScore?.toFixed(1) || 0,
           u.qualitativeScore?.toFixed(1) || 0,
           u.theReliableOne?.toFixed(1) || 0,
@@ -143,13 +104,11 @@ const ManageUsers = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
     } catch (error) {
       alert("Gagal melakukan export: " + error.message);
     }
   };
 
-  // --- LOGIKA CRUD USER (ASLI MILIKMU) ---
   const handleFileUpload = async (e) => {
     try {
       setUploading(true);
@@ -158,12 +117,11 @@ const ManageUsers = () => {
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage.from('photos').upload(filePath, file);
+      
+      const { error: uploadError } = await supabase.storage.from('photos').upload(fileName, file);
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from('photos').getPublicUrl(filePath);
+      const { data } = supabase.storage.from('photos').getPublicUrl(fileName);
       setFormData({ ...formData, photo_url: data.publicUrl });
       alert('Photo uploaded successfully!');
     } catch (error) {
@@ -177,30 +135,20 @@ const ManageUsers = () => {
     e.preventDefault();
     if (!formData.username) return alert('Username is required!');
 
-    const payload = {
-        username: formData.username,
-        ...(formData.password && { password: formData.password }),
-        full_name: formData.full_name,
-        role: formData.role,
-        dept: formData.dept,
-        division: formData.division,
-        cohort: formData.cohort,
-        position: formData.position,
-        photo_url: formData.photo_url
-    };
+    // PENTING: Konversi role menjadi Integer agar sinkron dengan database
+    const payload = { ...formData, role: parseInt(formData.role) };
 
     let error;
 
     if (isEditing) {
+        if (!payload.password) delete payload.password; // Jangan update password jika kosong
         const { error: updateError } = await supabase.from('users').update(payload).eq('id', formData.id);
         error = updateError;
     } else {
         if (!formData.password) return alert('Password is required for new user!');
-        payload.password = formData.password;
-        
-        const lastOrder = users.length > 0 ? Math.max(...users.map(u => u.sort_order || 0)) : 0;
+        const lastOrder = usersList.length > 0 ? Math.max(...usersList.map(u => u.sort_order || 0)) : 0;
         payload.sort_order = lastOrder + 1;
-
+        
         const { error: insertError } = await supabase.from('users').insert([payload]);
         error = insertError;
     }
@@ -234,18 +182,18 @@ const ManageUsers = () => {
   };
 
   const resetForm = () => {
-      setFormData({ id: null, username: '', password: '', full_name: '', role: 'member', dept: '-', division: '-', cohort: '-', position: 'Staff', photo_url: '' });
+      setFormData({ id: null, username: '', password: '', full_name: '', role: 6, dept: '-', division: '-', cohort: '-', position: 'Staff', photo_url: '' });
       setShowForm(false);
       setIsEditing(false);
   };
 
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = usersList.filter(u => 
     u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (u.full_name && u.full_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     u.dept.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalManagement = users.filter(u => u.role !== 'admin').length;
+  const totalManagement = usersList.filter(u => u.role !== 1).length;
 
   const getDeptColor = (deptName) => {
       const dept = deptName?.toUpperCase();
@@ -257,7 +205,10 @@ const ManageUsers = () => {
       return 'bg-gray-100 text-gray-600 border-gray-200';
   };
 
-  // Konfigurasi Array untuk Rendering Tab Periods
+  const getRoleText = (r) => {
+    switch(r) { case 1: return 'ADMIN'; case 2: return 'BPH'; case 3: return 'ADVISORY'; case 4: return 'KADEP'; case 5: return 'KADIV'; case 6: return 'STAFF'; default: return 'USER'; }
+  };
+
   const periodsConfig = [
     { id: 'q1_status', label: 'Quarter 1', value: appSettings.q1_status, q: 'Q1' },
     { id: 'q2_status', label: 'Quarter 2', value: appSettings.q2_status, q: 'Q2' },
@@ -277,7 +228,6 @@ const ManageUsers = () => {
           <p className="text-sm text-gray-500 mt-1 font-medium">Control panel for database, periods, and tracking.</p>
         </div>
 
-        {/* TAB NAVIGATION ADMIN */}
         <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-8 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm inline-flex">
           {adminTabs.map((tab) => {
             const Icon = tab.icon;
@@ -298,7 +248,7 @@ const ManageUsers = () => {
         </div>
 
         {/* ========================================== */}
-        {/* TAB 1: USER MANAGEMENT (ASLI MILIKMU 100%) */}
+        {/* TAB 1: USER MANAGEMENT (FULL CRUD) */}
         {/* ========================================== */}
         {activeTab === 'users' && (
           <div className="animate-fade-in-up">
@@ -306,7 +256,7 @@ const ManageUsers = () => {
               <div>
                 <h2 className="text-xl font-bold text-tsa-dark">User Database</h2>
                 <p className="text-sm text-gray-500 mt-1">
-                    Total Officers: <span className="font-bold text-tsa-green">{totalManagement} Staff</span> (Admin Excluded)
+                    Total Officers: <span className="font-bold text-tsa-green">{totalManagement} Personnel</span> (Admin Excluded)
                 </p>
               </div>
               <button 
@@ -317,7 +267,6 @@ const ManageUsers = () => {
               </button>
             </div>
 
-            {/* FORM INPUT */}
             {showForm && (
               <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl mb-8">
                 <h3 className="font-bold text-xl text-tsa-dark mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
@@ -338,15 +287,17 @@ const ManageUsers = () => {
                     <label className="text-xs font-bold text-tsa-green uppercase">Full Name</label>
                     <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} />
                   </div>
+                  
+                  {/* SELECT ROLE MENGGUNAKAN INTEGER VALUE */}
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-tsa-green uppercase">Role</label>
                     <select className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                        <option value="member">Staff (Member)</option>
-                        <option value="kadiv">Kadiv / Team Leader</option>
-                        <option value="kadep">Kadep</option>
-                        <option value="bph">BPH</option>
-                        <option value="adv">Advisory</option>
-                        <option value="admin">Admin</option>
+                        <option value={6}>Staff / Team Leader</option>
+                        <option value={5}>Kadiv</option>
+                        <option value={4}>Kadep / Wakadep</option>
+                        <option value={3}>Advisory</option>
+                        <option value={2}>BPH</option>
+                        <option value={1}>Admin</option>
                     </select>
                   </div>
                   <div className="space-y-1">
@@ -385,7 +336,7 @@ const ManageUsers = () => {
               </div>
             )}
 
-            {/* SEARCH BAR & TABEL */}
+            {/* SEARCH BAR & TABEL DATA UTUH */}
             <div className="relative mb-6">
                 <Search size={20} className="absolute left-4 top-3.5 text-gray-400" />
                 <input 
@@ -435,11 +386,12 @@ const ManageUsers = () => {
                                 </div>
                             </td>
                             <td className="p-5">
-                                <div className={`text-xs font-bold uppercase ${['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Department', 'Head of Division'].includes(u.position) ? 'text-tsa-gold' : 'text-tsa-green'}`}>
+                                {/* PERBAIKAN: Array kini mendeteksi Steering Committee agar warnanya Emas */}
+                                <div className={`text-xs font-bold uppercase ${['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Department', 'Head of Division', 'Steering Committee'].includes(u.position) ? 'text-tsa-gold' : 'text-tsa-green'}`}>
                                     {u.position}
                                 </div>
                                 <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-1 inline-block bg-gray-100 text-gray-500 border border-gray-200">
-                                    {u.role}
+                                    {getRoleText(u.role)}
                                 </span>
                             </td>
                             <td className="p-5 text-gray-600">
@@ -539,8 +491,10 @@ const ManageUsers = () => {
         {activeTab === 'tracker' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
              <h2 className="text-lg font-black text-tsa-dark mb-6">Live Evaluation Progress</h2>
-             <TrackerRow name="Rafael Royto" position="Head of ERBD" dept="ERBD" progress={5} total={5} />
-             <TrackerRow name="Ilyas Ramadana" position="Team Leader" dept="Product Partnership" progress={1} total={2} />
+             <div className="text-center py-10">
+               <Activity size={40} className="text-gray-300 mx-auto mb-3" />
+               <p className="text-sm font-bold text-gray-400">No active evaluation tracking available at the moment.</p>
+             </div>
           </div>
         )}
 

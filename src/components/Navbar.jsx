@@ -13,17 +13,35 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  // Logika Filter Akses Menu berdasarkan Role & Position
-  const isEB = user?.role !== 'member'; // BPH, ADV, KADEP, KADIV
-  const isAdmin = user?.role === 'admin';
+  // =========================================
+  // LOGIKA FILTER AKSES MENU (BERDASARKAN INTEGER)
+  // 1:Admin, 2:BPH, 3:ADV, 4:Kadep, 5:Kadiv, 6:Staff
+  // =========================================
+  const role = user?.role;
+  const isAdmin = role === 1;
+  const isReportViewer = role >= 2 && role <= 6; // Admin (1) tidak punya rapor
+  const isAssessor = role >= 2 && role <= 5; // Staff (6) dan Admin (1) tidak menilai
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
-    { name: 'My Report', path: '/report', icon: BarChart2, show: true },
-    { name: 'Assessment', path: '/input-assessment', icon: CheckSquare, show: isEB },
+    { name: 'My Report', path: '/report', icon: BarChart2, show: isReportViewer },
+    { name: 'Assessment', path: '/input-assessment', icon: CheckSquare, show: isAssessor },
     { name: 'Our Team', path: '/our-team', icon: Users, show: true },
     { name: 'Admin', path: '/manage-users', icon: Shield, show: isAdmin },
   ];
+
+  // Helper konversi angka ke teks jabatan untuk di sudut kanan atas
+  const getRoleText = (r) => {
+    switch(r) {
+      case 1: return 'ADMIN';
+      case 2: return 'BPH';
+      case 3: return 'ADVISORY';
+      case 4: return 'KADEP';
+      case 5: return 'KADIV';
+      case 6: return 'STAFF';
+      default: return 'USER';
+    }
+  };
 
   return (
     <>
@@ -74,7 +92,10 @@ const Navbar = () => {
             {/* Bagian Kanan: Profil Stacked Text & Logout */}
             <div className="flex items-center gap-6">
               <div className="flex flex-col items-end">
-                <span className="text-sm font-black text-tsa-dark uppercase">{user?.role === 'member' ? 'STAFF' : (user?.role || 'USER')}</span>
+                {/* REVISI: Menggunakan getRoleText agar nama sesuai dengan angka */}
+                <span className="text-sm font-black text-tsa-dark uppercase">
+                    {getRoleText(role)}
+                </span>
                 {user?.position && (
                   <span className="text-[9px] font-bold text-tsa-green uppercase mt-0.5 tracking-wider">
                     {user.position}

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { BarChart2, TrendingUp, Users, Shield, Award, Loader2 } from 'lucide-react';
 
-// Komponen Visual UI untuk Indikator Nilai (Tailwind murni, tanpa library eksternal)
+// Komponen Visual UI untuk Indikator Nilai
 const ScoreBar = ({ label, score, colorClass }) => (
   <div className="mb-4">
     <div className="flex justify-between items-end mb-1">
@@ -25,9 +25,10 @@ const Report = () => {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
 
-  const isStaff = user?.role === 'member';
-  const isEB = user?.role === 'kadep' || user?.role === 'kadiv';
-  const isGlobal = user?.role === 'bph' || user?.role === 'adv' || user?.role === 'admin';
+  // LOGIKA AKSES MUTLAK (Role 1-6)
+  const isStaff = user?.role === 6;
+  const isEB = user?.role === 4 || user?.role === 5;
+  const isGlobal = user?.role >= 1 && user?.role <= 3;
 
   useEffect(() => {
     if (user) fetchReportData();
@@ -35,18 +36,17 @@ const Report = () => {
 
   const fetchReportData = async () => {
     setLoading(true);
-    // CATATAN LOGIKA: Di sini nanti kita akan menarik data asli dari tabel 'assessments'.
-    // Untuk saat ini, kita pasang struktur UI dinamis agar tidak crash jika data Q1 belum ada.
     
-    // Simulasi struktur data yang akan dihitung dari backend nanti
+    // PENGHAPUSAN DATA DUMMY
+    // Untuk saat ini di-set 0 murni menunggu integrasi backend laporan personal per user.
     setTimeout(() => {
       setReportData({
-        attitude: 85,
-        discipline: 70,
-        active: 90,
-        agility: 80,
-        cheerful: 95,
-        attendance: 100, // Dari input Sekretaris
+        attitude: 0,
+        discipline: 0,
+        active: 0,
+        agility: 0,
+        cheerful: 0,
+        attendance: 0,
       });
       setLoading(false);
     }, 800);
@@ -110,7 +110,7 @@ const Report = () => {
                   {reportData?.attendance}%
                 </div>
                 <p className="text-xs text-gray-400 font-medium leading-relaxed">
-                  Berdasarkan data kehadiran riil yang divalidasi oleh Secretary.
+                  Based on real attendance data validated by the Secretary.
                 </p>
               </div>
 

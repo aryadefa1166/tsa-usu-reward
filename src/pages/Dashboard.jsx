@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
-import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Loader2 } from 'lucide-react';
+import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Users, Loader2 } from 'lucide-react';
 
 // Komponen Card Kategori Award
 const AwardCard = ({ title, description, icon: Icon, isPublished, winnerName, winnerDept, bgClass, iconColor }) => (
@@ -88,13 +88,13 @@ const Dashboard = () => {
         });
       }
     } catch (error) {
-      console.error("Gagal menarik pengaturan Admin:", error);
+      console.error("Error fetching settings:", error);
     }
   };
 
   const fetchWinnersData = async (quarter) => {
     setLoading(true);
-    // Panggil utilitas kalkulator yang baru saja kita buat
+    // Panggil utilitas kalkulator
     const result = await calculateQuarterlyResults(quarter);
     setWinners(result);
     setLoading(false);
@@ -102,9 +102,13 @@ const Dashboard = () => {
 
   const currentStatus = periodStatus[activeTab];
   const isPublished = currentStatus === 'PUBLISHED';
-  // BPH/ADV punya hak istimewa melihat hasil live meskipun belum dipublish (Masih ACTIVE)
-  const isPrivilegedView = (currentStatus === 'ACTIVE' || currentStatus === 'READ_ONLY') && (user?.role === 'bph' || user?.role === 'adv' || user?.role === 'admin');
+  
+  // Hak Istimewa melihat hasil live meskipun belum dipublish (Role 1: Admin, 2: BPH, 3: ADV)
+  const isPrivilegedView = (currentStatus === 'ACTIVE' || currentStatus === 'READ_ONLY') && (user?.role >= 1 && user?.role <= 3);
   const showWinners = isPublished || isPrivilegedView;
+
+  // Sapaan Presisi: Jika Admin, tampilkan Administrator. Jika bukan, tampilkan nama atau 'Staff'.
+  const greetingName = user?.role === 1 ? 'Administrator' : (user?.full_name || 'Staff');
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
@@ -115,7 +119,7 @@ const Dashboard = () => {
         <div className="mb-10">
           <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight">Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1 font-medium">
-            Welcome back, <span className="font-black text-tsa-green">{user?.full_name || 'User'}</span>
+            Welcome back, <span className="font-black text-tsa-green">{greetingName}</span>
           </p>
         </div>
 
@@ -161,7 +165,7 @@ const Dashboard = () => {
              <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-16 flex flex-col items-center justify-center text-center shadow-xl animate-fade-in-up border border-gray-800">
                 <Crown size={48} className="text-tsa-gold mb-4" />
                 <h2 className="text-2xl font-black text-white mb-2 tracking-widest uppercase">Hall of Fame 2026</h2>
-                <p className="text-sm text-gray-400 max-w-md">Kalkulasi akhir kepengurusan sedang diproses. Hasil Voting Berbobot akan segera dirilis.</p>
+                <p className="text-sm text-gray-400 max-w-md">End of term calculation is in progress. Ranked Choice Voting results will be released shortly.</p>
              </div>
           ) : loading ? (
              <div className="flex justify-center items-center py-20">
@@ -176,7 +180,7 @@ const Dashboard = () => {
                     <Trophy size={20} className="text-tsa-gold" /> 
                     {activeTab} Quarterly Awards
                   </h2>
-                  <p className="text-xs text-gray-500 mt-1 font-medium">Berdasarkan kalkulasi otomatis metrik kinerja & absensi.</p>
+                  <p className="text-xs text-gray-500 mt-1 font-medium">Based on automated calculation of performance metrics and attendance.</p>
                 </div>
                 {/* Status Badge */}
                 <div className="flex flex-col items-end">
@@ -193,7 +197,7 @@ const Dashboard = () => {
                 <div className="md:col-span-2 lg:col-span-3">
                   <AwardCard 
                     title="The Ultimate MVP" 
-                    description="Performa paling seimbang di 5 aspek kualitatif dan tingkat kehadiran riil di lapangan."
+                    description="The most balanced performance across 5 qualitative aspects and real-field attendance."
                     icon={Crown} 
                     bgClass="bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] border-blue-100"
                     iconColor="text-blue-500"
@@ -204,8 +208,19 @@ const Dashboard = () => {
                 </div>
 
                 <AwardCard 
+                  title="Best Department" 
+                  description="The department with the highest average MVP score per capita."
+                  icon={Users} 
+                  bgClass="bg-white" 
+                  iconColor="text-tsa-gold"
+                  isPublished={showWinners} 
+                  winnerName={winners?.bestDept ? winners.bestDept.dept : "No Data"} 
+                  winnerDept={winners?.bestDept ? `Average Score: ${winners.bestDept.score.toFixed(1)}` : "-"} 
+                />
+
+                <AwardCard 
                   title="The Reliable One" 
-                  description="Ketaatan SOP (Discipline) dan konsistensi kehadiran (Attendance) tertinggi."
+                  description="The highest SOP compliance (Discipline) and attendance consistency."
                   icon={ShieldCheck} 
                   bgClass="bg-white"
                   iconColor="text-emerald-500"
@@ -216,7 +231,7 @@ const Dashboard = () => {
                 
                 <AwardCard 
                   title="The High Achiever" 
-                  description="Kualitas eksekusi (Agility) dan inisiatif gerak cepat (Active) paling unggul."
+                  description="Superior execution quality (Agility) and rapid-response initiative (Active)."
                   icon={Target} 
                   bgClass="bg-white"
                   iconColor="text-red-500"
@@ -227,7 +242,7 @@ const Dashboard = () => {
                 
                 <AwardCard 
                   title="The Spark" 
-                  description="Paling komunikatif, ramah (Cheerful), dan memiliki tata krama luar biasa (Attitude)."
+                  description="Highly communicative and friendly (Cheerful) with outstanding manners (Attitude)."
                   icon={Zap} 
                   bgClass="bg-white"
                   iconColor="text-amber-500"

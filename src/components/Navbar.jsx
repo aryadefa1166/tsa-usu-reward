@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Home, BarChart2, CheckSquare, Users, Shield } from 'lucide-react';
+import { LogOut, Home, BarChart2, CheckSquare, Users, Shield, ClipboardCheck } from 'lucide-react';
 import tsaLogo from '../assets/tsa-logo.png';
 
 const Navbar = () => {
@@ -21,11 +21,15 @@ const Navbar = () => {
   const isAdmin = role === 1;
   const isReportViewer = role >= 2 && role <= 6; // Admin (1) tidak punya rapor
   const isAssessor = role >= 2 && role <= 5; // Staff (6) dan Admin (1) tidak menilai
+  
+  // LOGIKA AKSES SEKRETARIS MUTLAK
+  const isSecretary = role === 2 && user?.position === 'Secretary';
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
     { name: 'My Report', path: '/report', icon: BarChart2, show: isReportViewer },
     { name: 'Assessment', path: '/input-assessment', icon: CheckSquare, show: isAssessor },
+    { name: 'Attendance', path: '/input-attendance', icon: ClipboardCheck, show: isSecretary },
     { name: 'Our Team', path: '/our-team', icon: Users, show: true },
     { name: 'Admin', path: '/manage-users', icon: Shield, show: isAdmin },
   ];
@@ -92,7 +96,6 @@ const Navbar = () => {
             {/* Bagian Kanan: Profil Stacked Text & Logout */}
             <div className="flex items-center gap-6">
               <div className="flex flex-col items-end">
-                {/* REVISI: Menggunakan getRoleText agar nama sesuai dengan angka */}
                 <span className="text-sm font-black text-tsa-dark uppercase">
                     {getRoleText(role)}
                 </span>
@@ -119,7 +122,7 @@ const Navbar = () => {
       {/* 2. BOTTOM NAVIGATION BAR (HANYA MUNCUL DI HP) */}
       {/* ========================================= */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-50 pb-safe">
-        <div className="flex justify-around items-center h-16 px-2">
+        <div className="flex justify-around items-center h-16 px-2 overflow-x-auto hide-scrollbar">
           {navLinks.filter(link => link.show).map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path;
@@ -127,7 +130,7 @@ const Navbar = () => {
               <button
                 key={link.name}
                 onClick={() => navigate(link.path)}
-                className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-all ${
+                className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-full gap-1 transition-all ${
                   isActive ? 'text-tsa-green' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >

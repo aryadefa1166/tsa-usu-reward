@@ -26,10 +26,12 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto p-6 mt-6">
         <div className="mb-10">
           <h1 className="text-3xl font-black text-tsa-dark tracking-tight">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Welcome back, <span className="font-bold text-tsa-green">{user?.full_name || user?.email || 'Pengurus'}</span></p>
+          {/* Bahasa Inggris dan fallback ke 'User' jika full_name di DB kosong */}
+          <p className="text-gray-500 mt-1">Welcome back, <span className="font-bold text-tsa-green">{user?.full_name || 'User'}</span></p>
         </div>
 
-        {(user?.role === 'admin' || user?.role === 'bph' || user?.role === 'adv') && (
+        {/* Hak Akses EKSLUSIF hanya untuk role 'admin' */}
+        {user?.role === 'admin' && (
           <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm mb-8">
             <h2 className="text-lg font-bold text-tsa-dark mb-4 flex items-center gap-2"><Users size={20} className="text-tsa-green" /> Admin Control Center</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

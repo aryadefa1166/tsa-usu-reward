@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogOut } from 'lucide-react';
 
+import tsaLogo from '../assets/tsa-logo.png'; 
+
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -18,7 +20,8 @@ const Navbar = () => {
           
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/dashboard')}>
             <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center border border-green-100 overflow-hidden">
-                <img src="/tsa-logo.png" alt="TSA Logo" className="w-full h-full object-contain" />
+                {/* PANGGIL VARIABEL GAMBAR YANG SUDAH DI-IMPORT */}
+                <img src={tsaLogo} alt="TSA Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-black text-tsa-dark tracking-tight leading-none">

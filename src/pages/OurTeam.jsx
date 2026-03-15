@@ -7,11 +7,11 @@ import { Loader2, Building2, Crown, ShieldCheck } from 'lucide-react';
 // TEMA WARNA DEPARTEMEN MUTLAK
 // ==========================================
 const THEMES = {
-  BPH: { border: 'border-pink-200', bg: 'bg-pink-50', text: 'text-pink-600', shadow: 'shadow-pink-100/50', gradient: 'from-pink-400 to-pink-600', line: 'bg-pink-200' },
-  ADV: { border: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-700', shadow: 'shadow-amber-100/50', gradient: 'from-amber-600 to-amber-800', line: 'bg-amber-200' },
-  ERBD: { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-600', shadow: 'shadow-emerald-100/50', gradient: 'from-emerald-400 to-emerald-600', line: 'bg-emerald-200' },
-  MD: { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-600', shadow: 'shadow-purple-100/50', gradient: 'from-purple-400 to-purple-600', line: 'bg-purple-200' },
-  STD: { border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-600', shadow: 'shadow-blue-100/50', gradient: 'from-blue-400 to-blue-600', line: 'bg-blue-200' },
+  BPH: { border: 'border-pink-200', bg: 'bg-pink-50', text: 'text-pink-600', shadow: 'shadow-pink-100/50', gradient: 'from-pink-400 to-pink-600', line: 'bg-pink-300' },
+  ADV: { border: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-700', shadow: 'shadow-amber-100/50', gradient: 'from-amber-600 to-amber-800', line: 'bg-amber-300' },
+  ERBD: { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-600', shadow: 'shadow-emerald-100/50', gradient: 'from-emerald-400 to-emerald-600', line: 'bg-emerald-300' },
+  MD: { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-600', shadow: 'shadow-purple-100/50', gradient: 'from-purple-400 to-purple-600', line: 'bg-purple-300' },
+  STD: { border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-600', shadow: 'shadow-blue-100/50', gradient: 'from-blue-400 to-blue-600', line: 'bg-blue-300' },
 };
 
 // ==========================================
@@ -24,7 +24,6 @@ const MemberCard = ({ member, deptCode }) => {
 
   return (
     <div className={`bg-white rounded-2xl border ${theme.border} ${theme.shadow} p-5 flex flex-col items-center text-center hover:shadow-md transition-all duration-300 relative overflow-hidden w-full max-w-[200px] mx-auto z-10`}>
-      {/* Aksesoris Gradien EB */}
       {isEB && <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${theme.gradient}`}></div>}
 
       <div className={`w-20 h-20 rounded-full border-4 ${theme.bg} overflow-hidden mb-3 relative shadow-inner flex-shrink-0 bg-white`}>
@@ -58,6 +57,7 @@ const MemberCard = ({ member, deptCode }) => {
 // ==========================================
 // KONEKTOR GARIS (UI HELPERS)
 // ==========================================
+// Garis Vertikal
 const VLine = ({ height = 'h-8', color = 'bg-gray-200' }) => <div className={`w-px ${height} ${color} mx-auto`}></div>;
 
 const OurTeam = () => {
@@ -99,7 +99,7 @@ const OurTeam = () => {
     staff: users.filter(u => u.dept === 'ERBD' && u.division === div && u.position !== 'Team Leader')
   }));
 
-  // 4. MD & STD (Fungsi Helper karena strukturnya sama)
+  // 4. MD & STD
   const getDivisionalStructure = (deptName, divisions) => {
     return {
       kadep: users.find(u => u.dept === deptName && u.position === 'Head of Department'),
@@ -139,20 +139,20 @@ const OurTeam = () => {
               
               <div className="flex flex-col items-center">
                 <MemberCard member={president} deptCode="BPH" />
-                <VLine color={THEMES.BPH.line} />
+                <VLine height="h-6" color={THEMES.BPH.line} />
                 <MemberCard member={vp} deptCode="BPH" />
                 <VLine height="h-6" color={THEMES.BPH.line} />
                 
-                {/* Cabang Horizontal untuk Sec & Treas */}
-                <div className={`w-64 h-px ${THEMES.BPH.line}`}></div>
-                <div className="flex justify-between w-64">
+                {/* Percabangan Rapi Sec & Treas */}
+                <div className={`w-[260px] h-px ${THEMES.BPH.line}`}></div>
+                <div className="flex justify-between w-[260px]">
                   <VLine height="h-6" color={THEMES.BPH.line} />
                   <VLine height="h-6" color={THEMES.BPH.line} />
                 </div>
                 
-                <div className="flex justify-center gap-10 w-full max-w-md">
-                  <div className="w-1/2"><MemberCard member={secretary} deptCode="BPH" /></div>
-                  <div className="w-1/2"><MemberCard member={treasurer} deptCode="BPH" /></div>
+                <div className="flex justify-center gap-10 w-full max-w-lg">
+                  <div className="w-[200px]"><MemberCard member={secretary} deptCode="BPH" /></div>
+                  <div className="w-[200px]"><MemberCard member={treasurer} deptCode="BPH" /></div>
                 </div>
               </div>
             </section>
@@ -179,7 +179,16 @@ const OurTeam = () => {
                 <div className="flex flex-col items-center w-full lg:w-auto">
                   <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
                   <MemberCard member={advMonevHead} deptCode="ADV" />
-                  <VLine color={THEMES.ADV.line} />
+                  <VLine height="h-6" color={THEMES.ADV.line} />
+                  
+                  {/* Percabangan ke 3 Staff Monev */}
+                  <div className={`w-[80%] max-w-[400px] h-px ${THEMES.ADV.line}`}></div>
+                  <div className="flex justify-between w-[80%] max-w-[400px] mb-2">
+                    <VLine height="h-6" color={THEMES.ADV.line} />
+                    <VLine height="h-6" color={THEMES.ADV.line} />
+                    <VLine height="h-6" color={THEMES.ADV.line} />
+                  </div>
+
                   <div className="flex flex-wrap justify-center gap-4">
                     {advMonevStaff.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
                   </div>
@@ -194,24 +203,27 @@ const OurTeam = () => {
               <div className="flex flex-col items-center mb-10">
                 <Building2 size={32} className={THEMES.ERBD.text} />
                 <h2 className={`text-xl font-black uppercase tracking-widest mt-2 ${THEMES.ERBD.text}`}>ERBD Department</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">External Relations & Business Dev</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">External Relations & Business Development</p>
               </div>
 
               <div className="flex flex-col items-center">
                 <MemberCard member={erbdKadep} deptCode="ERBD" />
-                <VLine color={THEMES.ERBD.line} />
+                <VLine height="h-6" color={THEMES.ERBD.line} />
                 <MemberCard member={erbdWakadep} deptCode="ERBD" />
-                <VLine height="h-8" color={THEMES.ERBD.line} />
+                <VLine height="h-6" color={THEMES.ERBD.line} />
                 
                 {/* Garis Horizontal ke 4 Divisi */}
-                <div className={`w-[80%] h-px ${THEMES.ERBD.line} hidden md:block`}></div>
+                <div className={`w-[75%] h-px ${THEMES.ERBD.line} hidden lg:block`}></div>
+                <div className="hidden lg:flex justify-between w-[75%]">
+                  <VLine height="h-6" color={THEMES.ERBD.line} />
+                  <VLine height="h-6" color={THEMES.ERBD.line} />
+                  <VLine height="h-6" color={THEMES.ERBD.line} />
+                  <VLine height="h-6" color={THEMES.ERBD.line} />
+                </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-2">
                   {erbdTeams.map(team => (
                     <div key={team.name} className="flex flex-col items-center">
-                      {/* Titik Sambung Atas (Mobile Hidden) */}
-                      <div className={`w-px h-6 ${THEMES.ERBD.line} hidden md:block -mt-6`}></div>
-                      
                       <MemberCard member={team.tl} deptCode="ERBD" />
                       {team.staff.length > 0 && <VLine height="h-6" color={THEMES.ERBD.line} />}
                       <div className="flex flex-col gap-4 w-full">
@@ -230,22 +242,27 @@ const OurTeam = () => {
               <div className="flex flex-col items-center mb-10">
                 <Building2 size={32} className={THEMES.MD.text} />
                 <h2 className={`text-xl font-black uppercase tracking-widest mt-2 ${THEMES.MD.text}`}>MD Department</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Media & Development</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Media & Education</p>
               </div>
 
               <div className="flex flex-col items-center">
                 <MemberCard member={mdStruct.kadep} deptCode="MD" />
-                <VLine height="h-8" color={THEMES.MD.line} />
+                <VLine height="h-6" color={THEMES.MD.line} />
                 
                 {/* Garis Horizontal ke 2 Divisi */}
                 <div className={`w-[50%] h-px ${THEMES.MD.line} hidden md:block`}></div>
+                <div className="hidden md:flex justify-between w-[50%]">
+                  <VLine height="h-6" color={THEMES.MD.line} />
+                  <VLine height="h-6" color={THEMES.MD.line} />
+                </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 max-w-4xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-2 max-w-4xl">
                   {mdStruct.divs.map(div => (
                     <div key={div.name} className="flex flex-col items-center">
-                      <div className={`w-px h-6 ${THEMES.MD.line} hidden md:block -mt-6`}></div>
                       <MemberCard member={div.kadiv} deptCode="MD" />
                       {div.staff.length > 0 && <VLine height="h-6" color={THEMES.MD.line} />}
+                      
+                      {/* Grid Staff Berdampingan (Max 2 Kolom per Divisi) */}
                       <div className="grid grid-cols-2 gap-4 w-full">
                         {div.staff.map(member => <MemberCard key={member.id} member={member} deptCode="MD" />)}
                       </div>
@@ -262,19 +279,22 @@ const OurTeam = () => {
               <div className="flex flex-col items-center mb-10">
                 <Building2 size={32} className={THEMES.STD.text} />
                 <h2 className={`text-xl font-black uppercase tracking-widest mt-2 ${THEMES.STD.text}`}>STD Department</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student Talent Development</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Staff & Talent Development</p>
               </div>
 
               <div className="flex flex-col items-center">
                 <MemberCard member={stdStruct.kadep} deptCode="STD" />
-                <VLine height="h-8" color={THEMES.STD.line} />
+                <VLine height="h-6" color={THEMES.STD.line} />
                 
                 <div className={`w-[50%] h-px ${THEMES.STD.line} hidden md:block`}></div>
+                <div className="hidden md:flex justify-between w-[50%]">
+                  <VLine height="h-6" color={THEMES.STD.line} />
+                  <VLine height="h-6" color={THEMES.STD.line} />
+                </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 max-w-4xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-2 max-w-4xl">
                   {stdStruct.divs.map(div => (
                     <div key={div.name} className="flex flex-col items-center">
-                      <div className={`w-px h-6 ${THEMES.STD.line} hidden md:block -mt-6`}></div>
                       <MemberCard member={div.kadiv} deptCode="STD" />
                       {div.staff.length > 0 && <VLine height="h-6" color={THEMES.STD.line} />}
                       <div className="grid grid-cols-2 gap-4 w-full">

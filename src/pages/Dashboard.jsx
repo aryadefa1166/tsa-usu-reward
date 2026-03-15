@@ -224,6 +224,7 @@ const Dashboard = () => {
                   </h2>
                   <p className="text-xs text-gray-500 mt-1 font-medium">Based on automated calculation of performance metrics and attendance.</p>
                 </div>
+                {/* Status Badge */}
                 <div className="flex flex-col items-end">
                   <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm border ${isPublished ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-green-50 text-tsa-green border-green-100'}`}>
                     {isPublished ? '🏆 Results Published' : '🟢 Live Evaluation'}
@@ -241,7 +242,7 @@ const Dashboard = () => {
                     title="The Ultimate MVP" 
                     description="The most balanced performance across 5 qualitative aspects and real-field attendance."
                     icon={Crown} 
-                    bgClass="bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] border-blue-100"
+                    bgClass="bg-white" 
                     iconColor="text-blue-500"
                     isPublished={showWinners} 
                     winner={winners?.mvp}

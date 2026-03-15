@@ -14,14 +14,14 @@ const ShieldIcon = () => (
 );
 
 const ManageUsers = () => {
-  const [activeTab, setActiveTab] = useState('assets'); // Di-set default ke assets untuk testing
+  const [activeTab, setActiveTab] = useState('users'); 
   
   // State User Database
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // State Form Input
+  // State Form Input (Ditambah is_active)
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -29,7 +29,7 @@ const ManageUsers = () => {
   const [formData, setFormData] = useState({
     id: null, username: '', password: '', full_name: '', 
     role: 6, dept: '-', division: '-', cohort: '-', 
-    position: 'Staff', photo_url: ''
+    position: 'Staff', photo_url: '', is_active: true
   });
 
   // State Pengaturan Periode
@@ -76,7 +76,7 @@ const ManageUsers = () => {
   };
 
   // ==========================================
-  // ASSET UPLOAD LOGIC (NEW)
+  // ASSET UPLOAD LOGIC
   // ==========================================
   const handleAssetUpload = async (e, entityName) => {
     try {
@@ -97,7 +97,7 @@ const ManageUsers = () => {
       if (dbError) throw dbError;
 
       alert(`Foto untuk ${entityName} berhasil diperbarui!`);
-      fetchAssets(); // Refresh list asset
+      fetchAssets(); 
     } catch (error) {
       alert('Error uploading asset: ' + error.message);
     } finally {
@@ -185,8 +185,12 @@ const ManageUsers = () => {
     e.preventDefault();
     if (!formData.username) return alert('Username is required!');
 
-    // Konversi role menjadi Integer agar sinkron dengan database
-    const payload = { ...formData, role: parseInt(formData.role) };
+    // Konversi role menjadi Integer & is_active menjadi boolean murni
+    const payload = { 
+      ...formData, 
+      role: parseInt(formData.role),
+      is_active: formData.is_active.toString() === 'true'
+    };
 
     let error;
 
@@ -216,7 +220,7 @@ const ManageUsers = () => {
       setFormData({
           id: user.id, username: user.username, password: '', full_name: user.full_name,
           role: user.role, dept: user.dept, division: user.division, cohort: user.cohort,
-          position: user.position, photo_url: user.photo_url || ''
+          position: user.position, photo_url: user.photo_url || '', is_active: user.is_active !== false
       });
       setIsEditing(true);
       setShowForm(true);
@@ -232,7 +236,7 @@ const ManageUsers = () => {
   };
 
   const resetForm = () => {
-      setFormData({ id: null, username: '', password: '', full_name: '', role: 6, dept: '-', division: '-', cohort: '-', position: 'Staff', photo_url: '' });
+      setFormData({ id: null, username: '', password: '', full_name: '', role: 6, dept: '-', division: '-', cohort: '-', position: 'Staff', photo_url: '', is_active: true });
       setShowForm(false);
       setIsEditing(false);
   };
@@ -253,10 +257,6 @@ const ManageUsers = () => {
       if (dept === 'STD') return 'bg-blue-100 text-blue-700 border-blue-200'; 
       if (dept === 'ERBD') return 'bg-emerald-100 text-emerald-700 border-emerald-200'; 
       return 'bg-gray-100 text-gray-600 border-gray-200';
-  };
-
-  const getRoleText = (r) => {
-    switch(r) { case 1: return 'ADMIN'; case 2: return 'BPH'; case 3: return 'ADVISORY'; case 4: return 'KADEP'; case 5: return 'KADIV'; case 6: return 'STAFF'; default: return 'USER'; }
   };
 
   const periodsConfig = [
@@ -338,17 +338,25 @@ const ManageUsers = () => {
                     <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} />
                   </div>
                   
+                  {/* UPDATE: Dropdown Role & Dropdown Status Bersebelahan */}
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-tsa-green uppercase">Role</label>
                     <select className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                        <option value={6}>Staff / Team Leader</option>
-                        <option value={5}>Kadiv</option>
-                        <option value={4}>Kadep / Wakadep</option>
-                        <option value={3}>Advisory</option>
-                        <option value={2}>BPH</option>
+                        <option value={5}>Staff / Team Leader</option>
+                        <option value={4}>Kadiv</option>
+                        <option value={3}>Kadep / Wakadep</option>
+                        <option value={2}>BPH / ADV</option>
                         <option value={1}>Admin</option>
                     </select>
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-tsa-green uppercase">Status</label>
+                    <select className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none font-bold" value={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.value})}>
+                        <option value="true" className="text-tsa-green">Active (Menjabat)</option>
+                        <option value="false" className="text-red-500">Inactive (Demisioner/Resign)</option>
+                    </select>
+                  </div>
+
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-tsa-green uppercase">Department</label>
                     <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.dept} onChange={e => setFormData({...formData, dept: e.target.value})} />
@@ -366,7 +374,7 @@ const ManageUsers = () => {
                     <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.cohort} onChange={e => setFormData({...formData, cohort: e.target.value})} />
                   </div>
                   
-                  <div className="space-y-1 md:col-span-3">
+                  <div className="space-y-1 md:col-span-2">
                     <label className="text-xs font-bold text-tsa-green uppercase">Upload Photo</label>
                     <div className="flex gap-2 items-center">
                         <input type="file" accept="image/*" onChange={handleFileUpload} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-tsa-green/10 file:text-tsa-green hover:file:bg-tsa-green/20" />
@@ -401,7 +409,8 @@ const ManageUsers = () => {
                     <tr>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase w-12">#</th>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase">Profile</th>
-                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Position & Role</th>
+                        {/* UPDATE: Header diganti menjadi Position murni */}
+                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Position</th>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase">Dept / Div</th>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase">Cohort</th>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase text-right">Actions</th>
@@ -418,9 +427,9 @@ const ManageUsers = () => {
                             <td className="p-5 text-gray-400 font-mono text-xs">{index + 1}</td>
                             <td className="p-5">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gray-100 flex-shrink-0 overflow-hidden border border-gray-200">
+                                    <div className={`w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border ${u.is_active === false ? 'bg-gray-100 border-gray-200 opacity-50' : 'bg-gray-100 border-gray-200'}`}>
                                         {u.photo_url ? (
-                                            <img src={u.photo_url} alt={u.username} className="w-full h-full object-cover" />
+                                            <img src={u.photo_url} alt={u.username} className={`w-full h-full object-cover ${u.is_active === false ? 'grayscale' : ''}`} />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xs">
                                                 {u.full_name ? u.full_name.charAt(0) : '?'}
@@ -428,18 +437,21 @@ const ManageUsers = () => {
                                         )}
                                     </div>
                                     <div>
-                                        <div className="font-bold text-tsa-dark">{u.full_name || u.username}</div>
+                                        <div className={`font-bold ${u.is_active === false ? 'text-gray-400' : 'text-tsa-dark'}`}>{u.full_name || u.username}</div>
                                         <div className="text-xs text-gray-400">@{u.username}</div>
                                     </div>
                                 </div>
                             </td>
                             <td className="p-5">
-                                <div className={`text-xs font-bold uppercase ${['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Department', 'Head of Division', 'Steering Committee'].includes(u.position) ? 'text-tsa-gold' : 'text-tsa-green'}`}>
+                                {/* UPDATE: Logika pewarnaan emas dan penambahan badge Status Aktif */}
+                                <div className={`text-xs font-bold uppercase ${['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Dept', 'Vice Head of Department', 'Head of Division', 'Steering Committee'].includes(u.position) ? 'text-tsa-gold' : 'text-tsa-green'}`}>
                                     {u.position}
                                 </div>
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-1 inline-block bg-gray-100 text-gray-500 border border-gray-200">
-                                    {getRoleText(u.role)}
-                                </span>
+                                <div className="mt-1">
+                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase inline-block border ${u.is_active !== false ? 'bg-green-50 text-tsa-green border-green-100' : 'bg-red-50 text-red-500 border-red-100'}`}>
+                                      {u.is_active !== false ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
                             </td>
                             <td className="p-5 text-gray-600">
                                 <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase border ${getDeptColor(u.dept)}`}>
@@ -526,7 +538,7 @@ const ManageUsers = () => {
         )}
 
         {/* ========================================== */}
-        {/* TAB 3: ORGANIZATION ASSETS (NEW) */}
+        {/* TAB 3: ORGANIZATION ASSETS */}
         {/* ========================================== */}
         {activeTab === 'assets' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">

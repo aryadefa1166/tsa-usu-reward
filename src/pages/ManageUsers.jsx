@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { supabase } from '../supabaseClient';
+import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
-  Trash2, Plus, Search, UserPlus, Pencil, X, Save, Upload, Loader2, 
-  Users, CalendarDays, Activity, Eye, CheckCircle2, AlertCircle, ShieldCheck 
+  Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
+  Users, CalendarDays, Activity, Eye, CheckCircle2, AlertCircle, ShieldCheck, Download 
 } from 'lucide-react';
 
 // --- KOMPONEN BANTUAN UNTUK TRACKER TAB ---
@@ -42,9 +43,9 @@ const ShieldIcon = () => (
 // --- KOMPONEN UTAMA ---
 const ManageUsers = () => {
   // State Navigasi Tab
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('periods'); // Di-set default ke periods untuk testing
 
-  // State Bawaan Databasemu
+  // State Bawaan Databasemu (CRUD User)
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,16 +58,27 @@ const ManageUsers = () => {
   const [formData, setFormData] = useState({
     id: null, username: '', password: '', full_name: '', 
     role: 'member', dept: '-', division: '-', cohort: '-', 
-    position: 'Staff', photo_url: '' // Menggunakan standar "Staff"
+    position: 'Staff', photo_url: ''
   });
+
+  // State Pengaturan Admin (Backend Tahap 3)
+  const [appSettings, setAppSettings] = useState({ 
+    q1_status: 'LOCKED', q2_status: 'LOCKED', q3_status: 'LOCKED', q4_status: 'LOCKED', voting_status: 'LOCKED' 
+  });
+  const [savingPeriod, setSavingPeriod] = useState(false);
 
   const adminTabs = [
     { id: 'users', label: 'User Management', icon: Users },
-    { id: 'periods', label: 'Period Settings', icon: CalendarDays },
+    { id: 'periods', label: 'Period Settings & Export', icon: CalendarDays },
     { id: 'tracker', label: 'Evaluation Tracker', icon: Activity },
   ];
 
-  // --- LOGIKA DATABASE ASLI MILIKMU ---
+  useEffect(() => {
+    fetchUsers();
+    fetchSettings();
+  }, []);
+
+  // --- LOGIKA FETCHING ---
   const fetchUsers = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -79,10 +91,65 @@ const ManageUsers = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const fetchSettings = async () => {
+    const { data, error } = await supabase.from('app_settings').select('*').eq('id', 1).single();
+    if (!error && data) setAppSettings(data);
+  };
 
+  // --- LOGIKA UPDATE STATUS PERIODE (SYNC DATABASE) ---
+  const handleUpdatePeriod = async (column, value) => {
+    setSavingPeriod(true);
+    try {
+      const { error } = await supabase.from('app_settings').update({ [column]: value }).eq('id', 1);
+      if (error) throw error;
+      setAppSettings(prev => ({ ...prev, [column]: value }));
+    } catch (error) {
+      alert("Gagal memperbarui status: " + error.message);
+    } finally {
+      setSavingPeriod(false);
+    }
+  };
+
+  // --- LOGIKA EXPORT CSV (OTAK KALKULATOR) ---
+  const handleExportCSV = async (quarter) => {
+    try {
+      const result = await calculateQuarterlyResults(quarter);
+      if (!result || !result.allScores || result.allScores.length === 0) {
+        return alert("Data kalkulasi masih kosong atau gagal ditarik.");
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Nama Lengkap,Departemen,Posisi,Kehadiran (%),Skor Kualitatif (Rata-rata),The Reliable One,The High Achiever,The Spark,The Ultimate MVP\n";
+      
+      result.allScores.forEach(u => {
+        const row = [
+          `"${u.full_name || '-'}"`, 
+          `"${u.dept || '-'}"`, 
+          `"${u.position || '-'}"`,
+          u.attendanceScore?.toFixed(1) || 0,
+          u.qualitativeScore?.toFixed(1) || 0,
+          u.theReliableOne?.toFixed(1) || 0,
+          u.theHighAchiever?.toFixed(1) || 0,
+          u.theSpark?.toFixed(1) || 0,
+          u.theUltimateMVP?.toFixed(1) || 0
+        ].join(",");
+        csvContent += row + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `TSA_REWARD_${quarter}_Report.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+    } catch (error) {
+      alert("Gagal melakukan export: " + error.message);
+    }
+  };
+
+  // --- LOGIKA CRUD USER (ASLI MILIKMU) ---
   const handleFileUpload = async (e) => {
     try {
       setUploading(true);
@@ -190,6 +257,14 @@ const ManageUsers = () => {
       return 'bg-gray-100 text-gray-600 border-gray-200';
   };
 
+  // Konfigurasi Array untuk Rendering Tab Periods
+  const periodsConfig = [
+    { id: 'q1_status', label: 'Quarter 1', value: appSettings.q1_status, q: 'Q1' },
+    { id: 'q2_status', label: 'Quarter 2', value: appSettings.q2_status, q: 'Q2' },
+    { id: 'q3_status', label: 'Quarter 3', value: appSettings.q3_status, q: 'Q3' },
+    { id: 'q4_status', label: 'Quarter 4', value: appSettings.q4_status, q: 'Q4' },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
       <Navbar />
@@ -223,7 +298,7 @@ const ManageUsers = () => {
         </div>
 
         {/* ========================================== */}
-        {/* TAB 1: USER MANAGEMENT (ASLI MILIKMU) */}
+        {/* TAB 1: USER MANAGEMENT (ASLI MILIKMU 100%) */}
         {/* ========================================== */}
         {activeTab === 'users' && (
           <div className="animate-fade-in-up">
@@ -242,7 +317,7 @@ const ManageUsers = () => {
               </button>
             </div>
 
-            {/* FORM INPUT ASLI MILIKMU */}
+            {/* FORM INPUT */}
             {showForm && (
               <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl mb-8">
                 <h3 className="font-bold text-xl text-tsa-dark mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
@@ -251,7 +326,6 @@ const ManageUsers = () => {
                 </h3>
                 
                 <form onSubmit={handleSaveUser} className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  {/* ... (SELURUH INPUT FORM ASLI KAMU ADA DI SINI) ... */}
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-tsa-green uppercase">Username</label>
                     <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} required />
@@ -311,7 +385,7 @@ const ManageUsers = () => {
               </div>
             )}
 
-            {/* SEARCH BAR & TABEL ASLI MILIKMU */}
+            {/* SEARCH BAR & TABEL */}
             <div className="relative mb-6">
                 <Search size={20} className="absolute left-4 top-3.5 text-gray-400" />
                 <input 
@@ -396,17 +470,72 @@ const ManageUsers = () => {
         )}
 
         {/* ========================================== */}
-        {/* TAB 2 & 3: PERIODS & TRACKER (MOCKUP) */}
+        {/* TAB 2: PERIOD SETTINGS & EXPORT CSV */}
         {/* ========================================== */}
         {activeTab === 'periods' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
-            <h2 className="text-lg font-black text-tsa-dark mb-6">Period Lifecycle Control</h2>
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-sm">
-                Fitur ini akan diaktifkan secara backend pada iterasi selanjutnya. Saat ini difokuskan pada penggabungan UI Database terlebih dahulu.
+            <h2 className="text-lg font-black text-tsa-dark mb-6">Period Lifecycle Control & Export</h2>
+            
+            <div className="space-y-4">
+              {periodsConfig.map(p => (
+                <div key={p.id} className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border border-gray-200 bg-white hover:border-tsa-green transition-all gap-4">
+                  <div>
+                    <h3 className="font-bold text-tsa-dark text-base">{p.label}</h3>
+                    <p className="text-xs text-gray-500 mt-1">Current Status: <span className={`font-bold uppercase ${p.value === 'ACTIVE' ? 'text-tsa-green' : p.value === 'PUBLISHED' ? 'text-blue-500' : 'text-gray-500'}`}>{p.value}</span></p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select 
+                      value={p.value}
+                      onChange={(e) => handleUpdatePeriod(p.id, e.target.value)}
+                      disabled={savingPeriod}
+                      className="bg-white border border-gray-200 text-sm font-bold text-gray-700 rounded-xl px-4 py-2 focus:outline-none focus:border-tsa-green shadow-sm disabled:opacity-50"
+                    >
+                      <option value="LOCKED">🔒 Locked</option>
+                      <option value="ACTIVE">🟢 Active</option>
+                      <option value="READ_ONLY">👀 Read-Only</option>
+                      <option value="PUBLISHED">🏆 Published</option>
+                    </select>
+                    
+                    <button 
+                      onClick={() => handleExportCSV(p.q)}
+                      className="bg-gray-100 text-tsa-dark px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-200 transition-all flex items-center gap-2 shadow-sm border border-gray-200"
+                    >
+                      <Download size={14} /> CSV
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border border-gray-800 bg-gray-900 transition-all gap-4 mt-8 shadow-md">
+                  <div>
+                    <h3 className="font-bold text-tsa-gold text-base">End of Term (Voting)</h3>
+                    <p className="text-xs text-gray-400 mt-1">Status: <span className="font-bold text-white uppercase">{appSettings.voting_status}</span></p>
+                  </div>
+                  <select 
+                      value={appSettings.voting_status}
+                      onChange={(e) => handleUpdatePeriod('voting_status', e.target.value)}
+                      disabled={savingPeriod}
+                      className="bg-gray-800 border border-gray-700 text-sm font-bold text-white rounded-xl px-4 py-2 focus:outline-none focus:border-tsa-gold shadow-sm"
+                  >
+                      <option value="LOCKED">🔒 Locked</option>
+                      <option value="ACTIVE">🟢 Active</option>
+                      <option value="PUBLISHED">🏆 Published</option>
+                  </select>
+              </div>
+            </div>
+            
+            <div className="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-start gap-3">
+              <Eye className="text-blue-500 shrink-0 mt-0.5" size={18} />
+              <p className="text-xs text-blue-800 leading-relaxed font-medium">
+                <strong>Logika Sync:</strong> Apabila Anda merubah status menjadi <span className="bg-white px-1.5 py-0.5 rounded border border-blue-200">🏆 Published</span>, sistem akan otomatis melakukan kalkulasi akhir dan membuka gembok nama pemenang di layar Dashboard seluruh pengurus.
+              </p>
             </div>
           </div>
         )}
 
+        {/* ========================================== */}
+        {/* TAB 3: EVALUATION TRACKER */}
+        {/* ========================================== */}
         {activeTab === 'tracker' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
              <h2 className="text-lg font-black text-tsa-dark mb-6">Live Evaluation Progress</h2>

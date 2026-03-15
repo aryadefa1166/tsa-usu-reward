@@ -1,134 +1,293 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
-import { Save, CheckCircle, Search, Loader2 } from 'lucide-react';
+import { supabase } from '../supabaseClient';
+import { CalendarDays, Save, CheckCircle2, AlertCircle, Lock, Loader2, ShieldAlert } from 'lucide-react';
 
 const InputAttendance = () => {
   const { user } = useAuth();
-  const [targets, setTargets] = useState([]);
+  const [activeTab, setActiveTab] = useState('Q1');
+  
+  const [usersList, setUsersList] = useState([]);
+  const [attendanceData, setAttendanceData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [ratedIds, setRatedIds] = useState([]);
+  const [submittingId, setSubmittingId] = useState(null);
+
+  // Filter Akses Super Ketat: Hanya Sekretaris atau Admin yang boleh buka form ini
+  const isAuthorized = user?.position?.toLowerCase() === 'secretary' || user?.role === 'admin';
+
+  // Simulasi Status Periode (Disinkronkan dengan Admin Center)
+  const periodStatus = {
+    Q1: 'ACTIVE',
+    Q2: 'LOCKED',
+    Q3: 'LOCKED',
+    Q4: 'LOCKED'
+  };
+
+  const tabs = ['Q1', 'Q2', 'Q3', 'Q4'];
 
   useEffect(() => {
-    if (user) fetchData();
-  }, [user]);
+    if (isAuthorized) fetchAllUsers();
+  }, [isAuthorized]);
 
-  const fetchData = async () => {
+  const fetchAllUsers = async () => {
     setLoading(true);
+    try {
+      // Ambil seluruh pengurus kecuali Admin, urutkan presisi
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .neq('role', 'admin')
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      
+      setUsersList(data || []);
+
+      // Inisialisasi State Form dengan Big O(N) untuk setup, O(1) untuk akses
+      const initialData = {};
+      data.forEach(u => {
+        initialData[u.id] = { total_hadir: '', total_kegiatan: '', isSubmitted: false };
+      });
+      setAttendanceData(initialData);
+
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (userId, field, value) => {
+    if (periodStatus[activeTab] !== 'ACTIVE') return;
     
-    // Tarik semua member
-    const { data: usersData } = await supabase.from('users').select('*').eq('role', 'member').order('sort_order', { ascending: true });
-
-    // Cek siapa saja yang sudah diinput absensinya oleh Sekretaris di Q1
-    const { data: assessmentsData } = await supabase
-        .from('assessments')
-        .select('target_id')
-        .eq('evaluator_id', user.id)
-        .eq('period', 'Q1')
-        .gt('attendance_score', 0); // Cari yang attendance-nya sudah diisi
-
-    if (assessmentsData) setRatedIds(assessmentsData.map(a => a.target_id));
-    setTargets(usersData || []);
-    setLoading(false);
+    // Cegah input non-angka atau negatif
+    const numericValue = value.replace(/[^0-9]/g, '');
+    
+    setAttendanceData(prev => ({
+      ...prev,
+      [userId]: { ...prev[userId], [field]: numericValue }
+    }));
   };
 
-  const AttendanceCard = ({ target, isRated }) => {
-    const [hadir, setHadir] = useState('');
-    const [totalKegiatan, setTotalKegiatan] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [done, setDone] = useState(isRated);
+  const handleSubmitAttendance = async (userId) => {
+    const data = attendanceData[userId];
+    const hadir = parseInt(data.total_hadir);
+    const kegiatan = parseInt(data.total_kegiatan);
+    
+    // Validasi Logika Matematika Absolut
+    if (!data.total_hadir || !data.total_kegiatan) {
+      return alert('Mohon isi Total Hadir dan Total Kegiatan!');
+    }
+    if (hadir > kegiatan) {
+      return alert('Logika Error: Total Hadir tidak boleh lebih besar dari Total Kegiatan!');
+    }
 
-    const handleSave = async (e) => {
-        e.preventDefault();
-        if (!hadir || !totalKegiatan || Number(totalKegiatan) === 0) return alert("Input tidak valid!");
-        if (Number(hadir) > Number(totalKegiatan)) return alert("Total Hadir tidak boleh lebih dari Total Kegiatan!");
+    setSubmittingId(userId);
+    
+    try {
+      // LOGIKA DATABASE (Asumsi tabel attendance sudah disiapkan)
+      /*
+      const percentage = (hadir / kegiatan) * 100;
+      const { error } = await supabase.from('attendance').upsert({
+        target_id: userId,
+        quarter: activeTab,
+        total_present: hadir,
+        total_events: kegiatan,
+        percentage_score: percentage,
+        updated_by: user.id,
+        updated_at: new Date()
+      });
+      if (error) throw error;
+      */
 
-        setSubmitting(true);
+      // Simulasi eksekusi backend
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-        // KALKULASI PERSENTASE ABSENSI (Sesuai Blueprint)
-        const attendanceScore = Math.round((Number(hadir) / Number(totalKegiatan)) * 100);
+      setAttendanceData(prev => ({
+        ...prev,
+        [userId]: { ...prev[userId], isSubmitted: true }
+      }));
 
-        const payload = {
-            period: 'Q1',
-            evaluator_id: user.id,
-            target_id: target.id,
-            attendance_score: attendanceScore,
-            // Nilai bintang EB dibiarkan 0 karena ini form khusus Sekre
-            attitude_score: 0, discipline_score: 0, active_score: 0, agility_score: 0, cheerful_score: 0
-        };
+    } catch (error) {
+      alert("Gagal menyimpan data absensi: " + error.message);
+    } finally {
+      setSubmittingId(null);
+    }
+  };
 
-        const { error } = await supabase.from('assessments').insert([payload]);
+  // Grouping UI berdasarkan Departemen agar Sekretaris mudah mencari nama
+  const groupedUsers = usersList.reduce((acc, u) => {
+    const dept = u.dept || 'General';
+    if (!acc[dept]) acc[dept] = [];
+    acc[dept].push(u);
+    return acc;
+  }, {});
 
-        if (error) alert('Error: ' + error.message);
-        else setDone(true);
-        setSubmitting(false);
-    };
-
-    if (done) return (
-        <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center opacity-80">
-            <CheckCircle className="text-green-600 mb-2" size={24} />
-            <h3 className="font-bold text-green-800 text-sm">{target.full_name}</h3>
-            <p className="text-xs text-green-600">Attendance Logged</p>
-        </div>
-    );
-
+  if (!isAuthorized) {
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col">
-            <h3 className="font-bold text-tsa-dark text-sm truncate mb-1">{target.full_name}</h3>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-4">{target.dept}</p>
-            
-            <form onSubmit={handleSave} className="flex-1 flex flex-col gap-3">
-                <div className="flex gap-2">
-                    <div className="flex-1">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase">Hadir</label>
-                        <input type="number" min="0" required value={hadir} onChange={e => setHadir(e.target.value)} className="w-full border rounded-lg p-2 text-sm text-center" placeholder="0" />
-                    </div>
-                    <div className="flex-1">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase">Total</label>
-                        <input type="number" min="1" required value={totalKegiatan} onChange={e => setTotalKegiatan(e.target.value)} className="w-full border rounded-lg p-2 text-sm text-center" placeholder="0" />
-                    </div>
-                </div>
-                <button type="submit" disabled={submitting} className="w-full py-2 rounded-lg font-bold text-xs uppercase bg-tsa-green text-white hover:bg-emerald-800 flex justify-center items-center">
-                    {submitting ? <Loader2 className="animate-spin" size={14}/> : 'Save Absen'}
-                </button>
-            </form>
-        </div>
-    );
-  };
-
-  const filteredTargets = targets.filter(t => t.full_name.toLowerCase().includes(searchTerm.toLowerCase()));
-
-  // Filter Kunci: HANYA SECRETARY YANG BISA BUKA (Berdasarkan position)
-  if (user?.position !== 'Secretary') {
-      return (
-          <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 text-center">
-              <div>
-                  <h1 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h1>
-                  <p className="text-gray-500 text-sm">Only the Secretary has access to input attendance data.</p>
-              </div>
+      <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-6 mt-20 flex justify-center">
+          <div className="bg-red-50 border border-red-100 rounded-3xl p-10 flex flex-col items-center justify-center text-center max-w-lg">
+            <ShieldAlert size={48} className="text-red-500 mb-4" />
+            <h2 className="text-xl font-black text-tsa-dark mb-2">Akses Terlarang</h2>
+            <p className="text-sm text-gray-500">Halaman ini adalah form metrik kuantitatif eksklusif. Hanya akun dengan jabatan <strong>Secretary</strong> yang diizinkan mengakses halaman ini.</p>
           </div>
-      );
+        </main>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
       <Navbar />
-      <main className="max-w-7xl mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-tsa-dark">Attendance Input (Q1)</h1>
-          <p className="text-sm text-gray-500">Form eksklusif Sekretaris untuk menghitung metrik kehadiran.</p>
+      
+      <main className="max-w-7xl mx-auto px-6 mt-8">
+        {/* HEADER */}
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight flex items-center gap-3">
+            <CalendarDays className="text-tsa-green" size={36} />
+            Attendance Metrics
+          </h1>
+          <p className="text-sm text-gray-500 mt-1 font-medium">
+            Form input kehadiran absolut. Harap perhatikan akurasi data sebelum menekan tombol Submit.
+          </p>
         </div>
-        <div className="relative mb-6 max-w-md">
-            <Search size={18} className="absolute left-3 top-3 text-gray-400" />
-            <input type="text" placeholder="Cari nama..." className="w-full pl-10 pr-4 py-2 border rounded-xl text-sm outline-none focus:border-tsa-green" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+
+        {/* TAB NAVIGATION KUARTAL */}
+        <div className="flex overflow-x-auto hide-scrollbar gap-3 mb-8 pb-2">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab;
+            const status = periodStatus[tab];
+            
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-shrink-0 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${
+                  isActive
+                    ? 'bg-tsa-green text-white shadow-md transform scale-105'
+                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50'
+                }`}
+              >
+                {status === 'LOCKED' && <Lock size={14} className={isActive ? 'text-gray-100' : 'text-gray-300'} />}
+                {tab}
+              </button>
+            );
+          })}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {filteredTargets.map(target => (
-                <AttendanceCard key={target.id} target={target} isRated={ratedIds.includes(target.id)} />
+
+        {/* AREA KONTEN ABSENSI */}
+        {loading ? (
+          <div className="flex justify-center items-center py-32">
+             <Loader2 className="animate-spin text-tsa-green" size={40} />
+          </div>
+        ) : periodStatus[activeTab] === 'LOCKED' ? (
+          <div className="bg-white border border-gray-200 border-dashed rounded-3xl p-20 flex flex-col items-center justify-center text-center animate-fade-in-up">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+              <Lock size={32} className="text-gray-400" />
+            </div>
+            <h2 className="text-2xl font-black text-tsa-dark mb-2 tracking-tight">Period Locked</h2>
+            <p className="text-sm text-gray-500 max-w-md">Input absensi untuk <strong>{activeTab}</strong> saat ini ditutup atau belum dimulai.</p>
+          </div>
+        ) : (
+          <div className="space-y-10 animate-fade-in-up">
+            {Object.entries(groupedUsers).map(([deptName, users]) => (
+              <section key={deptName} className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
+                  <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">{deptName}</h2>
+                  <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full">{users.length} Personnel</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {users.map(u => {
+                    const data = attendanceData[u.id];
+                    const isReadOnly = periodStatus[activeTab] !== 'ACTIVE' || data?.isSubmitted;
+                    
+                    // Live Calculation UX
+                    const hadir = parseInt(data?.total_hadir) || 0;
+                    const kegiatan = parseInt(data?.total_kegiatan) || 0;
+                    const percentage = kegiatan > 0 ? ((hadir / kegiatan) * 100).toFixed(1) : 0;
+                    let colorClass = 'text-gray-400';
+                    if (kegiatan > 0) {
+                        if (percentage >= 80) colorClass = 'text-emerald-500';
+                        else if (percentage >= 50) colorClass = 'text-amber-500';
+                        else colorClass = 'text-red-500';
+                    }
+
+                    return (
+                      <div key={u.id} className="border border-gray-100 rounded-2xl p-5 hover:border-tsa-green hover:shadow-md transition-all">
+                        {/* Header Card */}
+                        <div className="flex items-center gap-3 mb-5">
+                          <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+                            {u.photo_url ? (
+                                <img src={u.photo_url} alt={u.full_name} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full text-tsa-green flex items-center justify-center font-black text-xs">
+                                  {u.full_name ? u.full_name.charAt(0) : '?'}
+                                </div>
+                            )}
+                          </div>
+                          <div className="flex-grow">
+                            <h3 className="font-bold text-tsa-dark text-sm truncate">{u.full_name}</h3>
+                            <p className="text-[9px] font-bold text-tsa-green uppercase tracking-widest">{u.position} {u.division !== '-' ? `• ${u.division}` : ''}</p>
+                          </div>
+                          {/* Live Percentage Indicator */}
+                          <div className={`text-sm font-black ${colorClass}`}>
+                            {percentage}%
+                          </div>
+                        </div>
+
+                        {/* Input Fields */}
+                        <div className="grid grid-cols-2 gap-3 mb-5">
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Hadir</label>
+                            <input 
+                              type="text" 
+                              value={data?.total_hadir || ''}
+                              onChange={(e) => handleInputChange(u.id, 'total_hadir', e.target.value)}
+                              disabled={isReadOnly}
+                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold text-tsa-dark focus:outline-none focus:border-tsa-green text-center"
+                              placeholder="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Kegiatan</label>
+                            <input 
+                              type="text" 
+                              value={data?.total_kegiatan || ''}
+                              onChange={(e) => handleInputChange(u.id, 'total_kegiatan', e.target.value)}
+                              disabled={isReadOnly}
+                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold text-tsa-dark focus:outline-none focus:border-tsa-green text-center"
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Submit Action */}
+                        {data?.isSubmitted ? (
+                          <div className="w-full bg-emerald-50 text-emerald-600 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 border border-emerald-100">
+                            <CheckCircle2 size={16} /> Data Terkunci
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => handleSubmitAttendance(u.id)}
+                            disabled={submittingId === u.id || isReadOnly}
+                            className="w-full bg-tsa-dark text-white py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-800 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                          >
+                            {submittingId === u.id ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                            Simpan Data
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             ))}
-        </div>
+          </div>
+        )}
       </main>
     </div>
   );

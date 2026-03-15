@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
-import { Trophy, Lock, Star, Zap, Target, ShieldCheck, Crown } from 'lucide-react';
+import { supabase } from '../supabaseClient';
+import { calculateQuarterlyResults } from '../utils/calculator';
+import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Loader2 } from 'lucide-react';
 
 // Komponen Card Kategori Award
 const AwardCard = ({ title, description, icon: Icon, isPublished, winnerName, winnerDept, bgClass, iconColor }) => (
@@ -24,8 +26,12 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winnerName, wi
       <div className="mt-auto pt-4 border-t border-gray-100/50 flex items-center gap-3">
         {isPublished ? (
           <>
-            <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden">
-              <img src={`https://ui-avatars.com/api/?name=${winnerName}&background=random`} alt="Winner" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden bg-gray-100 flex-shrink-0">
+              {winnerName !== "No Data" ? (
+                <img src={`https://ui-avatars.com/api/?name=${winnerName}&background=random`} alt="Winner" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold text-xs">?</div>
+              )}
             </div>
             <div>
               <p className="text-sm font-black text-tsa-dark leading-tight">{winnerName}</p>
@@ -35,7 +41,7 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winnerName, wi
         ) : (
           <div className="flex items-center gap-2 bg-white/50 px-4 py-2 rounded-xl border border-dashed border-gray-300 w-full">
             <Lock size={14} className="text-gray-400" />
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">To be announced</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">To be announced</p>
           </div>
         )}
       </div>
@@ -46,24 +52,66 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winnerName, wi
 const Dashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('Q1');
-
-  // Simulasi Status Admin (Nanti diambil dari database Phase 6)
-  const periodStatus = {
-    Q1: 'ACTIVE', // ACTIVE, LOCKED, PUBLISHED
-    Q2: 'LOCKED',
-    Q3: 'LOCKED',
-    Q4: 'LOCKED',
-    'End of Term': 'LOCKED'
-  };
+  const [loading, setLoading] = useState(true);
+  
+  // State Data Real dari Database
+  const [periodStatus, setPeriodStatus] = useState({
+    Q1: 'LOCKED', Q2: 'LOCKED', Q3: 'LOCKED', Q4: 'LOCKED', 'End of Term': 'LOCKED'
+  });
+  const [winners, setWinners] = useState(null);
 
   const tabs = ['Q1', 'Q2', 'Q3', 'Q4', 'End of Term'];
+
+  // 1. Ambil Settingan Gembok Admin saat komponen dimuat
+  useEffect(() => {
+    fetchAdminSettings();
+  }, []);
+
+  // 2. Ambil Data Pemenang setiap kali Tab Kuartal diklik
+  useEffect(() => {
+    if (activeTab !== 'End of Term') {
+      fetchWinnersData(activeTab);
+    }
+  }, [activeTab]);
+
+  const fetchAdminSettings = async () => {
+    try {
+      const { data, error } = await supabase.from('app_settings').select('*').eq('id', 1).single();
+      if (error) throw error;
+      if (data) {
+        setPeriodStatus({
+          Q1: data.q1_status,
+          Q2: data.q2_status,
+          Q3: data.q3_status,
+          Q4: data.q4_status,
+          'End of Term': data.voting_status
+        });
+      }
+    } catch (error) {
+      console.error("Gagal menarik pengaturan Admin:", error);
+    }
+  };
+
+  const fetchWinnersData = async (quarter) => {
+    setLoading(true);
+    // Panggil utilitas kalkulator yang baru saja kita buat
+    const result = await calculateQuarterlyResults(quarter);
+    setWinners(result);
+    setLoading(false);
+  };
+
+  const currentStatus = periodStatus[activeTab];
+  const isPublished = currentStatus === 'PUBLISHED';
+  // BPH/ADV punya hak istimewa melihat hasil live meskipun belum dipublish (Masih ACTIVE)
+  const isPrivilegedView = (currentStatus === 'ACTIVE' || currentStatus === 'READ_ONLY') && (user?.role === 'bph' || user?.role === 'adv' || user?.role === 'admin');
+  const showWinners = isPublished || isPrivilegedView;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-6 mt-8">
-        {/* HEADER & GREETINGS (FASE 4) */}
+        {/* HEADER */}
         <div className="mb-10">
           <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight">Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1 font-medium">
@@ -71,7 +119,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* TAB NAVIGATION (FASE 5) */}
+        {/* TAB NAVIGATION */}
         <div className="flex overflow-x-auto hide-scrollbar gap-3 mb-8 pb-2">
           {tabs.map((tab) => {
             const isActive = activeTab === tab;
@@ -97,10 +145,9 @@ const Dashboard = () => {
 
         {/* DYNAMIC CONTENT AREA */}
         <div className="transition-all duration-500">
-          {periodStatus[activeTab] === 'LOCKED' ? (
+          {currentStatus === 'LOCKED' ? (
             
-            /* UI TERKUNCI */
-            <div className="bg-white border border-gray-100 border-dashed rounded-3xl p-16 flex flex-col items-center justify-center text-center">
+            <div className="bg-white border border-gray-100 border-dashed rounded-3xl p-16 flex flex-col items-center justify-center text-center animate-fade-in-up">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                 <Lock size={24} className="text-gray-400" />
               </div>
@@ -110,9 +157,18 @@ const Dashboard = () => {
               </p>
             </div>
             
+          ) : activeTab === 'End of Term' ? (
+             <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-16 flex flex-col items-center justify-center text-center shadow-xl animate-fade-in-up border border-gray-800">
+                <Crown size={48} className="text-tsa-gold mb-4" />
+                <h2 className="text-2xl font-black text-white mb-2 tracking-widest uppercase">Hall of Fame 2026</h2>
+                <p className="text-sm text-gray-400 max-w-md">Kalkulasi akhir kepengurusan sedang diproses. Hasil Voting Berbobot akan segera dirilis.</p>
+             </div>
+          ) : loading ? (
+             <div className="flex justify-center items-center py-20">
+                <Loader2 className="animate-spin text-tsa-green" size={40} />
+             </div>
           ) : (
             
-            /* UI LEADERBOARD (MUNCUL JIKA ACTIVE / PUBLISHED) */
             <div className="space-y-6 animate-fade-in-up">
               <div className="flex items-center justify-between mb-2">
                 <div>
@@ -123,15 +179,17 @@ const Dashboard = () => {
                   <p className="text-xs text-gray-500 mt-1 font-medium">Berdasarkan kalkulasi otomatis metrik kinerja & absensi.</p>
                 </div>
                 {/* Status Badge */}
-                <span className="bg-green-50 border border-green-100 text-tsa-green text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
-                  {periodStatus[activeTab] === 'ACTIVE' ? 'Live Evaluation' : 'Results Published'}
-                </span>
+                <div className="flex flex-col items-end">
+                  <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm border ${isPublished ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-green-50 text-tsa-green border-green-100'}`}>
+                    {isPublished ? '🏆 Results Published' : '🟢 Live Evaluation'}
+                  </span>
+                  {isPrivilegedView && <span className="text-[9px] font-bold text-red-500 mt-1 uppercase tracking-widest animate-pulse">Privileged View Active</span>}
+                </div>
               </div>
 
               {/* GRID AWARDS */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
-                {/* 1. The Ultimate MVP (Dibuat Span 2 agar menonjol jika di desktop) */}
                 <div className="md:col-span-2 lg:col-span-3">
                   <AwardCard 
                     title="The Ultimate MVP" 
@@ -139,9 +197,9 @@ const Dashboard = () => {
                     icon={Crown} 
                     bgClass="bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] border-blue-100"
                     iconColor="text-blue-500"
-                    isPublished={periodStatus[activeTab] === 'PUBLISHED'} 
-                    winnerName="To be announced" 
-                    winnerDept="-" 
+                    isPublished={showWinners} 
+                    winnerName={winners?.mvp ? winners.mvp.full_name : "No Data"} 
+                    winnerDept={winners?.mvp ? `${winners.mvp.position} • ${winners.mvp.dept}` : "-"} 
                   />
                 </div>
 
@@ -151,7 +209,9 @@ const Dashboard = () => {
                   icon={ShieldCheck} 
                   bgClass="bg-white"
                   iconColor="text-emerald-500"
-                  isPublished={periodStatus[activeTab] === 'PUBLISHED'} 
+                  isPublished={showWinners} 
+                  winnerName={winners?.reliable ? winners.reliable.full_name : "No Data"} 
+                  winnerDept={winners?.reliable ? `${winners.reliable.position} • ${winners.reliable.dept}` : "-"} 
                 />
                 
                 <AwardCard 
@@ -160,7 +220,9 @@ const Dashboard = () => {
                   icon={Target} 
                   bgClass="bg-white"
                   iconColor="text-red-500"
-                  isPublished={periodStatus[activeTab] === 'PUBLISHED'} 
+                  isPublished={showWinners} 
+                  winnerName={winners?.achiever ? winners.achiever.full_name : "No Data"} 
+                  winnerDept={winners?.achiever ? `${winners.achiever.position} • ${winners.achiever.dept}` : "-"} 
                 />
                 
                 <AwardCard 
@@ -169,7 +231,9 @@ const Dashboard = () => {
                   icon={Zap} 
                   bgClass="bg-white"
                   iconColor="text-amber-500"
-                  isPublished={periodStatus[activeTab] === 'PUBLISHED'} 
+                  isPublished={showWinners} 
+                  winnerName={winners?.spark ? winners.spark.full_name : "No Data"} 
+                  winnerDept={winners?.spark ? `${winners.spark.position} • ${winners.spark.dept}` : "-"} 
                 />
 
               </div>

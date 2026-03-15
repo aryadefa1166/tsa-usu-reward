@@ -3,9 +3,12 @@ import { supabase } from '../supabaseClient';
 export const calculateQuarterlyResults = async (quarter) => {
   try {
     // 1. DATA FETCHING: Eksekusi Pararel (O(1) Network Call)
-    // Menarik data User (Hanya Staff), Penilaian EB, dan Absensi Sekretaris
+    // Menarik data User (Hanya Staff/TL Aktif), Penilaian EB, dan Absensi Sekretaris
     const [usersRes, assessRes, attendRes] = await Promise.all([
-      supabase.from('users').select('id, full_name, dept, role, division').eq('role', 'member'),
+      supabase.from('users')
+        .select('id, full_name, dept, role, division, position, cohort, photo_url')
+        .eq('role', 5)
+        .eq('is_active', true),
       supabase.from('assessments').select('*').eq('quarter', quarter),
       supabase.from('attendance').select('*').eq('quarter', quarter)
     ]);
@@ -101,7 +104,7 @@ export const calculateQuarterlyResults = async (quarter) => {
       spark: [...results].sort((a,b) => b.theSpark - a.theSpark)[0] || null,
       mvp: [...results].sort((a,b) => b.theUltimateMVP - a.theUltimateMVP)[0] || null,
       bestDept: deptResults.sort((a,b) => b.score - a.score)[0] || null,
-      allScores: results // Data mentah ini akan dipakai untuk Report Pribadi Staff
+      allScores: results // Data mentah ini akan dipakai untuk Report Pribadi Staff & Export CSV
     };
 
   } catch (error) {

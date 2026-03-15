@@ -25,10 +25,12 @@ const Report = () => {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
 
-  // LOGIKA AKSES MUTLAK (Role 1-6)
-  const isStaff = user?.role === 6;
-  const isEB = user?.role === 4 || user?.role === 5;
-  const isGlobal = user?.role >= 1 && user?.role <= 3;
+  // =========================================
+  // LOGIKA AKSES MUTLAK (Role 1-5 Terbaru)
+  // =========================================
+  const isStaff = user?.role === 5;
+  const isEB = user?.role === 3 || user?.role === 4;
+  const isGlobal = user?.role === 1 || user?.role === 2;
 
   useEffect(() => {
     if (user) fetchReportData();
@@ -37,19 +39,75 @@ const Report = () => {
   const fetchReportData = async () => {
     setLoading(true);
     
-    // PENGHAPUSAN DATA DUMMY
-    // Untuk saat ini di-set 0 murni menunggu integrasi backend laporan personal per user.
-    setTimeout(() => {
-      setReportData({
-        attitude: 0,
-        discipline: 0,
-        active: 0,
-        agility: 0,
-        cheerful: 0,
-        attendance: 0,
-      });
+    try {
+      // Kita set default Quarter ke Q1 (Bisa dibuat dinamis ke active tab di iterasi selanjutnya)
+      const currentQuarter = 'Q1';
+
+      if (isStaff) {
+        // 1. Tarik Data Penilaian Kualitatif (Bisa lebih dari 1 evaluator)
+        const { data: assessData, error: assessError } = await supabase
+          .from('assessments')
+          .select('attitude, discipline, active, agility, cheerful')
+          .eq('target_id', user.id)
+          .eq('quarter', currentQuarter);
+
+        if (assessError) throw assessError;
+
+        // 2. Tarik Data Kehadiran dari Sekretaris
+        const { data: attendData, error: attendError } = await supabase
+          .from('attendance')
+          .select('total_present, total_events')
+          .eq('target_id', user.id)
+          .eq('quarter', currentQuarter)
+          .single(); // Hanya ada 1 data absensi per kuartal
+
+        // Abaikan error single() jika data absensi belum diisi
+        if (attendError && attendError.code !== 'PGRST116') throw attendError; 
+
+        // 3. Kalkulasi Rata-rata Kualitatif
+        let avgAssess = { attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0 };
+        
+        if (assessData && assessData.length > 0) {
+          assessData.forEach(item => {
+            avgAssess.attitude += item.attitude;
+            avgAssess.discipline += item.discipline;
+            avgAssess.active += item.active;
+            avgAssess.agility += item.agility;
+            avgAssess.cheerful += item.cheerful;
+          });
+          
+          const count = assessData.length;
+          avgAssess.attitude /= count;
+          avgAssess.discipline /= count;
+          avgAssess.active /= count;
+          avgAssess.agility /= count;
+          avgAssess.cheerful /= count;
+        }
+
+        // 4. Kalkulasi Persentase Kehadiran
+        let attPercentage = 0;
+        if (attendData && attendData.total_events > 0) {
+          attPercentage = Math.round((attendData.total_present / attendData.total_events) * 100);
+        }
+
+        // 5. Injeksi ke State UI
+        setReportData({
+          ...avgAssess,
+          attendance: attPercentage
+        });
+
+      } else {
+        // Jika EB atau Global, set murni 0 sementara. 
+        // Agregasi data departemen lebih berat dan biasanya dipantau dari Dashboard.
+        setReportData({
+          attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0, attendance: 0
+        });
+      }
+    } catch (error) {
+      console.error("Gagal menarik data rapor:", error);
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -60,7 +118,7 @@ const Report = () => {
         
         {/* HEADER DINAMIS BERDASARKAN ROLE */}
         <div className="mb-10 flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+          <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-center flex-shrink-0">
             {isStaff && <BarChart2 size={28} className="text-tsa-green" />}
             {isEB && <Users size={28} className="text-blue-500" />}
             {isGlobal && <Shield size={28} className="text-tsa-gold" />}
@@ -82,7 +140,7 @@ const Report = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            {/* KOTAK KIRI: 5 Indikator Kualitatif EB */}
+            {/* KOTAK KIRI: 5 Indikator Kualitatif */}
             <div className="md:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-black text-tsa-dark flex items-center gap-2">

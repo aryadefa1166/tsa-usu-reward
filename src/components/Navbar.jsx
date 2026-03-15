@@ -15,12 +15,12 @@ const Navbar = () => {
 
   // =========================================
   // LOGIKA FILTER AKSES MENU (BERDASARKAN INTEGER)
-  // 1:Admin, 2:BPH, 3:ADV, 4:Kadep, 5:Kadiv, 6:Staff
+  // 1:Admin, 2:BPH/ADV, 3:Kadep/Wakadep, 4:Kadiv, 5:Staff/TL
   // =========================================
   const role = user?.role;
   const isAdmin = role === 1;
-  const isReportViewer = role >= 2 && role <= 6; // Admin (1) tidak punya rapor
-  const isAssessor = role >= 2 && role <= 5; // Staff (6) dan Admin (1) tidak menilai
+  const isReportViewer = role >= 2 && role <= 5; // Admin (1) tidak punya rapor
+  const isAssessor = role >= 2 && role <= 4; // Staff/TL (5) dan Admin (1) tidak menilai
   
   // LOGIKA AKSES SEKRETARIS MUTLAK
   const isSecretary = role === 2 && user?.position === 'Secretary';
@@ -38,11 +38,10 @@ const Navbar = () => {
   const getRoleText = (r) => {
     switch(r) {
       case 1: return 'ADMIN';
-      case 2: return 'BPH';
-      case 3: return 'ADVISORY';
-      case 4: return 'KADEP';
-      case 5: return 'KADIV';
-      case 6: return 'STAFF';
+      case 2: return 'BPH / ADV';
+      case 3: return 'KADEP';
+      case 4: return 'KADIV';
+      case 5: return 'STAFF';
       default: return 'USER';
     }
   };

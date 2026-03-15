@@ -39,37 +39,44 @@ const InputAssessment = () => {
   const [loading, setLoading] = useState(true);
   const [submittingId, setSubmittingId] = useState(null);
 
-  // Simulasi Status Periode (Akan dihubungkan dengan Admin Center di masa depan)
-  const periodStatus = {
-    Q1: 'ACTIVE',    // Bisa diisi & diedit
-    Q2: 'LOCKED',    // Belum mulai
-    Q3: 'LOCKED',
-    Q4: 'LOCKED'
-  };
+  const [periodStatus, setPeriodStatus] = useState({
+    Q1: 'LOCKED', Q2: 'LOCKED', Q3: 'LOCKED', Q4: 'LOCKED'
+  });
 
   const tabs = ['Q1', 'Q2', 'Q3', 'Q4'];
 
   useEffect(() => {
+    fetchAdminSettings();
     if (user) fetchStaffToEvaluate();
   }, [user]);
+
+  const fetchAdminSettings = async () => {
+    try {
+      const { data, error } = await supabase.from('app_settings').select('*').eq('id', 1).single();
+      if (!error && data) {
+        setPeriodStatus({ Q1: data.q1_status, Q2: data.q2_status, Q3: data.q3_status, Q4: data.q4_status });
+      }
+    } catch (error) { console.error("Error fetching settings:", error); }
+  };
 
   const fetchStaffToEvaluate = async () => {
     setLoading(true);
     try {
-      // 1. Ambil HANYA target yang role-nya 'member' (Staff) & Urutkan secara presisi
+      // 1. Ambil target yang role-nya 5 (Staff/TL) DAN statusnya masih aktif
       let query = supabase
         .from('users')
         .select('*')
-        .eq('role', 'member')
+        .eq('role', 5)
+        .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
-      // 2. Logika Filter Wewenang Blueprint
-      if (user.role === 'kadep') {
+      // 2. Logika Filter Wewenang Berdasarkan Angka Role
+      if (user.role === 3) { // Kadep / Wakadep
         query = query.eq('dept', user.dept);
-      } else if (user.role === 'kadiv') {
+      } else if (user.role === 4) { // Kadiv
         query = query.eq('dept', user.dept).eq('division', user.division);
       }
-      // Jika BPH / ADV, query tidak difilter (bisa lihat semua departemen)
+      // Jika BPH (2) / ADV (2) / Admin (1), query tidak difilter (bisa lihat semua departemen)
 
       const { data, error } = await query;
       if (error) throw error;
@@ -84,8 +91,6 @@ const InputAssessment = () => {
         };
       });
       setAssessments(initialAssessments);
-
-      // (Opsional Next Iteration: Fetch existing score dari tabel 'assessments' berdasarkan tab kuartal)
 
     } catch (error) {
       console.error("Error fetching staff:", error);
@@ -114,9 +119,8 @@ const InputAssessment = () => {
     setSubmittingId(staffId);
     
     try {
-      // LOGIKA DATABASE (Asumsi tabel assessments sudah ada)
-      /*
-      const { error } = await supabase.from('assessments').upsert({
+      // LOGIKA DATABASE ASLI (Insert Nilai)
+      const { error } = await supabase.from('assessments').insert({
         evaluator_id: user.id,
         target_id: staffId,
         quarter: activeTab,
@@ -124,14 +128,10 @@ const InputAssessment = () => {
         discipline: scores.discipline * 20,
         active: scores.active * 20,
         agility: scores.agility * 20,
-        cheerful: scores.cheerful * 20,
-        updated_at: new Date()
+        cheerful: scores.cheerful * 20
       });
+      
       if (error) throw error;
-      */
-
-      // Simulasi Delay Database
-      await new Promise(resolve => setTimeout(resolve, 800));
 
       // Ubah UI menjadi sukses tersubmit
       setAssessments(prev => ({
@@ -183,7 +183,7 @@ const InputAssessment = () => {
                     : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50'
                 }`}
               >
-                {status === 'LOCKED' && <Lock size={14} className={isActive ? 'text-gray-400' : 'text-gray-300'} />}
+                {status !== 'ACTIVE' && <Lock size={14} className={isActive ? 'text-gray-400' : 'text-gray-300'} />}
                 {tab}
               </button>
             );
@@ -195,7 +195,7 @@ const InputAssessment = () => {
           <div className="flex justify-center items-center py-32">
              <Loader2 className="animate-spin text-tsa-green" size={40} />
           </div>
-        ) : periodStatus[activeTab] === 'LOCKED' ? (
+        ) : periodStatus[activeTab] !== 'ACTIVE' ? (
           /* UI JIKA TERKUNCI */
           <div className="bg-white border border-gray-200 border-dashed rounded-3xl p-20 flex flex-col items-center justify-center text-center animate-fade-in-up">
             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
@@ -212,7 +212,7 @@ const InputAssessment = () => {
             <ShieldAlert size={40} className="text-red-400 mb-4" />
             <h2 className="text-xl font-black text-tsa-dark mb-2">Akses Ditolak / Kosong</h2>
             <p className="text-sm text-gray-500 max-w-sm">
-              Anda tidak memiliki daftar Staff untuk dievaluasi pada departemen/divisi Anda.
+              Anda tidak memiliki daftar Staff aktif untuk dievaluasi pada departemen/divisi Anda.
             </p>
           </div>
         ) : (

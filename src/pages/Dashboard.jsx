@@ -145,12 +145,12 @@ const Dashboard = () => {
   const currentStatus = periodStatus[activeTab];
   const isPublished = currentStatus === 'PUBLISHED';
   
-  // Hak Istimewa melihat hasil live (Role 1: Admin, 2: BPH, 3: ADV)
-  const isPrivilegedView = (currentStatus === 'ACTIVE' || currentStatus === 'READ_ONLY') && (user?.role >= 1 && user?.role <= 3);
+  // Hak Istimewa melihat hasil live (Role 1: Admin, 2: BPH/ADV)
+  const isPrivilegedView = (currentStatus === 'ACTIVE' || currentStatus === 'READ_ONLY') && (user?.role === 1 || user?.role === 2);
   const showWinners = isPublished || isPrivilegedView;
 
   // Sapaan Presisi
-  const greetingName = user?.role === 1 ? 'Administrator' : (user?.full_name || 'Staff');
+  const greetingName = user?.role === 1 ? 'Administrator' : (user?.full_name || 'User');
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">

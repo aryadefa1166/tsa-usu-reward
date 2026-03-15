@@ -37,11 +37,12 @@ const InputAttendance = () => {
   const fetchStaffAndAttendance = async () => {
     setLoading(true);
     try {
-      // 1. Tarik HANYA target yang role-nya 6 (Staff)
+      // 1. Tarik HANYA target yang role-nya 5 (Staff & TL) yang AKTIF
       const { data: staffData, error: staffError } = await supabase
         .from('users')
         .select('*')
-        .eq('role', 6)
+        .eq('role', 5)
+        .eq('is_active', true)
         .order('sort_order', { ascending: true });
       if (staffError) throw staffError;
 
@@ -222,7 +223,7 @@ const InputAttendance = () => {
           </div>
         ) : staffList.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-3xl p-10 text-center">
-            <p className="text-gray-500">Belum ada data Staff di sistem.</p>
+            <p className="text-gray-500">Belum ada data Staff aktif di sistem.</p>
           </div>
         ) : (
           <div className="space-y-10 animate-fade-in-up">

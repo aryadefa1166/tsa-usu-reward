@@ -351,16 +351,15 @@ const Voting = () => {
 
             {/* A. MOST FAVORITE EB (HANYA STAFF - ROLE 5) */}
             {isStaff && (
-              <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
+              <section className={`p-6 md:p-8 rounded-3xl border shadow-md relative overflow-hidden ${isReadOnly ? 'border-yellow-100 bg-yellow-50/30' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
-                <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-gold"><Vote size={120} /></div>
+                <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Vote size={120} /></div>
                 
                 <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
-                  <div className="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center shrink-0 border border-yellow-100"><Crown size={24} className="text-tsa-gold" /></div>
+                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Crown size={24} className="text-tsa-gold" /></div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Most Favorite EB</h2>
-                      <span className="bg-green-50 text-tsa-green text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest border border-green-100">Staff Privilege</span>
                     </div>
                     <p className="text-xs text-gray-500 font-medium mt-1">Select the top 5 most inspiring and supportive leaders (BPH/ADV/KADEP/KADIV). This vote is exclusively for Staff members.</p>
                   </div>
@@ -387,7 +386,7 @@ const Voting = () => {
 
             {/* B. EVALUASI BPH & ADV (HANYA ROLE 2) */}
             {isBPHADV && (
-              <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden mt-10 ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
+              <section className={`p-6 md:p-8 rounded-3xl border shadow-lg relative overflow-hidden mt-10 ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                 <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><ShieldCheck size={120} /></div>
                 

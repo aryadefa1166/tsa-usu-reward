@@ -11,38 +11,39 @@ import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Users, Loader2, Star, Sp
 const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClass, iconColor, isGroup, groupPhotoUrl, isEndOfTerm = false }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-  // Tema khusus Hall of Fame (Dark/Gold) vs Kuartalan (White)
-  const cardBorder = isEndOfTerm ? 'border-yellow-500/30 shadow-xl bg-gradient-to-br from-gray-900 to-black' : `border-gray-100 shadow-sm bg-white`;
-  const textColor = isEndOfTerm ? 'text-white' : 'text-tsa-dark';
-  const descColor = isEndOfTerm ? 'text-gray-400' : 'text-gray-500';
+  // Tema Hall of Fame: Clean White dengan border aksen (Gold/Green), Kuartalan: Putih biasa
+  const cardBorder = isEndOfTerm ? 'border-yellow-200/60 shadow-md bg-white relative overflow-hidden' : `border-gray-100 shadow-sm bg-white relative overflow-hidden`;
 
   return (
-    <div className={`relative p-6 rounded-3xl border ${cardBorder} hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full`}>
+    <div className={`p-6 rounded-3xl border ${cardBorder} hover:-translate-y-1 transition-all duration-300 flex flex-col h-full`}>
+      {/* Aksen Pinggir Khusus Hall of Fame */}
+      {isEndOfTerm && <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>}
+
       {/* Background Icon Watermark */}
-      <div className={`absolute top-0 right-0 p-6 ${isEndOfTerm ? 'opacity-5 text-tsa-gold' : 'opacity-10'}`}>
+      <div className={`absolute top-0 right-0 p-6 ${isEndOfTerm ? 'opacity-[0.03] text-tsa-gold' : 'opacity-10'}`}>
         <Icon size={100} />
       </div>
       
-      <div className="relative z-10 flex flex-col flex-grow">
+      <div className={`relative z-10 flex flex-col flex-grow ${isEndOfTerm ? 'ml-2' : ''}`}>
         <div className="flex items-center gap-3 mb-2">
-          <div className={`p-2 rounded-xl shadow-sm ${isEndOfTerm ? 'bg-yellow-500/10' : 'bg-white'} ${iconColor}`}>
+          <div className={`p-2 rounded-xl shadow-sm ${isEndOfTerm ? 'bg-yellow-50 border border-yellow-100' : 'bg-white'} ${iconColor}`}>
             <Icon size={20} />
           </div>
-          <h3 className={`font-black text-lg tracking-tight ${textColor}`}>{title}</h3>
+          <h3 className="font-black text-lg tracking-tight text-tsa-dark">{title}</h3>
         </div>
-        <p className={`text-xs font-medium leading-relaxed mb-6 max-w-[90%] ${descColor}`}>
+        <p className="text-xs font-medium leading-relaxed mb-6 max-w-[90%] text-gray-500">
           {description}
         </p>
         
-        <div className={`mt-auto pt-4 border-t ${isEndOfTerm ? 'border-gray-800' : 'border-gray-100/70'}`}>
+        <div className="mt-auto pt-4 border-t border-gray-100/70">
           {!isPublished ? (
-            <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border ${isEndOfTerm ? 'bg-gray-800/50 border-gray-700' : 'bg-white/50 border-dashed border-gray-300'} w-full`}>
-              <Lock size={14} className={isEndOfTerm ? 'text-gray-500' : 'text-gray-400'} />
-              <p className={`text-[10px] font-bold uppercase tracking-widest ${isEndOfTerm ? 'text-gray-500' : 'text-gray-400'}`}>To be announced</p>
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl border bg-white/50 border-dashed border-gray-300 w-full">
+              <Lock size={14} className="text-gray-400" />
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">To be announced</p>
             </div>
           ) : !winner ? (
-            <div className={`flex items-center gap-2 px-4 py-3 rounded-xl border w-full ${isEndOfTerm ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-              <p className={`text-[10px] font-bold uppercase tracking-widest ${isEndOfTerm ? 'text-gray-500' : 'text-gray-400'}`}>Data Not Available</p>
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl border w-full bg-gray-50 border-gray-200">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Data Not Available</p>
             </div>
           ) : isGroup ? (
             /* --- RENDER UNTUK BEST DEPARTMENT / PROJECT --- */
@@ -58,15 +59,15 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClas
                   {winner.name || `${winner.dept} DEPT`}
                 </p>
               </div>
-              <div className={`flex justify-between items-center p-3 rounded-xl border shadow-sm ${isEndOfTerm ? 'bg-gray-800/80 border-gray-700' : 'bg-white border-gray-100'}`}>
-                <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${isEndOfTerm ? 'bg-yellow-500/20 text-tsa-gold' : 'bg-yellow-50 text-tsa-gold'}`}>Total Score</span>
-                <span className={`text-sm font-black ${textColor}`}>{winner.score?.toFixed(1) || winner.finalScore?.toFixed(1)} / 100</span>
+              <div className="flex justify-between items-center p-3 rounded-xl border shadow-sm bg-white border-gray-100">
+                <span className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest bg-yellow-50 text-tsa-gold border border-yellow-100">Total Score</span>
+                <span className="text-sm font-black text-tsa-dark">{winner.score?.toFixed(1) || winner.finalScore?.toFixed(1)} / 100</span>
               </div>
             </div>
           ) : (
             /* --- RENDER UNTUK INDIVIDU --- */
             <div className="flex items-center gap-4">
-              <div className={`w-14 h-14 rounded-full border shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center ${isEndOfTerm ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-100'}`}>
+              <div className="w-14 h-14 rounded-full border shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center border-gray-200 bg-gray-100">
                 {winner.photo_url ? (
                   <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover" />
                 ) : (
@@ -74,12 +75,12 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClas
                 )}
               </div>
               <div className="overflow-hidden">
-                <p className={`text-sm font-black leading-tight truncate ${textColor}`}>{winner.full_name}</p>
+                <p className="text-sm font-black leading-tight truncate text-tsa-dark">{winner.full_name}</p>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${isEndOfTerm ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-500 border border-gray-200">
                     {winner.cohort}
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border truncate max-w-[200px] ${isEndOfTerm ? 'bg-yellow-500/10 text-tsa-gold border-tsa-gold/30' : 'bg-green-50 text-tsa-green border-green-100'}`}>
+                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border truncate max-w-[200px] ${isEndOfTerm ? 'bg-yellow-50 text-tsa-gold border-yellow-200' : 'bg-green-50 text-tsa-green border-green-100'}`}>
                     {winner.position} • {winner.dept}
                   </span>
                 </div>
@@ -179,7 +180,7 @@ const Dashboard = () => {
                 className={`flex-shrink-0 px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
                   isActive
                     ? isEndOfTerm
-                      ? 'bg-gradient-to-r from-gray-900 to-gray-800 text-tsa-gold shadow-md transform scale-105 border border-gray-700'
+                      ? 'bg-yellow-50 text-tsa-gold shadow-sm border border-yellow-200 transform scale-105'
                       : 'bg-tsa-green text-white shadow-md transform scale-105'
                     : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50'
                 }`}
@@ -205,18 +206,19 @@ const Dashboard = () => {
           ) : activeTab === 'End of Term' ? (
             
             /* ========================================== */
-            /* UI RAKSASA HALL OF FAME 2026 */
+            /* UI CLEAN WHITE HALL OF FAME 2026 */
             /* ========================================== */
             <div className="space-y-6 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-6 bg-gradient-to-r from-gray-900 to-black p-6 rounded-3xl border border-gray-800 shadow-xl">
-                <div>
-                  <h2 className="text-2xl font-black text-white flex items-center gap-3 tracking-widest uppercase">
+              <div className="flex items-center justify-between mb-6 bg-white p-6 rounded-3xl border border-yellow-200/50 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-2 h-full bg-tsa-gold"></div>
+                <div className="ml-2">
+                  <h2 className="text-2xl font-black text-tsa-dark flex items-center gap-3 tracking-widest uppercase">
                     <Crown size={28} className="text-tsa-gold" /> Hall of Fame 2026
                   </h2>
-                  <p className="text-xs text-gray-400 mt-2 font-medium">The most prestigious awards based on Q1-Q4 aggregation, BPH Evaluation, and Ranked Choice Voting.</p>
+                  <p className="text-xs text-gray-500 mt-2 font-medium max-w-2xl">The most prestigious awards based on Q1-Q4 aggregation, BPH Evaluation, and Ranked Choice Voting.</p>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm border ${isPublished ? 'bg-yellow-500/20 text-tsa-gold border-tsa-gold/30' : 'bg-gray-800 text-gray-400 border-gray-600'}`}>
+                  <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm border ${isPublished ? 'bg-yellow-50 text-tsa-gold border-yellow-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
                     {isPublished ? '🏆 Results Published' : '🟢 Voting Active'}
                   </span>
                   {isPrivilegedView && <span className="text-[9px] font-bold text-red-500 mt-2 uppercase tracking-widest animate-pulse">Privileged View</span>}
@@ -224,22 +226,12 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-                {/* BARIS 1: THE ULTIMATE MVP OF THE YEAR (Raksasa di tengah) */}
-                <div className="md:col-span-6 lg:col-span-4 lg:col-start-2">
-                  <AwardCard 
-                    isEndOfTerm={true} title="The Ultimate MVP of the Year" 
-                    description="The absolute highest honor for the most consistent, agile, and impactful officer throughout the entire tenure."
-                    icon={Trophy} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={hofWinners?.mvpOfYear}
-                  />
-                </div>
-
-                {/* BARIS 2: BEST DEPT & BEST PROJECT */}
+                {/* BARIS 1: BEST DEPT & BEST PROJECT (Kategori Entitas) */}
                 <div className="md:col-span-3">
                   <AwardCard 
                     isEndOfTerm={true} title="Best Department of the Year" 
                     description="Outstanding bureaucratic execution and solid teamwork, validated by the Executive Board."
-                    icon={Building2} iconColor="text-blue-400"
+                    icon={Building2} iconColor="text-tsa-gold"
                     isPublished={showWinners} winner={hofWinners?.bestDeptOfYear} isGroup={true} groupPhotoUrl={hofWinners?.bestDeptOfYear ? deptPhotos[hofWinners.bestDeptOfYear.dept] : null}
                   />
                 </div>
@@ -247,25 +239,33 @@ const Dashboard = () => {
                   <AwardCard 
                     isEndOfTerm={true} title="Best Project of the Year" 
                     description="The most impactful work program chosen by the masses and validated by the Executive Board."
-                    icon={Briefcase} iconColor="text-purple-400"
+                    icon={Briefcase} iconColor="text-tsa-gold"
                     isPublished={showWinners} winner={hofWinners?.bestProjectOfYear} isGroup={true}
                   />
                 </div>
 
-                {/* BARIS 3: ROOKIE & FAV EB */}
-                <div className="md:col-span-3">
+                {/* BARIS 2: MVP, ROOKIE, & FAV EB (Kategori Individu) */}
+                <div className="md:col-span-2">
+                  <AwardCard 
+                    isEndOfTerm={true} title="The Ultimate MVP" 
+                    description="The absolute highest honor for the most consistent, agile, and impactful officer."
+                    icon={Trophy} iconColor="text-tsa-gold"
+                    isPublished={showWinners} winner={hofWinners?.mvpOfYear}
+                  />
+                </div>
+                <div className="md:col-span-2">
                   <AwardCard 
                     isEndOfTerm={true} title="Rookie of the Year" 
-                    description="The most progressive and adaptive talent from the youngest generation (TELADAN 26)."
-                    icon={Sparkles} iconColor="text-emerald-400"
+                    description="The most progressive and adaptive talent from the youngest generation (TLD 26)."
+                    icon={Sparkles} iconColor="text-tsa-gold"
                     isPublished={showWinners} winner={hofWinners?.rookieOfYear}
                   />
                 </div>
-                <div className="md:col-span-3">
+                <div className="md:col-span-2">
                   <AwardCard 
                     isEndOfTerm={true} title="Most Favorite EB" 
-                    description="The most inspiring, supportive, and highly respected leader chosen 100% by the Staffs."
-                    icon={Star} iconColor="text-pink-400"
+                    description="The most inspiring and supportive leader chosen 100% by the Staffs."
+                    icon={Star} iconColor="text-tsa-gold"
                     isPublished={showWinners} winner={hofWinners?.favEb}
                   />
                 </div>

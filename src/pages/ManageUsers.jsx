@@ -5,13 +5,13 @@ import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
   Users, CalendarDays, Activity, ShieldCheck, Download, ImagePlus, UploadCloud, Briefcase,
-  AlertTriangle, CheckCircle2, Copy, Crown // <-- INI DIA PERBAIKANNYA: Crown ditambahkan di sini
+  AlertTriangle, CheckCircle2, Copy, Crown, Clock
 } from 'lucide-react';
 
 const ShieldIcon = () => (
-  // PERBAIKAN: Background Hijau TSA dengan Ikon Emas
-  <div className="w-10 h-10 bg-tsa-green rounded-xl flex items-center justify-center shadow-md border border-emerald-800">
-    <ShieldCheck size={20} className="text-tsa-gold" />
+  // PERBAIKAN: Background Hijau TSA dengan Ikon PUTIH
+  <div className="w-10 h-10 bg-tsa-green rounded-xl flex items-center justify-center shadow-md">
+    <ShieldCheck size={20} className="text-white" />
   </div>
 );
 
@@ -57,6 +57,7 @@ const ManageUsers = () => {
   const [trackerLoading, setTrackerLoading] = useState(false);
   const [activeTrackerName, setActiveTrackerName] = useState('');
 
+  // PERBAIKAN: Menyeragamkan warna icon header tab (Semua warna hijau jika aktif, text-gray-500 jika tidak)
   const adminTabs = [
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'projects', label: 'Project Nominations', icon: Briefcase },
@@ -103,7 +104,7 @@ const ManageUsers = () => {
   };
 
   // ==========================================
-  // TRACKER LOGIC
+  // PERBAIKAN TOTAL TRACKER LOGIC (MULTI-QUOTA)
   // ==========================================
   const fetchTrackerData = async () => {
     setTrackerLoading(true);
@@ -115,26 +116,49 @@ const ManageUsers = () => {
       else if (appSettings.q4_status === 'ACTIVE') activeQuarter = 'Q4';
 
       if (appSettings.voting_status === 'ACTIVE') {
-        setActiveTrackerName('End of Term Voting');
-        const { data: votes } = await supabase.from('end_of_term_votes').select('voter_id');
+        setActiveTrackerName('End of Term Evaluation'); // Teks 'Voting' dihapus
+        const { data: votes } = await supabase.from('end_of_term_votes').select('voter_id, category');
         
-        // Populasi target: Semua pengurus aktif (Role 2-5)
+        // Populasi target: Semua pengurus aktif selain Admin (Role 2,3,4,5)
         const votersTarget = usersList.filter(u => u.role !== 1 && u.is_active === true);
-        const votedIds = new Set(votes?.map(v => v.voter_id));
         
-        const report = votersTarget.map(user => ({
-          ...user,
-          status: votedIds.has(user.id) ? 'COMPLETED' : 'PENDING',
-          detail: votedIds.has(user.id) ? 'Voted' : 'Not yet voted'
-        }));
+        // Mapping berapa form yg sudah diisi per user
+        const userVotesCount = {};
+        votersTarget.forEach(u => userVotesCount[u.id] = 0);
+        votes?.forEach(v => {
+          if (userVotesCount[v.voter_id] !== undefined) {
+             // Mencegah duplikasi hitungan jika 1 user submit kategori yg sama berkali-kali (meskipun di UI sudah diblokir)
+             userVotesCount[v.voter_id] += 1; 
+          }
+        });
+
+        // Hitung status berdasarkan kuota Role
+        const report = votersTarget.map(user => {
+          const filledForms = userVotesCount[user.id] || 0;
+          let requiredForms = 3; // Default (MVP, Rookie, Project) untuk Role 3 & 4
+          if (user.role === 2) requiredForms = 5; // BPH/ADV (+ Eval Dept, Eval Project)
+          if (user.role === 5) requiredForms = 4; // Staff (+ Fav EB)
+
+          let status = 'PENDING';
+          if (filledForms >= requiredForms) status = 'COMPLETED';
+          else if (filledForms > 0) status = 'PROGRESS';
+
+          return {
+            ...user,
+            status,
+            detail: `${filledForms} of ${requiredForms} required forms submitted`
+          };
+        });
         
-        setTrackerData(report.sort((a, b) => a.status.localeCompare(b.status)));
+        // Sorting: Pending di atas, Progress di tengah, Completed di bawah
+        const sortOrder = { 'PENDING': 1, 'PROGRESS': 2, 'COMPLETED': 3 };
+        setTrackerData(report.sort((a, b) => sortOrder[a.status] - sortOrder[b.status]));
       } 
       else if (activeQuarter) {
-        setActiveTrackerName(`Quarterly Assessment (${activeQuarter})`);
+        setActiveTrackerName(`${activeQuarter} Assessment`);
         const { data: assessments } = await supabase.from('assessments').select('assessor_id').eq('quarter', activeQuarter);
         
-        // Populasi target: Semua penilai aktif (Role 2-4)
+        // Populasi target: Semua penilai aktif (Role 2,3,4)
         const assessorTarget = usersList.filter(u => u.role >= 2 && u.role <= 4 && u.is_active === true);
         
         const assessCount = {};
@@ -142,13 +166,17 @@ const ManageUsers = () => {
           assessCount[a.assessor_id] = (assessCount[a.assessor_id] || 0) + 1;
         });
 
-        const report = assessorTarget.map(user => ({
-          ...user,
-          status: assessCount[user.id] > 0 ? 'PROGRESS' : 'PENDING',
-          detail: assessCount[user.id] ? `Assessed ${assessCount[user.id]} targets` : 'No assessments yet'
-        }));
+        const report = assessorTarget.map(user => {
+          const count = assessCount[user.id] || 0;
+          return {
+            ...user,
+            status: count > 0 ? 'COMPLETED' : 'PENDING', // Di kuartal, asal sudah nilai 1 orang, dianggap completed/progress baik
+            detail: count > 0 ? `Assessed ${count} members` : 'No assessments yet'
+          };
+        });
 
-        setTrackerData(report.sort((a, b) => a.status.localeCompare(b.status)));
+        const sortOrder = { 'PENDING': 1, 'COMPLETED': 2 };
+        setTrackerData(report.sort((a, b) => sortOrder[a.status] - sortOrder[b.status]));
       } 
       else {
         setActiveTrackerName('');
@@ -163,13 +191,13 @@ const ManageUsers = () => {
 
   const handleCopyReminder = (name, type) => {
     let text = "";
-    if (type === 'End of Term Voting') {
-      text = `Halo ${name}, mohon segera mengisi Form Voting End of Term di website TSA USU REWARD ya! 🙏`;
+    if (type === 'End of Term Evaluation') {
+      text = `Hello ${name}, please kindly check the TSA USU R.E.W.A.R.D portal and complete your required End of Term evaluation forms. Thank you! 🙏`;
     } else {
-      text = `Halo ${name}, mohon segera menyelesaikan pengisian Assessment Kuartalan untuk staf/TL kamu di website TSA USU REWARD ya! 🙏`;
+      text = `Hello ${name}, a gentle reminder to complete your quarterly assessments for your team members on the TSA USU R.E.W.A.R.D portal. Thank you! 🙏`;
     }
     navigator.clipboard.writeText(text);
-    alert(`Pesan reminder untuk ${name} disalin ke clipboard!`);
+    alert(`Reminder message for ${name} copied to clipboard!`);
   };
 
   // ==========================================
@@ -482,7 +510,7 @@ const ManageUsers = () => {
           <div className="animate-fade-in-up">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
               <div>
-                <h2 className="text-xl font-bold text-tsa-dark">User Database</h2>
+                <h2 className="text-xl font-bold text-tsa-dark flex items-center gap-2"><Users size={20} className="text-tsa-green"/> User Database</h2>
                 <p className="text-sm text-gray-500 mt-1">
                     Total Officers: <span className="font-bold text-tsa-green">{totalManagement} Personnel</span> (Admin Excluded)
                 </p>
@@ -498,7 +526,7 @@ const ManageUsers = () => {
             {showForm && (
               <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl mb-8">
                 <h3 className="font-bold text-xl text-tsa-dark mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
-                  {isEditing ? <Pencil size={20} className="text-tsa-gold" /> : <UserPlus size={20} className="text-tsa-gold" />} 
+                  {isEditing ? <Pencil size={20} className="text-tsa-green" /> : <UserPlus size={20} className="text-tsa-green" />} 
                   {isEditing ? 'Edit User Data' : 'Add New User'}
                 </h3>
                 
@@ -584,12 +612,12 @@ const ManageUsers = () => {
                 <table className="w-full text-left text-sm">
                     <thead className="bg-gray-50 border-b border-gray-100">
                     <tr>
-                        <th className="p-5 font-bold text-tsa-green text-xs uppercase w-12">#</th>
-                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Profile</th>
-                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Position</th>
-                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Dept / Div</th>
-                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Cohort</th>
-                        <th className="p-5 font-bold text-tsa-green text-xs uppercase text-right">Actions</th>
+                        <th className="p-5 font-bold text-gray-500 text-xs uppercase w-12">#</th>
+                        <th className="p-5 font-bold text-gray-500 text-xs uppercase">Profile</th>
+                        <th className="p-5 font-bold text-gray-500 text-xs uppercase">Position</th>
+                        <th className="p-5 font-bold text-gray-500 text-xs uppercase">Dept / Div</th>
+                        <th className="p-5 font-bold text-gray-500 text-xs uppercase">Cohort</th>
+                        <th className="p-5 font-bold text-gray-500 text-xs uppercase text-right">Actions</th>
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -599,7 +627,7 @@ const ManageUsers = () => {
                         <tr><td colSpan="6" className="p-8 text-center text-gray-400">No users found.</td></tr>
                     ) : (
                         filteredUsers.map((u, index) => (
-                        <tr key={u.id} className="hover:bg-green-50/30 transition-colors">
+                        <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
                             <td className="p-5 text-gray-400 font-mono text-xs">{index + 1}</td>
                             <td className="p-5">
                                 <div className="flex items-center gap-3">
@@ -662,7 +690,7 @@ const ManageUsers = () => {
           <div className="animate-fade-in-up">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
               <div>
-                <h2 className="text-xl font-bold text-tsa-dark flex items-center gap-2"><Briefcase size={20} className="text-tsa-gold"/> Project Nominations</h2>
+                <h2 className="text-xl font-bold text-tsa-dark flex items-center gap-2"><Briefcase size={20} className="text-tsa-green"/> Project Nominations</h2>
                 <p className="text-sm text-gray-500 mt-1">Manage TSA USU work programs for End of Term Awards.</p>
               </div>
               <button 
@@ -756,7 +784,10 @@ const ManageUsers = () => {
         {/* ========================================== */}
         {activeTab === 'periods' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
-            <h2 className="text-lg font-black text-tsa-dark mb-6">Period Lifecycle Control & Export</h2>
+            <div className="flex items-center gap-2 mb-6">
+                <CalendarDays size={20} className="text-tsa-green"/>
+                <h2 className="text-lg font-black text-tsa-dark">Period Lifecycle Control & Export</h2>
+            </div>
             
             <div className="space-y-4">
               {periodsConfig.map(p => (
@@ -792,7 +823,7 @@ const ManageUsers = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border border-yellow-200/50 bg-white shadow-sm transition-all gap-4 mt-8 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                   <div className="ml-2">
-                    <h3 className="font-bold text-tsa-dark text-base flex items-center gap-2"><Crown size={16} className="text-tsa-gold"/> End of Term (Voting)</h3>
+                    <h3 className="font-bold text-tsa-dark text-base flex items-center gap-2"><Crown size={16} className="text-tsa-gold"/> End of Term</h3>
                     <p className="text-xs text-gray-500 mt-1">Status: <span className={`font-bold uppercase ${appSettings.voting_status === 'ACTIVE' ? 'text-tsa-green' : appSettings.voting_status === 'PUBLISHED' ? 'text-blue-500' : 'text-gray-500'}`}>{appSettings.voting_status}</span></p>
                   </div>
                   <select 
@@ -815,7 +846,10 @@ const ManageUsers = () => {
         {/* ========================================== */}
         {activeTab === 'assets' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
-            <h2 className="text-lg font-black text-tsa-dark mb-2">Organization Assets</h2>
+            <div className="flex items-center gap-2 mb-2">
+                <ImagePlus size={20} className="text-tsa-green"/>
+                <h2 className="text-lg font-black text-tsa-dark">Organization Assets</h2>
+            </div>
             <p className="text-sm text-gray-500 mb-8">Upload department photos to be displayed on the Dashboard Awards.</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -867,16 +901,19 @@ const ManageUsers = () => {
         {activeTab === 'tracker' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
              <div className="mb-6">
-                <h2 className="text-lg font-black text-tsa-dark">Live Evaluation Progress</h2>
-                <p className="text-sm text-gray-500 mt-1">Lacak partisipasi pengurus saat periode <span className="font-bold text-tsa-green">{activeTrackerName || 'tertentu'}</span> sedang Active.</p>
+                <div className="flex items-center gap-2 mb-1">
+                    <Activity size={20} className="text-tsa-green"/>
+                    <h2 className="text-lg font-black text-tsa-dark">Live Evaluation Progress</h2>
+                </div>
+                <p className="text-sm text-gray-500">Track officer participation during <span className="font-bold text-tsa-green">{activeTrackerName || 'active'}</span> periods.</p>
              </div>
 
              {trackerLoading ? (
                <div className="flex justify-center py-20"><Loader2 className="animate-spin text-tsa-green" size={32} /></div>
              ) : !activeTrackerName ? (
                <div className="text-center py-20 border-2 border-dashed border-gray-200 rounded-2xl">
-                 <Activity size={40} className="text-gray-300 mx-auto mb-3" />
-                 <p className="text-sm font-bold text-gray-400">Tidak ada periode Kuartal atau Voting yang sedang ACTIVE.</p>
+                 <Clock size={40} className="text-gray-300 mx-auto mb-3" />
+                 <p className="text-sm font-bold text-gray-400">No active Quarter or End of Term periods at the moment.</p>
                </div>
              ) : (
                <div className="overflow-x-auto border border-gray-100 rounded-2xl">
@@ -901,6 +938,10 @@ const ManageUsers = () => {
                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider border border-red-100">
                                <AlertTriangle size={12} /> Pending
                              </span>
+                           ) : user.status === 'PROGRESS' ? (
+                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-yellow-50 text-yellow-600 text-[10px] font-black uppercase tracking-wider border border-yellow-200">
+                               <Clock size={12} /> Progress
+                             </span>
                            ) : (
                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider border border-emerald-100">
                                <CheckCircle2 size={12} /> Completed
@@ -911,12 +952,12 @@ const ManageUsers = () => {
                            {user.detail}
                          </td>
                          <td className="p-4 text-right">
-                           {user.status === 'PENDING' && (
+                           {(user.status === 'PENDING' || user.status === 'PROGRESS') && (
                              <button 
                                onClick={() => handleCopyReminder(user.full_name, activeTrackerName)}
                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors text-xs font-bold"
                              >
-                               <Copy size={14} /> Tagih
+                               <Copy size={14} /> Remind
                              </button>
                            )}
                          </td>

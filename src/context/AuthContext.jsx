@@ -35,13 +35,17 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Password salah!');
       }
 
-      // 3. Simpan data user ke State & LocalStorage biar gak log out pas refresh
+      // 3. Simpan SELURUH data user krusial ke State & LocalStorage
       const userData = {
         id: data.id,
         username: data.username,
-        name: data.username, // Nanti bisa update tabel user tambah kolom 'name' asli
         role: data.role,
-        dept: data.dept
+        dept: data.dept,
+        full_name: data.full_name,   // DITAMBAHKAN
+        position: data.position,     // DITAMBAHKAN
+        division: data.division,     // DITAMBAHKAN
+        cohort: data.cohort,         // DITAMBAHKAN
+        photo_url: data.photo_url    // DITAMBAHKAN
       };
 
       setUser(userData);

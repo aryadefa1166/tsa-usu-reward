@@ -90,7 +90,7 @@ export const calculateQuarterlyResults = async (quarter) => {
       mvp: getWinner(results, 'theUltimateMVP'),
       bestDept: getWinner(deptResults, 'score'),
       allScores: results,
-      allDeptScores: deptResults // DITAMBAHKAN UNTUK TARIKAN DATA END OF TERM
+      allDeptScores: deptResults 
     };
 
   } catch (error) {
@@ -163,7 +163,7 @@ export const calculateEndOfTermResults = async () => {
     const voterCounts = { MVP: new Set(), ROOKIE: new Set(), PROJECT: new Set(), FAV_EB: new Set() };
 
     votes.forEach(v => {
-      // 1. Rekap Evaluasi BPH (1-5 Bintang)
+      // 1. Rekap Evaluasi BPH (1-5 Bintang yg sudah dikonversi ke 0-100 di DB)
       if (v.category === 'EVAL_DEPT') {
         if (!evalStars.DEPT[v.target_id]) evalStars.DEPT[v.target_id] = { total: 0, count: 0 };
         evalStars.DEPT[v.target_id].total += v.evaluation_score;
@@ -198,10 +198,9 @@ export const calculateEndOfTermResults = async () => {
       return maxTheoretical > 0 ? (rawPoints / maxTheoretical) * 100 : 0;
     };
 
-    // Helper Normalisasi Bintang (Nilai Bintang * 20)
-    const normalizeEval = (totalStars, count) => {
-      const avgStar = count > 0 ? (totalStars / count) : 0;
-      return avgStar * 20; // 5 Bintang = 100
+    // Helper Normalisasi Bintang (PERBAIKAN: Hapus perkalian 20 karena data dari DB sudah 0-100)
+    const normalizeEval = (totalScoreFromDB, count) => {
+      return count > 0 ? (totalScoreFromDB / count) : 0;
     };
 
     // ==========================================

@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 
 const ShieldIcon = () => (
-  // PERBAIKAN: Background Hijau TSA dengan Ikon PUTIH
   <div className="w-10 h-10 bg-tsa-green rounded-xl flex items-center justify-center shadow-md">
     <ShieldCheck size={20} className="text-white" />
   </div>
@@ -57,7 +56,6 @@ const ManageUsers = () => {
   const [trackerLoading, setTrackerLoading] = useState(false);
   const [activeTrackerName, setActiveTrackerName] = useState('');
 
-  // Menyeragamkan warna icon header tab
   const adminTabs = [
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'projects', label: 'Project Nominations', icon: Briefcase },
@@ -73,7 +71,6 @@ const ManageUsers = () => {
     fetchProjects();
   }, []);
 
-  // Fetch Tracker Data setiap kali tab Tracker dibuka atau App Settings berubah
   useEffect(() => {
     if (activeTab === 'tracker') fetchTrackerData();
   }, [activeTab, appSettings]);
@@ -104,7 +101,7 @@ const ManageUsers = () => {
   };
 
   // ==========================================
-  // TRACKER LOGIC (MULTI-QUOTA)
+  // TRACKER LOGIC (DIPERBAIKI JADI BINER)
   // ==========================================
   const fetchTrackerData = async () => {
     setTrackerLoading(true);
@@ -117,36 +114,26 @@ const ManageUsers = () => {
 
       if (appSettings.voting_status === 'ACTIVE') {
         setActiveTrackerName('End of Term Evaluation'); 
-        const { data: votes } = await supabase.from('end_of_term_votes').select('voter_id, category');
         
+        // Tarik HANYA kolom voter_id agar ringan
+        const { data: votes } = await supabase.from('end_of_term_votes').select('voter_id');
+        
+        // Target: Semua Pengurus Aktif KECUALI Admin
         const votersTarget = usersList.filter(u => u.role !== 1 && u.is_active === true);
         
-        const userVotesCount = {};
-        votersTarget.forEach(u => userVotesCount[u.id] = 0);
-        votes?.forEach(v => {
-          if (userVotesCount[v.voter_id] !== undefined) {
-             userVotesCount[v.voter_id] += 1; 
-          }
-        });
+        // Buat Set (O(1) Lookup) berisi daftar unik ID pengurus yang sudah vote
+        const votedSet = new Set(votes?.map(v => v.voter_id) || []);
 
         const report = votersTarget.map(user => {
-          const filledForms = userVotesCount[user.id] || 0;
-          let requiredForms = 3; 
-          if (user.role === 2) requiredForms = 5; 
-          if (user.role === 5) requiredForms = 4; 
-
-          let status = 'PENDING';
-          if (filledForms >= requiredForms) status = 'COMPLETED';
-          else if (filledForms > 0) status = 'PROGRESS';
-
+          const hasVoted = votedSet.has(user.id);
           return {
             ...user,
-            status,
-            detail: `${filledForms} of ${requiredForms} required forms submitted`
+            status: hasVoted ? 'COMPLETED' : 'PENDING',
+            detail: hasVoted ? 'Votes submitted successfully' : 'Has not participated yet'
           };
         });
         
-        const sortOrder = { 'PENDING': 1, 'PROGRESS': 2, 'COMPLETED': 3 };
+        const sortOrder = { 'PENDING': 1, 'COMPLETED': 2 };
         setTrackerData(report.sort((a, b) => sortOrder[a.status] - sortOrder[b.status]));
       } 
       else if (activeQuarter) {
@@ -449,7 +436,6 @@ const ManageUsers = () => {
 
   const totalManagement = usersList.filter(u => u.role !== 1).length;
 
-  // PERBAIKAN: Warna ADV dibuat lebih oranye/cokelat agar tidak pucat seperti kuning
   const getDeptColor = (deptName) => {
       const dept = deptName?.toUpperCase();
       if (dept === 'BPH') return 'bg-pink-100 text-pink-700 border-pink-200';
@@ -607,7 +593,6 @@ const ManageUsers = () => {
                 <table className="w-full text-left text-sm">
                     <thead className="bg-gray-50 border-b border-gray-100">
                     <tr>
-                        {/* PERBAIKAN: Header Tabel warna Hijau TSA */}
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase w-12">#</th>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase">Profile</th>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase">Position</th>
@@ -680,7 +665,7 @@ const ManageUsers = () => {
         )}
 
         {/* ========================================== */}
-        {/* TAB 2: PROJECT NOMINATIONS (NEW END OF TERM) */}
+        {/* TAB 2: PROJECT NOMINATIONS */}
         {/* ========================================== */}
         {activeTab === 'projects' && (
           <div className="animate-fade-in-up">
@@ -801,7 +786,6 @@ const ManageUsers = () => {
                     >
                       <option value="LOCKED">🔒 Locked</option>
                       <option value="ACTIVE">🟢 Active</option>
-                      <option value="READ_ONLY">👀 Read-Only</option>
                       <option value="PUBLISHED">🏆 Published</option>
                     </select>
                     
@@ -815,7 +799,7 @@ const ManageUsers = () => {
                 </div>
               ))}
 
-              {/* END OF TERM SECTION DIPERBAIKI (TEMA WHITE-GOLD) */}
+              {/* END OF TERM SECTION */}
               <div className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border border-yellow-200/50 bg-white shadow-sm transition-all gap-4 mt-8 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                   <div className="ml-2">
@@ -916,7 +900,6 @@ const ManageUsers = () => {
                  <table className="w-full text-left text-sm">
                    <thead className="bg-gray-50 border-b border-gray-100">
                      <tr>
-                       {/* PERBAIKAN: Header Tabel warna Hijau TSA */}
                        <th className="p-4 font-bold text-tsa-green text-xs uppercase">Target Name</th>
                        <th className="p-4 font-bold text-tsa-green text-xs uppercase">Status</th>
                        <th className="p-4 font-bold text-tsa-green text-xs uppercase">Detail</th>
@@ -935,10 +918,6 @@ const ManageUsers = () => {
                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider border border-red-100">
                                <AlertTriangle size={12} /> Pending
                              </span>
-                           ) : user.status === 'PROGRESS' ? (
-                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-yellow-50 text-yellow-600 text-[10px] font-black uppercase tracking-wider border border-yellow-200">
-                               <Clock size={12} /> Progress
-                             </span>
                            ) : (
                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider border border-emerald-100">
                                <CheckCircle2 size={12} /> Completed
@@ -949,7 +928,7 @@ const ManageUsers = () => {
                            {user.detail}
                          </td>
                          <td className="p-4 text-right">
-                           {(user.status === 'PENDING' || user.status === 'PROGRESS') && (
+                           {user.status === 'PENDING' && (
                              <button 
                                onClick={() => handleCopyReminder(user.full_name, activeTrackerName)}
                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors text-xs font-bold"

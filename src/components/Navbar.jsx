@@ -10,14 +10,15 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State untuk status Voting End of Term
-  const [votingActive, setVotingActive] = useState(false);
+  // State untuk melacak apakah menu End of Term harus ditampilkan
+  const [showEndOfTermMenu, setShowEndOfTermMenu] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
       const { data, error } = await supabase.from('app_settings').select('voting_status').eq('id', 1).single();
       if (!error && data) {
-        setVotingActive(data.voting_status === 'ACTIVE');
+        // PERBAIKAN: Menu End of Term muncul jika status ACTIVE atau PUBLISHED (Read-Only)
+        setShowEndOfTermMenu(data.voting_status === 'ACTIVE' || data.voting_status === 'PUBLISHED');
       }
     };
     fetchSettings();
@@ -34,14 +35,12 @@ const Navbar = () => {
   // =========================================
   const role = user?.role;
   const isAdmin = role === 1;
-  const isReportViewer = role >= 2 && role <= 5; // Admin (1) tidak punya rapor
-  const isAssessor = role >= 2 && role <= 4; // Staff/TL (5) dan Admin (1) tidak menilai
-  
-  // LOGIKA AKSES SEKRETARIS MUTLAK
+  const isReportViewer = role >= 2 && role <= 5; 
+  const isAssessor = role >= 2 && role <= 4; 
   const isSecretary = role === 2 && user?.position === 'Secretary';
   
-  // LOGIKA AKSES VOTING (Hanya muncul jika ACTIVE dan user adalah pengurus)
-  const showVoting = votingActive && role >= 2 && role <= 5;
+  // Tampilkan tab End of Term hanya jika statusnya memungkinkan DAN user bukan admin
+  const canSeeVoting = showEndOfTermMenu && role >= 2 && role <= 5;
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
@@ -49,8 +48,7 @@ const Navbar = () => {
     { name: 'Assessment', path: '/input-assessment', icon: CheckSquare, show: isAssessor },
     { name: 'Attendance', path: '/input-attendance', icon: ClipboardCheck, show: isSecretary },
     { name: 'Our Team', path: '/our-team', icon: Users, show: true },
-    // PERBAIKAN: Nama diubah jadi End of Term, Ikon jadi Crown
-    { name: 'End of Term', path: '/voting', icon: Crown, show: showVoting }, 
+    { name: 'End of Term', path: '/voting', icon: Crown, show: canSeeVoting }, 
     { name: 'Admin', path: '/manage-users', icon: Shield, show: isAdmin },
   ];
 
@@ -88,7 +86,6 @@ const Navbar = () => {
                   <button
                     key={link.name}
                     onClick={() => navigate(link.path)}
-                    // PERBAIKAN: Logika isVotingBtn dihapus, semua pakai tema TSA Green
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                       isActive 
                         ? 'bg-green-50 text-tsa-green' 
@@ -105,12 +102,9 @@ const Navbar = () => {
             {/* Bagian Kanan: Profil Stacked Text & Logout */}
             <div className="flex items-center gap-6">
               <div className="flex flex-col items-end">
-                {/* Baris 1: Nama Lengkap Presisi */}
                 <span className="text-sm font-black text-tsa-dark capitalize">
                   {user?.full_name || 'Administrator'}
                 </span>
-                
-                {/* Baris 2: Posisi dan Departemen */}
                 {role === 1 ? (
                   <span className="text-[9px] font-bold text-tsa-green uppercase mt-0.5 tracking-wider">
                     System Administrator
@@ -147,7 +141,6 @@ const Navbar = () => {
               <button
                 key={link.name}
                 onClick={() => navigate(link.path)}
-                // PERBAIKAN: Logika isVotingBtn dihapus, semua diseragamkan
                 className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-full gap-1 transition-all ${
                   isActive 
                     ? 'text-tsa-green' 

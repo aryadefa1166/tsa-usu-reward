@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
-import { BarChart2, TrendingUp, Users, Loader2, CalendarDays, ChevronRight, ArrowLeft, LayoutList, Lock, Crown, Trophy, Activity, Filter } from 'lucide-react';
+import { BarChart2, TrendingUp, Users, Loader2, CalendarDays, ChevronRight, ArrowLeft, LayoutList, Lock, Crown, Activity, Navigation } from 'lucide-react';
 
 // ==========================================
 // 1. KOMPONEN VISUAL: PROGRESS BAR (TSA Green)
@@ -219,11 +219,11 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [analytics, setAnalytics] = useState(null);
   
-  // State untuk Multi-level Tab Leaderboard
+  // State untuk Multi-level Tab Leaderboard & Selected Entity (Master-Detail Radar)
   const [leaderboardTab, setLeaderboardTab] = useState('Staff');
   const [availableTabs, setAvailableTabs] = useState([]);
+  const [selectedEntityId, setSelectedEntityId] = useState(null);
 
-  // Konfigurasi hak akses Tab Leaderboard
   useEffect(() => {
     const tabs = [];
     if (currentUser.role <= 2) {
@@ -255,12 +255,16 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
     }
   }, [activeQuarter, groupedStaff]);
 
+  // Reset selectedEntityId jika Tab berubah, agar otomatis memilih Rank #1 lagi
+  useEffect(() => {
+    setSelectedEntityId(null);
+  }, [leaderboardTab, activeQuarter]);
+
   const fetchStaffList = async () => {
     setLoadingDir(true);
     try {
       let query = supabase.from('users').select('*').eq('role', 5).eq('is_active', true);
 
-      // Role 1 dan 2 bisa melihat semua (tanpa filter dept/div)
       if (currentUser.role === 3) query = query.eq('dept', currentUser.dept);
       else if (currentUser.role === 4) query = query.eq('dept', currentUser.dept).eq('division', currentUser.division);
 
@@ -293,7 +297,6 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
         return;
       }
 
-      // Kumpulkan ID Staf berdasarkan wewenang
       const myStaffList = [];
       Object.values(groupedStaff).forEach(divObj => {
         Object.values(divObj).forEach(arr => myStaffList.push(...arr));
@@ -305,36 +308,50 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
         setAnalytics(null); return;
       }
 
-      // 1. Rata-rata Skor Global Tim
+      // 1. Rata-rata Skor Global Tim (Highlight Cards)
       const avgMvp = myScores.reduce((acc, curr) => acc + (curr.theUltimateMVP || 0), 0) / myScores.length;
       const avgAtt = myScores.reduce((acc, curr) => acc + (curr.attendanceScore || 0), 0) / myScores.length;
 
-      // 2. Agregasi Multi-Level Leaderboard
+      // 2. Agregasi Multi-Level Leaderboard & Pemetaan Relasi Staf (Untuk sinkronisasi Radar)
       const deptMap = {};
       const divMap = {};
       const staffLeaderboard = [];
+      const entityToStaffIds = {
+        Department: {},
+        Division: {},
+        Staff: {}
+      };
 
       myScores.forEach(s => {
         const score = s.theUltimateMVP || 0;
         
-        // Push Staf
-        staffLeaderboard.push({ name: s.full_name, score: score, subtext: `${s.position} • ${s.dept}` });
+        // --- STAFF LEVEL ---
+        staffLeaderboard.push({ id: s.id, name: s.full_name, score: score, subtext: `${s.position} • ${s.dept}` });
+        entityToStaffIds.Staff[s.id] = [s.id]; // Staf hanya mewakili dirinya sendiri
 
-        // Push Dept
-        if (!deptMap[s.dept]) deptMap[s.dept] = { total: 0, count: 0 };
+        // --- DEPT LEVEL ---
+        if (!deptMap[s.dept]) {
+          deptMap[s.dept] = { total: 0, count: 0 };
+          entityToStaffIds.Department[s.dept] = [];
+        }
         deptMap[s.dept].total += score;
         deptMap[s.dept].count += 1;
+        entityToStaffIds.Department[s.dept].push(s.id); // Kumpulkan ID staf di dept ini
 
-        // Push Divisi (Agar jelas jika BPH yang login, tampilkan nama departemen di depannya)
+        // --- DIV LEVEL ---
         const divName = s.division && s.division !== '-' ? s.division : 'General';
         const fullDivName = currentUser.role <= 2 ? `${s.dept} - ${divName}` : divName;
-        if (!divMap[fullDivName]) divMap[fullDivName] = { total: 0, count: 0 };
+        if (!divMap[fullDivName]) {
+          divMap[fullDivName] = { total: 0, count: 0 };
+          entityToStaffIds.Division[fullDivName] = [];
+        }
         divMap[fullDivName].total += score;
         divMap[fullDivName].count += 1;
+        entityToStaffIds.Division[fullDivName].push(s.id); // Kumpulkan ID staf di div ini
       });
 
-      const deptLeaderboard = Object.keys(deptMap).map(d => ({ name: d, score: deptMap[d].total / deptMap[d].count })).sort((a,b) => b.score - a.score);
-      const divLeaderboard = Object.keys(divMap).map(d => ({ name: d, score: divMap[d].total / divMap[d].count })).sort((a,b) => b.score - a.score);
+      const deptLeaderboard = Object.keys(deptMap).map(d => ({ id: d, name: d, score: deptMap[d].total / deptMap[d].count })).sort((a,b) => b.score - a.score);
+      const divLeaderboard = Object.keys(divMap).map(d => ({ id: d, name: d, score: divMap[d].total / divMap[d].count })).sort((a,b) => b.score - a.score);
       staffLeaderboard.sort((a,b) => b.score - a.score);
 
       const leaderboardsData = {
@@ -343,39 +360,20 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
         Staff: staffLeaderboard
       };
 
-      // 3. Highlight Card Top Unit
-      let topUnit = null;
-      let unitLabel = '';
-      if (currentUser.role <= 2) {
-        unitLabel = 'Department';
-        topUnit = deptLeaderboard.length > 0 && deptLeaderboard[0].score > 0 ? deptLeaderboard[0] : null;
-      } else if (currentUser.role === 3) {
-        unitLabel = 'Division';
-        topUnit = divLeaderboard.length > 0 && divLeaderboard[0].score > 0 ? divLeaderboard[0] : null;
-      } else {
-        unitLabel = 'Staff';
-        topUnit = staffLeaderboard.length > 0 && staffLeaderboard[0].score > 0 ? staffLeaderboard[0] : null;
-      }
-
-      // 4. Trait Radar
+      // 3. Tarik SELURUH data kualitatif staf (di-cache untuk Radar dinamis)
       const { data: assessData } = await supabase
           .from('assessments')
-          .select('attitude, discipline, active, agility, cheerful')
+          .select('target_id, attitude, discipline, active, agility, cheerful')
           .in('target_id', myStaffIds)
           .eq('quarter', quarter);
 
-      let traits = { attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0 };
-      if (assessData && assessData.length > 0) {
-          assessData.forEach(item => {
-            traits.attitude += item.attitude; traits.discipline += item.discipline;
-            traits.active += item.active; traits.agility += item.agility; traits.cheerful += item.cheerful;
-          });
-          const count = assessData.length;
-          traits.attitude /= count; traits.discipline /= count;
-          traits.active /= count; traits.agility /= count; traits.cheerful /= count;
-      }
-
-      setAnalytics({ avgMvp, avgAtt, topUnit, unitLabel, leaderboards: leaderboardsData, traits });
+      setAnalytics({ 
+        avgMvp, 
+        avgAtt, 
+        leaderboards: leaderboardsData, 
+        entityToStaffIds, // Relasi: Entitas mana yang berisi staf siapa saja
+        assessDataCache: assessData || [] // Cache data nilai bintang untuk di-kalkulasi dinamis
+      });
 
     } catch (error) {
       console.error(error);
@@ -416,6 +414,31 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
   }
 
   const currentList = analytics?.leaderboards?.[leaderboardTab] || [];
+  
+  // Tentukan Entitas mana yang Radarnya sedang di-render
+  // Jika manajer belum mengklik apa-apa, otomatis pilih Rank #1 dari list yang sedang terbuka
+  const activeEntityId = selectedEntityId || (currentList.length > 0 ? currentList[0].id : null);
+  const activeEntityName = currentList.find(i => i.id === activeEntityId)?.name || 'Team';
+
+  // Kalkulasi Radar secara Dinamis berdasarkan `activeEntityId`
+  const radarTraits = useMemo(() => {
+    if (!analytics || !activeEntityId) return { attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0 };
+    
+    const staffIdsToCalculate = analytics.entityToStaffIds[leaderboardTab][activeEntityId] || [];
+    const relevantAssessments = analytics.assessDataCache.filter(a => staffIdsToCalculate.includes(a.target_id));
+
+    let traits = { attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0 };
+    if (relevantAssessments.length > 0) {
+      relevantAssessments.forEach(item => {
+        traits.attitude += item.attitude; traits.discipline += item.discipline;
+        traits.active += item.active; traits.agility += item.agility; traits.cheerful += item.cheerful;
+      });
+      const count = relevantAssessments.length;
+      traits.attitude /= count; traits.discipline /= count;
+      traits.active /= count; traits.agility /= count; traits.cheerful /= count;
+    }
+    return traits;
+  }, [analytics, leaderboardTab, activeEntityId]);
 
   return (
     <div className="animate-fade-in-up">
@@ -451,13 +474,15 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
           </div>
         ) : (
           <div className="space-y-6 animate-fade-in-up">
-            {/* BARIS 1: 3 EXECUTIVE HIGHLIGHTS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* PERBAIKAN: BARIS 1 (2 KARTU 50:50) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:-translate-y-1 transition-transform">
                 <div className="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center border border-yellow-100 shrink-0">
                   <Crown size={20} className="text-tsa-gold" />
                 </div>
                 <div>
+                  {/* PERBAIKAN: Teks diubah menjadi Team Avg. MVP */}
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Team Avg. MVP</p>
                   <div className="text-2xl font-black text-tsa-dark">{analytics.avgMvp > 0 ? analytics.avgMvp.toFixed(1) : '-'}</div>
                 </div>
@@ -468,30 +493,17 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
                   <Users size={20} className="text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Avg. Attendance</p>
+                  {/* PERBAIKAN: Teks diubah menjadi Team Avg. Attendance */}
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Team Avg. Attendance</p>
                   <div className="text-2xl font-black text-tsa-dark">{analytics.avgAtt > 0 ? `${analytics.avgAtt.toFixed(1)}%` : '-'}</div>
-                </div>
-              </div>
-
-              {/* PERBAIKAN: TOP UNIT CARD (TETAP RENDER TAPI TAMPILKAN - JIKA KOSONG) */}
-              <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:-translate-y-1 transition-transform relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-3 opacity-[0.03] text-tsa-green"><Trophy size={80} /></div>
-                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center border border-green-100 shrink-0 relative z-10">
-                  <Trophy size={20} className="text-tsa-green" />
-                </div>
-                <div className="relative z-10 overflow-hidden w-full">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 truncate">Top {analytics.unitLabel}</p>
-                  <div className="text-lg font-black text-tsa-dark truncate leading-tight">
-                    {analytics.topUnit && analytics.topUnit.score > 0 ? analytics.topUnit.name : '-'}
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* BARIS 2: MULTI-LEVEL LEADERBOARD & QUALITATIVE RADAR */}
+            {/* BARIS 2: MULTI-LEVEL LEADERBOARD & INTERACTIVE RADAR */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* Leaderboard Multi-Level */}
+              {/* LEADERBOARD PANEL */}
               <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-full">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-black text-tsa-dark flex items-center gap-2">
@@ -499,7 +511,7 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
                   </h3>
                 </div>
 
-                {/* Smart Tabs untuk Leaderboard Hierarki */}
+                {/* Smart Tabs */}
                 {availableTabs.length > 1 && (
                   <div className="flex gap-2 mb-5 border-b border-gray-100 pb-3 overflow-x-auto hide-scrollbar">
                     {availableTabs.map(tab => (
@@ -514,27 +526,31 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
                   </div>
                 )}
 
-                <div className="space-y-4 max-h-[350px] overflow-y-auto pr-3 hide-scrollbar flex-grow">
+                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-3 hide-scrollbar flex-grow">
                   {currentList.length === 0 ? (
                     <div className="text-center text-xs text-gray-400 font-medium py-10 border border-dashed border-gray-100 rounded-xl">No evaluation data yet.</div>
                   ) : (
                     currentList.map((item, idx) => (
-                      <div key={item.name + idx}>
+                      <div 
+                        key={item.id}
+                        // PERBAIKAN: Fungsi onClick untuk Master-Detail Radar
+                        onClick={() => setSelectedEntityId(item.id)} 
+                        className={`p-3 rounded-xl border transition-all cursor-pointer ${activeEntityId === item.id ? 'bg-green-50/50 border-green-200' : 'bg-white border-transparent hover:bg-gray-50'}`}
+                      >
                         <div className="flex justify-between items-end mb-1.5">
                           <div className="flex flex-col max-w-[80%]">
-                            <span className="text-xs font-bold text-gray-700 truncate">
+                            <span className={`text-xs font-bold truncate ${activeEntityId === item.id ? 'text-tsa-green' : 'text-gray-700'}`}>
                               <span className="text-gray-400 mr-2">#{idx+1}</span>{item.name}
                             </span>
-                            {/* Munculkan subtext (jabatan) hanya di tab Staff */}
                             {item.subtext && leaderboardTab === 'Staff' && (
                               <span className="text-[9px] text-gray-400 ml-6 uppercase tracking-wider truncate">{item.subtext}</span>
                             )}
                           </div>
                           <span className="text-xs font-black text-tsa-dark">{item.score > 0 ? item.score.toFixed(1) : '0.0'}</span>
                         </div>
-                        <div className="w-full bg-gray-50 rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden ml-6 max-w-[calc(100%-1.5rem)]">
                           <div 
-                            className={`h-full rounded-full transition-all duration-1000 ${idx === 0 && item.score > 0 ? 'bg-tsa-gold' : 'bg-gray-300'}`}
+                            className={`h-full rounded-full transition-all duration-1000 ${idx === 0 && item.score > 0 ? 'bg-tsa-gold' : 'bg-tsa-green'}`}
                             style={{ width: `${item.score}%` }}
                           ></div>
                         </div>
@@ -544,16 +560,27 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
                 </div>
               </div>
 
-              {/* Trait Radar */}
-              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm h-full">
-                <h3 className="text-base font-black text-tsa-dark mb-6 flex items-center gap-2">
-                  <TrendingUp size={18} className="text-tsa-green" /> Team Trait Radar
-                </h3>
-                <ScoreBar label="Attitude" score={analytics.traits.attitude} colorClass="from-blue-400 to-blue-600" />
-                <ScoreBar label="Discipline" score={analytics.traits.discipline} colorClass="from-emerald-400 to-emerald-600" />
-                <ScoreBar label="Active" score={analytics.traits.active} colorClass="from-red-400 to-red-600" />
-                <ScoreBar label="Agility" score={analytics.traits.agility} colorClass="from-amber-400 to-amber-600" />
-                <ScoreBar label="Cheerful" score={analytics.traits.cheerful} colorClass="from-purple-400 to-purple-600" />
+              {/* TRAIT RADAR PANEL (MASTER-DETAIL) */}
+              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm h-full relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-[0.02] text-tsa-green pointer-events-none"><Navigation size={120} /></div>
+                
+                <div className="flex justify-between items-start mb-6 relative z-10">
+                  <h3 className="text-base font-black text-tsa-dark flex items-center gap-2">
+                    <TrendingUp size={18} className="text-tsa-green" /> Trait Radar
+                  </h3>
+                  {/* Label Indikator Entitas Aktif */}
+                  <span className="text-[9px] px-2 py-1 rounded bg-green-50 text-tsa-green font-black uppercase tracking-widest border border-green-100 max-w-[120px] truncate text-right">
+                    {activeEntityName}
+                  </span>
+                </div>
+
+                <div className="relative z-10">
+                  <ScoreBar label="Attitude" score={radarTraits.attitude} colorClass="from-blue-400 to-blue-600" />
+                  <ScoreBar label="Discipline" score={radarTraits.discipline} colorClass="from-emerald-400 to-emerald-600" />
+                  <ScoreBar label="Active" score={radarTraits.active} colorClass="from-red-400 to-red-600" />
+                  <ScoreBar label="Agility" score={radarTraits.agility} colorClass="from-amber-400 to-amber-600" />
+                  <ScoreBar label="Cheerful" score={radarTraits.cheerful} colorClass="from-purple-400 to-purple-600" />
+                </div>
               </div>
 
             </div>
@@ -684,7 +711,6 @@ const Report = () => {
     );
   }
 
-  // Admin dan semua atasan dihitung sebagai Manager
   const isManager = user.role >= 1 && user.role <= 4;
   const isViewingPersonal = selectedUser !== null;
 

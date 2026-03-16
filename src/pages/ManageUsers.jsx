@@ -51,9 +51,7 @@ const ManageUsers = () => {
     id: null, name: '', description: '', event_date: '', pct: '', photo_url: ''
   });
 
-  // ==========================================
-  // NEW: STATE EVALUATION TRACKER
-  // ==========================================
+  // State Evaluation Tracker
   const [trackerData, setTrackerData] = useState([]);
   const [trackerLoading, setTrackerLoading] = useState(false);
   const [activeTrackerName, setActiveTrackerName] = useState('');
@@ -104,7 +102,7 @@ const ManageUsers = () => {
   };
 
   // ==========================================
-  // TRACKER LOGIC (NEW)
+  // TRACKER LOGIC
   // ==========================================
   const fetchTrackerData = async () => {
     setTrackerLoading(true);
@@ -129,7 +127,7 @@ const ManageUsers = () => {
           detail: votedIds.has(user.id) ? 'Voted' : 'Not yet voted'
         }));
         
-        setTrackerData(report.sort((a, b) => a.status.localeCompare(b.status))); // Yang belum vote di atas
+        setTrackerData(report.sort((a, b) => a.status.localeCompare(b.status)));
       } 
       else if (activeQuarter) {
         setActiveTrackerName(`Quarterly Assessment (${activeQuarter})`);
@@ -138,7 +136,6 @@ const ManageUsers = () => {
         // Populasi target: Semua penilai aktif (Role 2-4)
         const assessorTarget = usersList.filter(u => u.role >= 2 && u.role <= 4 && u.is_active === true);
         
-        // Hitung berapa orang yang sudah dinilai oleh tiap assessor
         const assessCount = {};
         assessments?.forEach(a => {
           assessCount[a.assessor_id] = (assessCount[a.assessor_id] || 0) + 1;
@@ -531,8 +528,8 @@ const ManageUsers = () => {
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-tsa-green uppercase">Status</label>
                     <select className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none font-bold" value={formData.is_active} onChange={e => setFormData({...formData, is_active: e.target.value})}>
-                        <option value="true" className="text-tsa-green">Active (Menjabat)</option>
-                        <option value="false" className="text-red-500">Inactive (Demisioner/Resign)</option>
+                        <option value="true" className="text-tsa-green">Active</option>
+                        <option value="false" className="text-red-500">Inactive</option>
                     </select>
                   </div>
 
@@ -669,7 +666,7 @@ const ManageUsers = () => {
               </div>
               <button 
                 onClick={() => { resetProjectForm(); setShowProjectForm(!showProjectForm); }}
-                className={`px-6 py-3 rounded-xl flex items-center gap-2 text-sm font-bold transition-all shadow-md ${showProjectForm ? 'bg-gray-200 text-gray-600' : 'bg-tsa-gold text-white'}`}
+                className={`px-6 py-3 rounded-xl flex items-center gap-2 text-sm font-bold transition-all shadow-md ${showProjectForm ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' : 'bg-tsa-green text-white hover:bg-emerald-900'}`}
               >
                 {showProjectForm ? <><X size={18} /> Cancel</> : <><Plus size={18} /> Add Project</>}
               </button>
@@ -683,36 +680,36 @@ const ManageUsers = () => {
                 
                 <form onSubmit={handleSaveProject} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-tsa-gold uppercase">Project Name</label>
+                    <label className="text-xs font-bold text-tsa-green uppercase">Project Name</label>
                     <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={projectFormData.name} onChange={e => setProjectFormData({...projectFormData, name: e.target.value})} required placeholder="e.g. Welcoming Party 2026" />
                   </div>
                   
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-tsa-gold uppercase">Event Date</label>
+                    <label className="text-xs font-bold text-tsa-green uppercase">Event Date</label>
                     <input type="date" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={projectFormData.event_date} onChange={e => setProjectFormData({...projectFormData, event_date: e.target.value})} />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-tsa-gold uppercase">Project Core Team (PCT)</label>
+                    <label className="text-xs font-bold text-tsa-green uppercase">Project Core Team (PCT)</label>
                     <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={projectFormData.pct} onChange={e => setProjectFormData({...projectFormData, pct: e.target.value})} placeholder="e.g. Budi (Ketua), Siti, dkk" />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-tsa-gold uppercase">Upload Cover Photo</label>
+                    <label className="text-xs font-bold text-tsa-green uppercase">Upload Cover Photo</label>
                     <div className="flex gap-2 items-center">
-                        <input type="file" accept="image/*" onChange={handleProjectPhotoUpload} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-yellow-50 file:text-tsa-gold hover:file:bg-yellow-100" />
-                        {uploadingProjectPhoto && <Loader2 className="animate-spin text-tsa-gold" />}
+                        <input type="file" accept="image/*" onChange={handleProjectPhotoUpload} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-tsa-green hover:file:bg-green-100" />
+                        {uploadingProjectPhoto && <Loader2 className="animate-spin text-tsa-green" />}
                     </div>
                     {projectFormData.photo_url && <p className="text-[10px] text-green-600 mt-1 truncate">File: {projectFormData.photo_url}</p>}
                   </div>
 
                   <div className="space-y-1 md:col-span-2">
-                    <label className="text-xs font-bold text-tsa-gold uppercase">Description</label>
+                    <label className="text-xs font-bold text-tsa-green uppercase">Description</label>
                     <textarea rows="3" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none resize-none" value={projectFormData.description} onChange={e => setProjectFormData({...projectFormData, description: e.target.value})} placeholder="Singkat, padat, dan jelas mengenai project ini..."></textarea>
                   </div>
 
                   <div className="md:col-span-2 flex justify-end gap-3 mt-4 border-t border-gray-100 pt-6">
-                    <button type="submit" className="px-8 py-3 rounded-lg text-sm font-bold bg-tsa-gold text-white shadow-md flex items-center gap-2 hover:bg-yellow-600">
+                    <button type="submit" className="px-8 py-3 rounded-lg text-sm font-bold bg-tsa-green text-white shadow-md flex items-center gap-2 hover:bg-emerald-800">
                         <Save size={18} /> Save Project
                     </button>
                   </div>
@@ -790,16 +787,18 @@ const ManageUsers = () => {
                 </div>
               ))}
 
-              <div className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border border-gray-800 bg-gray-900 transition-all gap-4 mt-8 shadow-md">
-                  <div>
-                    <h3 className="font-bold text-tsa-gold text-base">End of Term (Voting)</h3>
-                    <p className="text-xs text-gray-400 mt-1">Status: <span className="font-bold text-white uppercase">{appSettings.voting_status}</span></p>
+              {/* END OF TERM SECTION DIPERBAIKI (TEMA WHITE-GOLD) */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border border-yellow-200/50 bg-white shadow-sm transition-all gap-4 mt-8 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+                  <div className="ml-2">
+                    <h3 className="font-bold text-tsa-dark text-base flex items-center gap-2"><Crown size={16} className="text-tsa-gold"/> End of Term (Voting)</h3>
+                    <p className="text-xs text-gray-500 mt-1">Status: <span className={`font-bold uppercase ${appSettings.voting_status === 'ACTIVE' ? 'text-tsa-green' : appSettings.voting_status === 'PUBLISHED' ? 'text-blue-500' : 'text-gray-500'}`}>{appSettings.voting_status}</span></p>
                   </div>
                   <select 
                       value={appSettings.voting_status}
                       onChange={(e) => handleUpdatePeriod('voting_status', e.target.value)}
                       disabled={savingPeriod}
-                      className="bg-gray-800 border border-gray-700 text-sm font-bold text-white rounded-xl px-4 py-2 focus:outline-none focus:border-tsa-gold shadow-sm"
+                      className="bg-white border border-gray-200 text-sm font-bold text-gray-700 rounded-xl px-4 py-2 focus:outline-none focus:border-tsa-gold shadow-sm"
                   >
                       <option value="LOCKED">🔒 Locked</option>
                       <option value="ACTIVE">🟢 Active</option>
@@ -862,7 +861,7 @@ const ManageUsers = () => {
         )}
 
         {/* ========================================== */}
-        {/* TAB 5: EVALUATION TRACKER (NEW) */}
+        {/* TAB 5: EVALUATION TRACKER */}
         {/* ========================================== */}
         {activeTab === 'tracker' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">

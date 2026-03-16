@@ -209,12 +209,11 @@ const Dashboard = () => {
             /* ========================================== */
             <div className="space-y-6 animate-fade-in-up">
               <div className="flex items-center justify-between mb-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
-                {/* PERBAIKAN: Border kiri ditipiskan jadi w-1.5 */}
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                 <div className="ml-2">
                   <h2 className="text-2xl font-black text-tsa-dark flex items-center gap-3 tracking-widest uppercase">
-                    {/* PERBAIKAN: Ikon Hall of Fame diganti Trophy */}
-                    <Trophy size={28} className="text-tsa-gold" /> Hall of Fame 2026
+                    {/* PERBAIKAN: Ikon Trophy jadi hijau */}
+                    <Trophy size={28} className="text-tsa-green" /> Hall of Fame 2026
                   </h2>
                   <p className="text-xs text-gray-500 mt-2 font-medium max-w-2xl">The most prestigious awards based on Q1-Q4 aggregation, BPH Evaluation, and Ranked Choice Voting.</p>
                 </div>
@@ -282,7 +281,8 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-black text-tsa-dark flex items-center gap-2">
-                    <Trophy size={20} className="text-tsa-gold" /> {activeTab} Quarterly Awards
+                    {/* PERBAIKAN: Ikon Trophy jadi hijau */}
+                    <Trophy size={20} className="text-tsa-green" /> {activeTab} Quarterly Awards
                   </h2>
                   <p className="text-xs text-gray-500 mt-1 font-medium">Based on automated calculation of performance metrics and attendance.</p>
                 </div>

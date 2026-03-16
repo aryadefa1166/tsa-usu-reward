@@ -183,6 +183,17 @@ const PersonalReportView = ({ targetUser, onBack }) => {
 // ==========================================
 // 3. KOMPONEN: MANAGER VIEW (GROUPED LIST)
 // ==========================================
+
+// KONFIGURASI URUTAN MUTLAK (HIERARKI STRUKTURAL)
+const DEPT_ORDER = ['BPH', 'ADV', 'ERBD', 'MD', 'STD', 'Other'];
+const DIV_ORDER = {
+  BPH: ['General'],
+  ADV: ['SC', 'MONEV', 'General'],
+  ERBD: ['Product Partnership', 'University Network', 'Government Relations', 'Network Relations', 'Alumni & Ext. Outreach', 'General'],
+  MD: ['Education', 'Media', 'General'],
+  STD: ['Staff Management', 'Talent Management', 'General']
+};
+
 const ManagerReportView = ({ currentUser, onSelectUser }) => {
   const [groupedStaff, setGroupedStaff] = useState({});
   const [loading, setLoading] = useState(true);
@@ -193,7 +204,7 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
     setLoading(true);
     try {
       // WAJIB: Hanya tarik Role 5 (Staff / TL) yang aktif
-      let query = supabase.from('users').select('*').eq('role', 5).eq('is_active', true).order('full_name', { ascending: true });
+      let query = supabase.from('users').select('*').eq('role', 5).eq('is_active', true);
 
       // Jika Kadep (Role 3): Hanya lihat staff departemennya
       if (currentUser.role === 3) {
@@ -229,6 +240,30 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
     }
   };
 
+  // Fungsi Pengurutan Ganda (Cohort Tertua -> Alfabetis Nama)
+  const sortStaff = (a, b) => {
+    const getCohortNum = (cohortStr) => {
+      const num = parseInt((cohortStr || '').replace(/\D/g, ''));
+      return isNaN(num) ? 999 : num; // Jika tidak ada angka, taruh paling bawah
+    };
+
+    const cohortA = getCohortNum(a.cohort);
+    const cohortB = getCohortNum(b.cohort);
+
+    if (cohortA !== cohortB) {
+      return cohortA - cohortB; // Angka lebih kecil (senior) diurutkan lebih dulu
+    }
+    // Jika angkatannya sama, urutkan berdasarkan abjad A-Z
+    return (a.full_name || '').localeCompare(b.full_name || '');
+  };
+
+  // Helper untuk mendapatkan urutan divisi
+  const getDivWeight = (dept, div) => {
+    const order = DIV_ORDER[dept] || [];
+    const index = order.indexOf(div);
+    return index !== -1 ? index : 999;
+  };
+
   return (
     <div className="animate-fade-in-up">
       <div className="mb-8">
@@ -247,7 +282,8 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
         </div>
       ) : (
         <div className="space-y-10">
-          {Object.keys(groupedStaff).sort().map((dept) => (
+          {/* URUTAN MUTLAK DEPARTEMEN */}
+          {DEPT_ORDER.filter(dept => groupedStaff[dept]).map((dept) => (
             <div key={dept} className="animate-fade-in-up">
               {/* Header Departemen */}
               <div className="flex items-center gap-3 mb-4 pl-2">
@@ -256,7 +292,10 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {Object.keys(groupedStaff[dept]).sort().map((div) => (
+                {/* URUTAN MUTLAK DIVISI */}
+                {Object.keys(groupedStaff[dept])
+                  .sort((a, b) => getDivWeight(dept, a) - getDivWeight(dept, b))
+                  .map((div) => (
                   <div key={div} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
                     {/* Header Divisi */}
                     <div className="bg-gray-50/50 border-b border-gray-100 px-5 py-3">
@@ -265,9 +304,9 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
                       </span>
                     </div>
                     
-                    {/* Daftar Staff di Divisi Tersebut */}
+                    {/* URUTAN GANDA STAFF (COHORT -> ALFABETIS) */}
                     <div className="divide-y divide-gray-50 flex-grow">
-                      {groupedStaff[dept][div].map((staff) => (
+                      {[...groupedStaff[dept][div]].sort(sortStaff).map((staff) => (
                         <div 
                           key={staff.id} 
                           onClick={() => onSelectUser(staff)}

@@ -356,7 +356,7 @@ const Voting = () => {
                 <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Vote size={120} /></div>
                 
                 <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
-                  <div className="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center shrink-0 border border-yellow-100"><Crown size={24} className="text-tsa-gold" /></div>
+                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Crown size={24} className="text-tsa-green" /></div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Most Favorite EB</h2>
@@ -368,12 +368,12 @@ const Voting = () => {
                 <div className="relative z-10 space-y-3">
                   {[1, 2, 3, 4, 5].map((rank, index) => (
                     <div key={`faveb-${rank}`} className="flex items-center gap-3">
-                      <span className="w-20 text-[10px] font-black text-tsa-gold uppercase tracking-widest bg-white px-3 py-3 rounded-xl text-center border border-yellow-100 shrink-0">Rank {rank}</span>
+                      <span className="w-20 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white px-3 py-3 rounded-xl text-center border border-gray-200 shrink-0">Rank {rank}</span>
                       <select 
                         disabled={isReadOnly}
                         value={favEbVotes[index]} 
                         onChange={(e) => handleVoteChange('faveb', index, e.target.value)} 
-                        className="w-full border border-gray-200 p-3 rounded-xl text-sm font-bold text-tsa-dark focus:outline-none focus:border-tsa-gold focus:ring-1 focus:ring-tsa-gold bg-white shadow-sm transition-all hover:border-tsa-gold disabled:opacity-70 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full border border-gray-200 p-3 rounded-xl text-sm font-bold text-tsa-dark focus:outline-none focus:border-tsa-green focus:ring-1 focus:ring-tsa-green bg-white shadow-sm transition-all disabled:opacity-70 disabled:bg-gray-100 disabled:cursor-not-allowed"
                       >
                         <option value="">-- Select Executive Board Candidate --</option>
                         {ebCandidates.map(eb => <option key={eb.id} value={eb.id}>{eb.full_name} ({eb.position})</option>)}

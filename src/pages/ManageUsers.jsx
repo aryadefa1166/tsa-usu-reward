@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
-  Users, CalendarDays, Activity, Eye, ShieldCheck, Download, ImagePlus, UploadCloud 
+  Users, CalendarDays, Activity, ShieldCheck, Download, ImagePlus, UploadCloud, Briefcase 
 } from 'lucide-react';
 
 const ShieldIcon = () => (
@@ -21,14 +21,13 @@ const ManageUsers = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // State Form Input (Ditambah is_active)
+  // State Form User
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
   const [formData, setFormData] = useState({
     id: null, username: '', password: '', full_name: '', 
-    role: 6, dept: '-', division: '-', cohort: '-', 
+    role: 5, dept: '-', division: '-', cohort: '-', 
     position: 'Staff', photo_url: '', is_active: true
   });
 
@@ -38,12 +37,24 @@ const ManageUsers = () => {
   });
   const [savingPeriod, setSavingPeriod] = useState(false);
 
-  // State Organization Assets (Foto Dept/Project)
+  // State Organization Assets
   const [assetsList, setAssetsList] = useState([]);
   const [uploadingAsset, setUploadingAsset] = useState(null);
 
+  // ==========================================
+  // NEW: STATE PROJECT NOMINATIONS
+  // ==========================================
+  const [projectsList, setProjectsList] = useState([]);
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [uploadingProjectPhoto, setUploadingProjectPhoto] = useState(false);
+  const [projectFormData, setProjectFormData] = useState({
+    id: null, name: '', description: '', event_date: '', pct: '', photo_url: ''
+  });
+
   const adminTabs = [
     { id: 'users', label: 'User Management', icon: Users },
+    { id: 'projects', label: 'Project Nominations', icon: Briefcase }, // TAB BARU
     { id: 'periods', label: 'Period Settings & Export', icon: CalendarDays },
     { id: 'assets', label: 'Organization Assets', icon: ImagePlus },
     { id: 'tracker', label: 'Evaluation Tracker', icon: Activity },
@@ -53,6 +64,7 @@ const ManageUsers = () => {
     fetchUsers();
     fetchSettings();
     fetchAssets();
+    fetchProjects(); // FETCH PROJECT BARU
   }, []);
 
   // ==========================================
@@ -75,6 +87,94 @@ const ManageUsers = () => {
     if (!error && data) setAssetsList(data);
   };
 
+  const fetchProjects = async () => {
+    const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+    if (!error && data) setProjectsList(data);
+  };
+
+  // ==========================================
+  // PROJECT CRUD LOGIC (NEW)
+  // ==========================================
+  const handleProjectPhotoUpload = async (e) => {
+    try {
+      setUploadingProjectPhoto(true);
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `project_${Math.random()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage.from('photos').upload(fileName, file);
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('photos').getPublicUrl(fileName);
+      setProjectFormData({ ...projectFormData, photo_url: data.publicUrl });
+    } catch (error) {
+      alert('Error uploading photo: ' + error.message);
+    } finally {
+      setUploadingProjectPhoto(false);
+    }
+  };
+
+  const handleSaveProject = async (e) => {
+    e.preventDefault();
+    if (!projectFormData.name) return alert('Project Name is required!');
+
+    let error;
+    if (isEditingProject) {
+      const { error: updateError } = await supabase.from('projects').update({
+        name: projectFormData.name,
+        description: projectFormData.description,
+        event_date: projectFormData.event_date,
+        pct: projectFormData.pct,
+        photo_url: projectFormData.photo_url
+      }).eq('id', projectFormData.id);
+      error = updateError;
+    } else {
+      const { error: insertError } = await supabase.from('projects').insert([{
+        name: projectFormData.name,
+        description: projectFormData.description,
+        event_date: projectFormData.event_date,
+        pct: projectFormData.pct,
+        photo_url: projectFormData.photo_url
+      }]);
+      error = insertError;
+    }
+
+    if (error) {
+      alert('Failed to save project: ' + error.message);
+    } else {
+      alert(isEditingProject ? 'Project updated!' : 'Project added successfully!');
+      resetProjectForm();
+      fetchProjects();
+    }
+  };
+
+  const handleEditProject = (proj) => {
+    setProjectFormData({
+      id: proj.id, name: proj.name, description: proj.description, 
+      event_date: proj.event_date || '', pct: proj.pct, photo_url: proj.photo_url || ''
+    });
+    setIsEditingProject(true);
+    setShowProjectForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDeleteProject = async (id) => {
+    if (window.confirm('Delete this project nomination?')) {
+      const { error } = await supabase.from('projects').delete().eq('id', id);
+      if (error) alert(error.message);
+      else fetchProjects();
+    }
+  };
+
+  const resetProjectForm = () => {
+    setProjectFormData({ id: null, name: '', description: '', event_date: '', pct: '', photo_url: '' });
+    setShowProjectForm(false);
+    setIsEditingProject(false);
+  };
+
+
   // ==========================================
   // ASSET UPLOAD LOGIC
   // ==========================================
@@ -92,7 +192,6 @@ const ManageUsers = () => {
 
       const { data } = supabase.storage.from('photos').getPublicUrl(fileName);
       
-      // Update tabel organization_assets
       const { error: dbError } = await supabase.from('organization_assets').update({ photo_url: data.publicUrl }).eq('entity_name', entityName);
       if (dbError) throw dbError;
 
@@ -185,7 +284,6 @@ const ManageUsers = () => {
     e.preventDefault();
     if (!formData.username) return alert('Username is required!');
 
-    // Konversi role menjadi Integer & is_active menjadi boolean murni
     const payload = { 
       ...formData, 
       role: parseInt(formData.role),
@@ -195,7 +293,7 @@ const ManageUsers = () => {
     let error;
 
     if (isEditing) {
-        if (!payload.password) delete payload.password; // Jangan update password jika kosong
+        if (!payload.password) delete payload.password; 
         const { error: updateError } = await supabase.from('users').update(payload).eq('id', formData.id);
         error = updateError;
     } else {
@@ -211,7 +309,7 @@ const ManageUsers = () => {
       alert('Operation failed: ' + error.message);
     } else {
       alert(isEditing ? 'User updated successfully!' : 'User added successfully!');
-      resetForm();
+      resetUserForm();
       fetchUsers();
     }
   };
@@ -235,8 +333,8 @@ const ManageUsers = () => {
     }
   };
 
-  const resetForm = () => {
-      setFormData({ id: null, username: '', password: '', full_name: '', role: 6, dept: '-', division: '-', cohort: '-', position: 'Staff', photo_url: '', is_active: true });
+  const resetUserForm = () => {
+      setFormData({ id: null, username: '', password: '', full_name: '', role: 5, dept: '-', division: '-', cohort: '-', position: 'Staff', photo_url: '', is_active: true });
       setShowForm(false);
       setIsEditing(false);
   };
@@ -252,7 +350,7 @@ const ManageUsers = () => {
   const getDeptColor = (deptName) => {
       const dept = deptName?.toUpperCase();
       if (dept === 'BPH') return 'bg-pink-100 text-pink-700 border-pink-200';
-      if (dept === 'ADV') return 'bg-[#795548]/10 text-[#795548] border-[#795548]/20';
+      if (dept === 'ADV') return 'bg-amber-100 text-amber-700 border-amber-200';
       if (dept === 'MD') return 'bg-purple-100 text-purple-700 border-purple-200'; 
       if (dept === 'STD') return 'bg-blue-100 text-blue-700 border-blue-200'; 
       if (dept === 'ERBD') return 'bg-emerald-100 text-emerald-700 border-emerald-200'; 
@@ -298,7 +396,7 @@ const ManageUsers = () => {
         </div>
 
         {/* ========================================== */}
-        {/* TAB 1: USER MANAGEMENT (FULL CRUD) */}
+        {/* TAB 1: USER MANAGEMENT */}
         {/* ========================================== */}
         {activeTab === 'users' && (
           <div className="animate-fade-in-up">
@@ -310,7 +408,7 @@ const ManageUsers = () => {
                 </p>
               </div>
               <button 
-                onClick={() => { resetForm(); setShowForm(!showForm); }}
+                onClick={() => { resetUserForm(); setShowForm(!showForm); }}
                 className={`px-6 py-3 rounded-xl flex items-center gap-2 text-sm font-bold transition-all shadow-md ${showForm ? 'bg-gray-200 text-gray-600 hover:bg-gray-300' : 'bg-tsa-green text-white hover:bg-emerald-900'}`}
               >
                 {showForm ? <><X size={18} /> Cancel</> : <><Plus size={18} /> Add User</>}
@@ -338,7 +436,6 @@ const ManageUsers = () => {
                     <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} />
                   </div>
                   
-                  {/* UPDATE: Dropdown Role & Dropdown Status Bersebelahan */}
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-tsa-green uppercase">Role</label>
                     <select className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
@@ -384,7 +481,7 @@ const ManageUsers = () => {
                   </div>
 
                   <div className="md:col-span-4 flex justify-end gap-3 mt-4 border-t border-gray-100 pt-6">
-                    <button type="button" onClick={resetForm} className="px-6 py-3 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">Cancel</button>
+                    <button type="button" onClick={resetUserForm} className="px-6 py-3 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all">Cancel</button>
                     <button type="submit" className="px-8 py-3 rounded-lg text-sm font-bold bg-tsa-green text-white hover:bg-emerald-800 transition-all shadow-md flex items-center gap-2">
                         <Save size={18} /> {isEditing ? 'Save Changes' : 'Create User'}
                     </button>
@@ -409,7 +506,6 @@ const ManageUsers = () => {
                     <tr>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase w-12">#</th>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase">Profile</th>
-                        {/* UPDATE: Header diganti menjadi Position murni */}
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase">Position</th>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase">Dept / Div</th>
                         <th className="p-5 font-bold text-tsa-green text-xs uppercase">Cohort</th>
@@ -443,7 +539,6 @@ const ManageUsers = () => {
                                 </div>
                             </td>
                             <td className="p-5">
-                                {/* UPDATE: Logika pewarnaan emas dan penambahan badge Status Aktif */}
                                 <div className={`text-xs font-bold uppercase ${['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Dept', 'Vice Head of Department', 'Head of Division', 'Steering Committee'].includes(u.position) ? 'text-tsa-gold' : 'text-tsa-green'}`}>
                                     {u.position}
                                 </div>
@@ -481,7 +576,103 @@ const ManageUsers = () => {
         )}
 
         {/* ========================================== */}
-        {/* TAB 2: PERIOD SETTINGS & EXPORT CSV */}
+        {/* TAB 2: PROJECT NOMINATIONS (NEW END OF TERM) */}
+        {/* ========================================== */}
+        {activeTab === 'projects' && (
+          <div className="animate-fade-in-up">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+              <div>
+                <h2 className="text-xl font-bold text-tsa-dark flex items-center gap-2"><Briefcase size={20} className="text-tsa-gold"/> Project Nominations</h2>
+                <p className="text-sm text-gray-500 mt-1">Manage TSA USU work programs for End of Term Awards.</p>
+              </div>
+              <button 
+                onClick={() => { resetProjectForm(); setShowProjectForm(!showProjectForm); }}
+                className={`px-6 py-3 rounded-xl flex items-center gap-2 text-sm font-bold transition-all shadow-md ${showProjectForm ? 'bg-gray-200 text-gray-600' : 'bg-tsa-gold text-white'}`}
+              >
+                {showProjectForm ? <><X size={18} /> Cancel</> : <><Plus size={18} /> Add Project</>}
+              </button>
+            </div>
+
+            {showProjectForm && (
+              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-xl mb-8">
+                <h3 className="font-bold text-xl text-tsa-dark mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
+                  {isEditingProject ? 'Edit Project Data' : 'Add New Project'}
+                </h3>
+                
+                <form onSubmit={handleSaveProject} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-tsa-gold uppercase">Project Name</label>
+                    <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={projectFormData.name} onChange={e => setProjectFormData({...projectFormData, name: e.target.value})} required placeholder="e.g. Welcoming Party 2026" />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-tsa-gold uppercase">Event Date</label>
+                    <input type="date" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={projectFormData.event_date} onChange={e => setProjectFormData({...projectFormData, event_date: e.target.value})} />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-tsa-gold uppercase">Project Core Team (PCT)</label>
+                    <input type="text" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none" value={projectFormData.pct} onChange={e => setProjectFormData({...projectFormData, pct: e.target.value})} placeholder="e.g. Budi (Ketua), Siti, dkk" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-tsa-gold uppercase">Upload Cover Photo</label>
+                    <div className="flex gap-2 items-center">
+                        <input type="file" accept="image/*" onChange={handleProjectPhotoUpload} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-yellow-50 file:text-tsa-gold hover:file:bg-yellow-100" />
+                        {uploadingProjectPhoto && <Loader2 className="animate-spin text-tsa-gold" />}
+                    </div>
+                    {projectFormData.photo_url && <p className="text-[10px] text-green-600 mt-1 truncate">File: {projectFormData.photo_url}</p>}
+                  </div>
+
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-xs font-bold text-tsa-gold uppercase">Description</label>
+                    <textarea rows="3" className="w-full border border-gray-300 p-3 rounded-lg text-sm outline-none resize-none" value={projectFormData.description} onChange={e => setProjectFormData({...projectFormData, description: e.target.value})} placeholder="Singkat, padat, dan jelas mengenai project ini..."></textarea>
+                  </div>
+
+                  <div className="md:col-span-2 flex justify-end gap-3 mt-4 border-t border-gray-100 pt-6">
+                    <button type="submit" className="px-8 py-3 rounded-lg text-sm font-bold bg-tsa-gold text-white shadow-md flex items-center gap-2 hover:bg-yellow-600">
+                        <Save size={18} /> Save Project
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projectsList.length === 0 ? (
+                <div className="col-span-full text-center py-10 text-gray-400 font-medium">No projects added yet.</div>
+              ) : (
+                projectsList.map(proj => (
+                  <div key={proj.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group hover:shadow-md transition-all">
+                    <div className="h-32 bg-gray-100 relative overflow-hidden flex items-center justify-center">
+                      {proj.photo_url ? (
+                        <img src={proj.photo_url} alt={proj.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      ) : (
+                        <Briefcase size={32} className="text-gray-300" />
+                      )}
+                      <div className="absolute top-2 right-2 flex gap-1">
+                        <button onClick={() => handleEditProject(proj)} className="p-1.5 bg-white/90 text-blue-600 rounded-lg shadow-sm hover:bg-white backdrop-blur-sm"><Pencil size={14}/></button>
+                        <button onClick={() => handleDeleteProject(proj.id)} className="p-1.5 bg-white/90 text-red-600 rounded-lg shadow-sm hover:bg-white backdrop-blur-sm"><Trash2 size={14}/></button>
+                      </div>
+                    </div>
+                    <div className="p-5">
+                      <h3 className="font-black text-tsa-dark text-lg leading-tight mb-1 truncate">{proj.name}</h3>
+                      <p className="text-[10px] font-bold text-tsa-gold uppercase tracking-widest mb-3">{proj.event_date || 'Date TBD'}</p>
+                      <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-4">{proj.description || 'No description provided.'}</p>
+                      <div className="pt-3 border-t border-gray-100">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Core Team (PCT)</p>
+                        <p className="text-xs font-bold text-tsa-dark truncate mt-0.5">{proj.pct || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================== */}
+        {/* TAB 3: PERIOD SETTINGS & EXPORT CSV */}
         {/* ========================================== */}
         {activeTab === 'periods' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
@@ -538,18 +729,17 @@ const ManageUsers = () => {
         )}
 
         {/* ========================================== */}
-        {/* TAB 3: ORGANIZATION ASSETS */}
+        {/* TAB 4: ORGANIZATION ASSETS */}
         {/* ========================================== */}
         {activeTab === 'assets' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
             <h2 className="text-lg font-black text-tsa-dark mb-2">Organization Assets</h2>
-            <p className="text-sm text-gray-500 mb-8">Upload department or project photos to be displayed on the Dashboard Awards.</p>
+            <p className="text-sm text-gray-500 mb-8">Upload department photos to be displayed on the Dashboard Awards.</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {assetsList.map((asset) => (
                 <div key={asset.entity_name} className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:border-tsa-green transition-all">
                   
-                  {/* Image Preview (Landscape 16:9) */}
                   <div className="aspect-video bg-gray-100 relative group flex items-center justify-center">
                     {asset.photo_url ? (
                       <img src={asset.photo_url} alt={asset.entity_name} className="w-full h-full object-cover" />
@@ -557,7 +747,6 @@ const ManageUsers = () => {
                       <ImagePlus size={40} className="text-gray-300" />
                     )}
                     
-                    {/* Hover Overlay for Uploading */}
                     <div className={`absolute inset-0 bg-black/50 flex flex-col items-center justify-center transition-opacity ${uploadingAsset === asset.entity_name ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                       {uploadingAsset === asset.entity_name ? (
                         <Loader2 className="animate-spin text-white" size={30} />
@@ -577,7 +766,6 @@ const ManageUsers = () => {
                     </div>
                   </div>
 
-                  {/* Card Footer */}
                   <div className="p-4 bg-white border-t border-gray-100 flex items-center justify-between">
                     <div>
                       <h3 className="font-bold text-tsa-dark">{asset.entity_name}</h3>
@@ -592,7 +780,7 @@ const ManageUsers = () => {
         )}
 
         {/* ========================================== */}
-        {/* TAB 4: EVALUATION TRACKER */}
+        {/* TAB 5: EVALUATION TRACKER */}
         {/* ========================================== */}
         {activeTab === 'tracker' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">

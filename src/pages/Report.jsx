@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
-import { BarChart2, TrendingUp, Users, Loader2, CalendarDays, ChevronRight, ArrowLeft, LayoutList, Lock, Crown, Trophy, Activity } from 'lucide-react';
+import { BarChart2, TrendingUp, Users, Loader2, CalendarDays, ChevronRight, ArrowLeft, LayoutList, Lock, Crown, Trophy, Activity, Filter } from 'lucide-react';
 
 // ==========================================
 // 1. KOMPONEN VISUAL: PROGRESS BAR (TSA Green)
@@ -218,6 +218,26 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
   // States untuk Analytics Dashboard
   const [metricsLoading, setMetricsLoading] = useState(false);
   const [analytics, setAnalytics] = useState(null);
+  
+  // State untuk Multi-level Tab Leaderboard
+  const [leaderboardTab, setLeaderboardTab] = useState('Staff');
+  const [availableTabs, setAvailableTabs] = useState([]);
+
+  // Konfigurasi hak akses Tab Leaderboard
+  useEffect(() => {
+    const tabs = [];
+    if (currentUser.role <= 2) {
+      tabs.push('Department', 'Division', 'Staff');
+      setLeaderboardTab('Department');
+    } else if (currentUser.role === 3) {
+      tabs.push('Division', 'Staff');
+      setLeaderboardTab('Division');
+    } else {
+      tabs.push('Staff');
+      setLeaderboardTab('Staff');
+    }
+    setAvailableTabs(tabs);
+  }, [currentUser.role]);
 
   useEffect(() => {
     if (publishedQuarters.length > 0 && !activeQuarter) {
@@ -229,7 +249,6 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
     fetchStaffList(); 
   }, []);
 
-  // Tarik metrik agregasi saat data staf dan kuartal siap
   useEffect(() => {
     if (activeQuarter && Object.keys(groupedStaff).length > 0) {
       fetchAnalytics(activeQuarter);
@@ -241,6 +260,7 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
     try {
       let query = supabase.from('users').select('*').eq('role', 5).eq('is_active', true);
 
+      // Role 1 dan 2 bisa melihat semua (tanpa filter dept/div)
       if (currentUser.role === 3) query = query.eq('dept', currentUser.dept);
       else if (currentUser.role === 4) query = query.eq('dept', currentUser.dept).eq('division', currentUser.division);
 
@@ -273,55 +293,71 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
         return;
       }
 
-      // Kumpulkan ID Staf yang ada di bawah wewenang Manajer
+      // Kumpulkan ID Staf berdasarkan wewenang
       const myStaffList = [];
       Object.values(groupedStaff).forEach(divObj => {
         Object.values(divObj).forEach(arr => myStaffList.push(...arr));
       });
       const myStaffIds = myStaffList.map(s => s.id);
 
-      // Filter Skor Mutlak
       const myScores = result.allScores.filter(s => myStaffIds.includes(s.id));
       if (myScores.length === 0) {
         setAnalytics(null); return;
       }
 
-      // 1. Hitung Rata-rata Tim
+      // 1. Rata-rata Skor Global Tim
       const avgMvp = myScores.reduce((acc, curr) => acc + (curr.theUltimateMVP || 0), 0) / myScores.length;
       const avgAtt = myScores.reduce((acc, curr) => acc + (curr.attendanceScore || 0), 0) / myScores.length;
 
-      // 2. Hitung Peringkat Hierarki (Leaderboard)
-      let leaderboard = [];
-      let unitLabel = '';
+      // 2. Agregasi Multi-Level Leaderboard
+      const deptMap = {};
+      const divMap = {};
+      const staffLeaderboard = [];
 
+      myScores.forEach(s => {
+        const score = s.theUltimateMVP || 0;
+        
+        // Push Staf
+        staffLeaderboard.push({ name: s.full_name, score: score, subtext: `${s.position} • ${s.dept}` });
+
+        // Push Dept
+        if (!deptMap[s.dept]) deptMap[s.dept] = { total: 0, count: 0 };
+        deptMap[s.dept].total += score;
+        deptMap[s.dept].count += 1;
+
+        // Push Divisi (Agar jelas jika BPH yang login, tampilkan nama departemen di depannya)
+        const divName = s.division && s.division !== '-' ? s.division : 'General';
+        const fullDivName = currentUser.role <= 2 ? `${s.dept} - ${divName}` : divName;
+        if (!divMap[fullDivName]) divMap[fullDivName] = { total: 0, count: 0 };
+        divMap[fullDivName].total += score;
+        divMap[fullDivName].count += 1;
+      });
+
+      const deptLeaderboard = Object.keys(deptMap).map(d => ({ name: d, score: deptMap[d].total / deptMap[d].count })).sort((a,b) => b.score - a.score);
+      const divLeaderboard = Object.keys(divMap).map(d => ({ name: d, score: divMap[d].total / divMap[d].count })).sort((a,b) => b.score - a.score);
+      staffLeaderboard.sort((a,b) => b.score - a.score);
+
+      const leaderboardsData = {
+        Department: deptLeaderboard,
+        Division: divLeaderboard,
+        Staff: staffLeaderboard
+      };
+
+      // 3. Highlight Card Top Unit
+      let topUnit = null;
+      let unitLabel = '';
       if (currentUser.role <= 2) {
         unitLabel = 'Department';
-        const deptMap = {};
-        myScores.forEach(s => {
-          if (!deptMap[s.dept]) deptMap[s.dept] = { total: 0, count: 0 };
-          deptMap[s.dept].total += s.theUltimateMVP || 0;
-          deptMap[s.dept].count += 1;
-        });
-        leaderboard = Object.keys(deptMap).map(d => ({ name: d, score: deptMap[d].total / deptMap[d].count }));
+        topUnit = deptLeaderboard.length > 0 && deptLeaderboard[0].score > 0 ? deptLeaderboard[0] : null;
       } else if (currentUser.role === 3) {
         unitLabel = 'Division';
-        const divMap = {};
-        myScores.forEach(s => {
-          const div = s.division && s.division !== '-' ? s.division : 'General';
-          if (!divMap[div]) divMap[div] = { total: 0, count: 0 };
-          divMap[div].total += s.theUltimateMVP || 0;
-          divMap[div].count += 1;
-        });
-        leaderboard = Object.keys(divMap).map(d => ({ name: d, score: divMap[d].total / divMap[d].count }));
+        topUnit = divLeaderboard.length > 0 && divLeaderboard[0].score > 0 ? divLeaderboard[0] : null;
       } else {
         unitLabel = 'Staff';
-        leaderboard = myScores.map(s => ({ name: s.full_name, score: s.theUltimateMVP || 0 }));
+        topUnit = staffLeaderboard.length > 0 && staffLeaderboard[0].score > 0 ? staffLeaderboard[0] : null;
       }
 
-      leaderboard.sort((a, b) => b.score - a.score);
-      const topUnit = leaderboard.length > 0 ? leaderboard[0] : null;
-
-      // 3. Hitung Radar Kualitatif Tim
+      // 4. Trait Radar
       const { data: assessData } = await supabase
           .from('assessments')
           .select('attitude, discipline, active, agility, cheerful')
@@ -339,7 +375,7 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
           traits.active /= count; traits.agility /= count; traits.cheerful /= count;
       }
 
-      setAnalytics({ avgMvp, avgAtt, topUnit, unitLabel, leaderboard, traits });
+      setAnalytics({ avgMvp, avgAtt, topUnit, unitLabel, leaderboards: leaderboardsData, traits });
 
     } catch (error) {
       console.error(error);
@@ -379,6 +415,8 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
     );
   }
 
+  const currentList = analytics?.leaderboards?.[leaderboardTab] || [];
+
   return (
     <div className="animate-fade-in-up">
       
@@ -415,71 +453,99 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
           <div className="space-y-6 animate-fade-in-up">
             {/* BARIS 1: 3 EXECUTIVE HIGHLIGHTS */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1: Team MVP */}
               <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:-translate-y-1 transition-transform">
                 <div className="w-12 h-12 rounded-full bg-yellow-50 flex items-center justify-center border border-yellow-100 shrink-0">
                   <Crown size={20} className="text-tsa-gold" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Team Avg. MVP</p>
-                  <div className="text-2xl font-black text-tsa-dark">{analytics.avgMvp.toFixed(1)}</div>
+                  <div className="text-2xl font-black text-tsa-dark">{analytics.avgMvp > 0 ? analytics.avgMvp.toFixed(1) : '-'}</div>
                 </div>
               </div>
 
-              {/* Card 2: Team Attendance */}
               <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:-translate-y-1 transition-transform">
                 <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100 shrink-0">
                   <Users size={20} className="text-blue-500" />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Avg. Attendance</p>
-                  <div className="text-2xl font-black text-tsa-dark">{analytics.avgAtt.toFixed(1)}%</div>
+                  <div className="text-2xl font-black text-tsa-dark">{analytics.avgAtt > 0 ? `${analytics.avgAtt.toFixed(1)}%` : '-'}</div>
                 </div>
               </div>
 
-              {/* Card 3: Top Unit */}
+              {/* PERBAIKAN: TOP UNIT CARD (TETAP RENDER TAPI TAMPILKAN - JIKA KOSONG) */}
               <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:-translate-y-1 transition-transform relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-3 opacity-[0.03] text-tsa-green"><Trophy size={80} /></div>
                 <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center border border-green-100 shrink-0 relative z-10">
                   <Trophy size={20} className="text-tsa-green" />
                 </div>
-                <div className="relative z-10 overflow-hidden">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Top {analytics.unitLabel}</p>
-                  <div className="text-lg font-black text-tsa-dark truncate leading-tight">{analytics.topUnit ? analytics.topUnit.name : '-'}</div>
+                <div className="relative z-10 overflow-hidden w-full">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5 truncate">Top {analytics.unitLabel}</p>
+                  <div className="text-lg font-black text-tsa-dark truncate leading-tight">
+                    {analytics.topUnit && analytics.topUnit.score > 0 ? analytics.topUnit.name : '-'}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* BARIS 2: LEADERBOARD & QUALITATIVE RADAR */}
+            {/* BARIS 2: MULTI-LEVEL LEADERBOARD & QUALITATIVE RADAR */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* Leaderboard */}
-              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                <h3 className="text-base font-black text-tsa-dark mb-6 flex items-center gap-2">
-                  <BarChart2 size={18} className="text-tsa-green" /> {analytics.unitLabel} Leaderboard
-                </h3>
-                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 hide-scrollbar">
-                  {analytics.leaderboard.map((item, idx) => (
-                    <div key={item.name}>
-                      <div className="flex justify-between items-end mb-1.5">
-                        <span className="text-xs font-bold text-gray-700 truncate max-w-[70%]">
-                           <span className="text-gray-400 mr-2">#{idx+1}</span>{item.name}
-                        </span>
-                        <span className="text-xs font-black text-tsa-dark">{item.score.toFixed(1)}</span>
+              {/* Leaderboard Multi-Level */}
+              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-full">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-black text-tsa-dark flex items-center gap-2">
+                    <BarChart2 size={18} className="text-tsa-green" /> Leaderboard
+                  </h3>
+                </div>
+
+                {/* Smart Tabs untuk Leaderboard Hierarki */}
+                {availableTabs.length > 1 && (
+                  <div className="flex gap-2 mb-5 border-b border-gray-100 pb-3 overflow-x-auto hide-scrollbar">
+                    {availableTabs.map(tab => (
+                      <button 
+                        key={tab} 
+                        onClick={() => setLeaderboardTab(tab)} 
+                        className={`text-[10px] px-3 py-1.5 rounded-lg font-black uppercase tracking-widest transition-all whitespace-nowrap ${leaderboardTab === tab ? 'bg-green-50 text-tsa-green border border-green-100' : 'bg-white text-gray-400 hover:bg-gray-50 border border-transparent'}`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="space-y-4 max-h-[350px] overflow-y-auto pr-3 hide-scrollbar flex-grow">
+                  {currentList.length === 0 ? (
+                    <div className="text-center text-xs text-gray-400 font-medium py-10 border border-dashed border-gray-100 rounded-xl">No evaluation data yet.</div>
+                  ) : (
+                    currentList.map((item, idx) => (
+                      <div key={item.name + idx}>
+                        <div className="flex justify-between items-end mb-1.5">
+                          <div className="flex flex-col max-w-[80%]">
+                            <span className="text-xs font-bold text-gray-700 truncate">
+                              <span className="text-gray-400 mr-2">#{idx+1}</span>{item.name}
+                            </span>
+                            {/* Munculkan subtext (jabatan) hanya di tab Staff */}
+                            {item.subtext && leaderboardTab === 'Staff' && (
+                              <span className="text-[9px] text-gray-400 ml-6 uppercase tracking-wider truncate">{item.subtext}</span>
+                            )}
+                          </div>
+                          <span className="text-xs font-black text-tsa-dark">{item.score > 0 ? item.score.toFixed(1) : '0.0'}</span>
+                        </div>
+                        <div className="w-full bg-gray-50 rounded-full h-2 overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-1000 ${idx === 0 && item.score > 0 ? 'bg-tsa-gold' : 'bg-gray-300'}`}
+                            style={{ width: `${item.score}%` }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-50 rounded-full h-2 overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full ${idx === 0 ? 'bg-tsa-gold' : 'bg-gray-300'}`}
-                          style={{ width: `${item.score}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
               {/* Trait Radar */}
-              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm h-full">
                 <h3 className="text-base font-black text-tsa-dark mb-6 flex items-center gap-2">
                   <TrendingUp size={18} className="text-tsa-green" /> Team Trait Radar
                 </h3>
@@ -618,6 +684,7 @@ const Report = () => {
     );
   }
 
+  // Admin dan semua atasan dihitung sebagai Manager
   const isManager = user.role >= 1 && user.role <= 4;
   const isViewingPersonal = selectedUser !== null;
 

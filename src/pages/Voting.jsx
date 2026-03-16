@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
-import { Vote, Star, Trophy, AlertCircle, CheckCircle2, Save, Loader2, Lock, Crown, Sparkles, Building2, ShieldCheck } from 'lucide-react';
+import { Vote, Star, Trophy, AlertCircle, CheckCircle2, Save, Loader2, Lock, Crown, Sparkles, Building2, ShieldCheck, Info } from 'lucide-react';
 
 // ==========================================
 // KOMPONEN BINTANG UNTUK EVALUASI BPH
@@ -63,8 +63,9 @@ const Voting = () => {
       const status = settings?.voting_status || 'LOCKED';
       setVotingStatus(status);
 
-      if ((status === 'ACTIVE' || status === 'PUBLISHED') && user && !isAdmin) {
-        // Tarik semua data secara paralel
+      // PERBAIKAN: Izinkan fetch data jika ACTIVE, PUBLISHED, atau READ_ONLY
+      if (['ACTIVE', 'PUBLISHED', 'READ_ONLY'].includes(status) && user && !isAdmin) {
+        
         const [usersRes, projectsRes, existingVotesRes] = await Promise.all([
           supabase.from('users').select('*').neq('role', 1).eq('is_active', true).order('full_name', { ascending: true }),
           supabase.from('projects').select('*').order('name', { ascending: true }),
@@ -77,7 +78,6 @@ const Voting = () => {
 
         const existingVotes = existingVotesRes.data || [];
         
-        // JIKA SUDAH VOTE: Lakukan Auto-Fill ke State
         if (existingVotes.length > 0) {
           setIsVoted(true);
           
@@ -96,7 +96,7 @@ const Voting = () => {
           if (isBPHADV) {
             const initDeptEval = { 'ERBD': 0, 'MD': 0, 'STD': 0 };
             const initProjEval = {};
-            projs.forEach(p => initProjEval[p.id] = 0); // Default 0
+            projs.forEach(p => initProjEval[p.id] = 0);
             
             existingVotes.forEach(v => {
               if (v.category === 'EVAL_DEPT') initDeptEval[v.target_id] = v.evaluation_score / 20;
@@ -107,7 +107,6 @@ const Voting = () => {
             setEvalProjectVotes(initProjEval);
           }
         } else {
-          // JIKA BELUM VOTE (Inisialisasi Project BPH agar tidak undefined)
           if (isBPHADV) {
             const initProjEval = {};
             projs.forEach(p => initProjEval[p.id] = 0);
@@ -122,13 +121,11 @@ const Voting = () => {
     }
   };
 
-  // Helper: Mengecek Duplikasi
   const checkDuplicate = (arr) => {
     const filled = arr.filter(val => val !== '');
     return new Set(filled).size !== filled.length;
   };
 
-  // Helper: Mengecek Urutan Bolong (Misal: Isi Rank 1 & 3, tapi Rank 2 kosong)
   const checkConsecutiveRanks = (arr, categoryName) => {
     let foundEmpty = false;
     for (let i = 0; i < arr.length; i++) {
@@ -157,26 +154,22 @@ const Voting = () => {
     e.preventDefault();
     if (isAdmin) return alert("Administrators are not allowed to participate in voting.");
     
-    // 1. Validasi Duplikasi Mutlak
     if (checkDuplicate(mvpVotes)) return alert('Duplicate candidates found in The Ultimate MVP category!');
     if (checkDuplicate(rookieVotes)) return alert('Duplicate candidates found in Rookie of the Year category!');
     if (checkDuplicate(projectVotes)) return alert('Duplicate nominations found in Best Project category!');
     if (isStaff && checkDuplicate(favEbVotes)) return alert('Duplicate candidates found in Most Favorite EB category!');
 
-    // 2. Validasi Tidak Boleh Melompat (Harus Berurutan)
     const consecutiveError = checkConsecutiveRanks(mvpVotes, 'The Ultimate MVP') ||
                              checkConsecutiveRanks(rookieVotes, 'Rookie of the Year') ||
                              checkConsecutiveRanks(projectVotes, 'Best Project') ||
                              (isStaff ? checkConsecutiveRanks(favEbVotes, 'Most Favorite EB') : null);
     if (consecutiveError) return alert(consecutiveError);
 
-    // 3. Validasi Wajib Isi Rank 1
     if (!mvpVotes[0]) return alert('You must select a candidate for Rank 1 in The Ultimate MVP!');
     if (!rookieVotes[0]) return alert('You must select a candidate for Rank 1 in Rookie of the Year!');
     if (!projectVotes[0]) return alert('You must select a project for Rank 1 in Best Project!');
     if (isStaff && !favEbVotes[0]) return alert('You must select a candidate for Rank 1 in Most Favorite EB!');
 
-    // 4. Validasi BPH Wajib Evaluasi Bintang
     if (isBPHADV) {
       if (Object.values(evalDeptVotes).includes(0)) return alert("Executive Board must evaluate all departments (minimum 1 star)!");
       if (Object.values(evalProjectVotes).includes(0)) return alert("Executive Board must evaluate all projects (minimum 1 star)!");
@@ -220,8 +213,8 @@ const Voting = () => {
   const rookieCandidates = usersList.filter(u => u.role === 5 && (u.cohort || '').includes('26')); 
   const ebCandidates = usersList.filter(u => u.role >= 2 && u.role <= 4);
 
-  // Status Cerdas untuk Read-Only
-  const isReadOnly = votingStatus === 'PUBLISHED' || isVoted;
+  // PERBAIKAN: Status Read-Only MENGUASAI jika PUBLISHED, READ_ONLY, atau sudah Voted.
+  const isReadOnly = votingStatus === 'PUBLISHED' || votingStatus === 'READ_ONLY' || isVoted;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
@@ -255,7 +248,7 @@ const Voting = () => {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8 animate-fade-in-up">
             
-            {/* BANNER INFORMASI READ ONLY (JIKA SUDAH VOTE / PUBLISHED) */}
+            {/* PERBAIKAN: BANNER INFORMASI READ ONLY CERDAS */}
             {isReadOnly && (
               <div className="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl flex items-start gap-4 shadow-sm mb-6">
                 <CheckCircle2 className="text-emerald-500 shrink-0 mt-0.5" size={24} />
@@ -264,13 +257,14 @@ const Voting = () => {
                   <p className="text-xs text-emerald-700 mt-1 font-medium leading-relaxed">
                     {votingStatus === 'PUBLISHED' 
                       ? "The End of Term period is now PUBLISHED. You are viewing your historically recorded votes." 
+                      : votingStatus === 'READ_ONLY'
+                      ? "The voting period is paused for tabulation. You are viewing your historically recorded votes."
                       : "Your votes have been successfully submitted and locked for integrity. Thank you for your participation."}
                   </p>
                 </div>
               </div>
             )}
             
-            {/* ========================================== */}
             {/* 1. THE ULTIMATE MVP (Top 5) */}
             <section className={`bg-white p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-gray-100'}`}>
               <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
@@ -463,8 +457,8 @@ const Voting = () => {
               </>
             ) : (
               <div className="w-full bg-gray-100 text-gray-500 py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm border border-gray-200 cursor-not-allowed">
-                <Lock size={20} />
-                {votingStatus === 'PUBLISHED' ? 'Voting Period Closed' : 'Votes Submitted Successfully'}
+                {votingStatus === 'READ_ONLY' ? <Info size={20} /> : <Lock size={20} />}
+                {votingStatus === 'PUBLISHED' ? 'Voting Period Closed' : votingStatus === 'READ_ONLY' ? 'Voting Paused for Tabulation' : 'Votes Submitted Successfully'}
               </div>
             )}
 

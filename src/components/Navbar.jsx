@@ -17,8 +17,12 @@ const Navbar = () => {
     const fetchSettings = async () => {
       const { data, error } = await supabase.from('app_settings').select('voting_status').eq('id', 1).single();
       if (!error && data) {
-        // PERBAIKAN: Menu End of Term muncul jika status ACTIVE atau PUBLISHED (Read-Only)
-        setShowEndOfTermMenu(data.voting_status === 'ACTIVE' || data.voting_status === 'PUBLISHED');
+        // PERBAIKAN: Menu End of Term muncul jika status ACTIVE, READ_ONLY, atau PUBLISHED
+        setShowEndOfTermMenu(
+          data.voting_status === 'ACTIVE' || 
+          data.voting_status === 'PUBLISHED' || 
+          data.voting_status === 'READ_ONLY'
+        );
       }
     };
     fetchSettings();

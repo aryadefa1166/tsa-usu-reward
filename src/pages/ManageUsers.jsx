@@ -101,18 +101,18 @@ const ManageUsers = () => {
   };
 
   // ==========================================
-  // TRACKER LOGIC (DIPERBAIKI JADI BINER)
+  // TRACKER LOGIC (DIPERBAIKI JADI BINER & MENDUKUNG READ_ONLY)
   // ==========================================
   const fetchTrackerData = async () => {
     setTrackerLoading(true);
     try {
       let activeQuarter = null;
-      if (appSettings.q1_status === 'ACTIVE') activeQuarter = 'Q1';
-      else if (appSettings.q2_status === 'ACTIVE') activeQuarter = 'Q2';
-      else if (appSettings.q3_status === 'ACTIVE') activeQuarter = 'Q3';
-      else if (appSettings.q4_status === 'ACTIVE') activeQuarter = 'Q4';
+      if (['ACTIVE', 'READ_ONLY'].includes(appSettings.q1_status)) activeQuarter = 'Q1';
+      else if (['ACTIVE', 'READ_ONLY'].includes(appSettings.q2_status)) activeQuarter = 'Q2';
+      else if (['ACTIVE', 'READ_ONLY'].includes(appSettings.q3_status)) activeQuarter = 'Q3';
+      else if (['ACTIVE', 'READ_ONLY'].includes(appSettings.q4_status)) activeQuarter = 'Q4';
 
-      if (appSettings.voting_status === 'ACTIVE') {
+      if (['ACTIVE', 'READ_ONLY'].includes(appSettings.voting_status)) {
         setActiveTrackerName('End of Term Evaluation'); 
         
         // Tarik HANYA kolom voter_id agar ringan
@@ -484,9 +484,7 @@ const ManageUsers = () => {
           })}
         </div>
 
-        {/* ========================================== */}
         {/* TAB 1: USER MANAGEMENT */}
-        {/* ========================================== */}
         {activeTab === 'users' && (
           <div className="animate-fade-in-up">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
@@ -664,9 +662,7 @@ const ManageUsers = () => {
           </div>
         )}
 
-        {/* ========================================== */}
         {/* TAB 2: PROJECT NOMINATIONS */}
-        {/* ========================================== */}
         {activeTab === 'projects' && (
           <div className="animate-fade-in-up">
             <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
@@ -760,9 +756,7 @@ const ManageUsers = () => {
           </div>
         )}
 
-        {/* ========================================== */}
         {/* TAB 3: PERIOD SETTINGS & EXPORT CSV */}
-        {/* ========================================== */}
         {activeTab === 'periods' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
             <div className="flex items-center gap-2 mb-6">
@@ -775,9 +769,12 @@ const ManageUsers = () => {
                 <div key={p.id} className="flex flex-col md:flex-row md:items-center justify-between p-5 rounded-2xl border border-gray-200 bg-white hover:border-tsa-green transition-all gap-4">
                   <div>
                     <h3 className="font-bold text-tsa-dark text-base">{p.label}</h3>
-                    <p className="text-xs text-gray-500 mt-1">Current Status: <span className={`font-bold uppercase ${p.value === 'ACTIVE' ? 'text-tsa-green' : p.value === 'PUBLISHED' ? 'text-blue-500' : 'text-gray-500'}`}>{p.value}</span></p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Current Status: <span className={`font-bold uppercase ${p.value === 'ACTIVE' ? 'text-tsa-green' : p.value === 'PUBLISHED' ? 'text-blue-500' : p.value === 'READ_ONLY' ? 'text-amber-500' : 'text-gray-500'}`}>{p.value}</span>
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
+                    {/* PERBAIKAN: Menambahkan opsi READ_ONLY */}
                     <select 
                       value={p.value}
                       onChange={(e) => handleUpdatePeriod(p.id, e.target.value)}
@@ -786,6 +783,7 @@ const ManageUsers = () => {
                     >
                       <option value="LOCKED">🔒 Locked</option>
                       <option value="ACTIVE">🟢 Active</option>
+                      <option value="READ_ONLY">👀 Read-Only</option>
                       <option value="PUBLISHED">🏆 Published</option>
                     </select>
                     
@@ -804,8 +802,11 @@ const ManageUsers = () => {
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                   <div className="ml-2">
                     <h3 className="font-bold text-tsa-dark text-base flex items-center gap-2"><Crown size={16} className="text-tsa-gold"/> End of Term</h3>
-                    <p className="text-xs text-gray-500 mt-1">Status: <span className={`font-bold uppercase ${appSettings.voting_status === 'ACTIVE' ? 'text-tsa-green' : appSettings.voting_status === 'PUBLISHED' ? 'text-blue-500' : 'text-gray-500'}`}>{appSettings.voting_status}</span></p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Status: <span className={`font-bold uppercase ${appSettings.voting_status === 'ACTIVE' ? 'text-tsa-green' : appSettings.voting_status === 'PUBLISHED' ? 'text-blue-500' : appSettings.voting_status === 'READ_ONLY' ? 'text-amber-500' : 'text-gray-500'}`}>{appSettings.voting_status}</span>
+                    </p>
                   </div>
+                  {/* PERBAIKAN: Menambahkan opsi READ_ONLY */}
                   <select 
                       value={appSettings.voting_status}
                       onChange={(e) => handleUpdatePeriod('voting_status', e.target.value)}
@@ -814,6 +815,7 @@ const ManageUsers = () => {
                   >
                       <option value="LOCKED">🔒 Locked</option>
                       <option value="ACTIVE">🟢 Active</option>
+                      <option value="READ_ONLY">👀 Read-Only</option>
                       <option value="PUBLISHED">🏆 Published</option>
                   </select>
               </div>
@@ -821,9 +823,7 @@ const ManageUsers = () => {
           </div>
         )}
 
-        {/* ========================================== */}
         {/* TAB 4: ORGANIZATION ASSETS */}
-        {/* ========================================== */}
         {activeTab === 'assets' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
             <div className="flex items-center gap-2 mb-2">
@@ -875,9 +875,7 @@ const ManageUsers = () => {
           </div>
         )}
 
-        {/* ========================================== */}
         {/* TAB 5: EVALUATION TRACKER */}
-        {/* ========================================== */}
         {activeTab === 'tracker' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
              <div className="mb-6">

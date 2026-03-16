@@ -1,12 +1,27 @@
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Home, BarChart2, CheckSquare, Users, Shield, ClipboardCheck } from 'lucide-react';
+import { supabase } from '../supabaseClient';
+import { LogOut, Home, BarChart2, CheckSquare, Users, Shield, ClipboardCheck, Vote } from 'lucide-react';
 import tsaLogo from '../assets/tsa-logo.png';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // State untuk status Voting End of Term
+  const [votingActive, setVotingActive] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data, error } = await supabase.from('app_settings').select('voting_status').eq('id', 1).single();
+      if (!error && data) {
+        setVotingActive(data.voting_status === 'ACTIVE');
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -15,7 +30,7 @@ const Navbar = () => {
 
   // =========================================
   // LOGIKA FILTER AKSES MENU (BERDASARKAN INTEGER)
-  // 1:Admin, 2:BPH/ADV, 3:Kadep/Wakadep, 4:Kadiv, 5:Staff/TL
+  // 1:Admin, 2:BPH/ADV, 3:Kadep, 4:Kadiv, 5:Staff/TL
   // =========================================
   const role = user?.role;
   const isAdmin = role === 1;
@@ -24,6 +39,9 @@ const Navbar = () => {
   
   // LOGIKA AKSES SEKRETARIS MUTLAK
   const isSecretary = role === 2 && user?.position === 'Secretary';
+  
+  // LOGIKA AKSES VOTING (Hanya muncul jika ACTIVE dan user adalah pengurus)
+  const showVoting = votingActive && role >= 2 && role <= 5;
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
@@ -31,6 +49,7 @@ const Navbar = () => {
     { name: 'Assessment', path: '/input-assessment', icon: CheckSquare, show: isAssessor },
     { name: 'Attendance', path: '/input-attendance', icon: ClipboardCheck, show: isSecretary },
     { name: 'Our Team', path: '/our-team', icon: Users, show: true },
+    { name: 'Voting', path: '/voting', icon: Vote, show: showVoting }, // TAB EKSKLUSIF END OF TERM
     { name: 'Admin', path: '/manage-users', icon: Shield, show: isAdmin },
   ];
 
@@ -75,14 +94,18 @@ const Navbar = () => {
               {navLinks.filter(link => link.show).map((link) => {
                 const Icon = link.icon;
                 const isActive = location.pathname === link.path;
+                
+                // Styling khusus untuk tombol Voting agar stand-out
+                const isVotingBtn = link.name === 'Voting';
+
                 return (
                   <button
                     key={link.name}
                     onClick={() => navigate(link.path)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                       isActive 
-                        ? 'bg-green-50 text-tsa-green' 
-                        : 'text-gray-500 hover:bg-gray-50 hover:text-tsa-dark'
+                        ? (isVotingBtn ? 'bg-tsa-gold text-white shadow-sm' : 'bg-green-50 text-tsa-green') 
+                        : (isVotingBtn ? 'text-tsa-gold hover:bg-yellow-50' : 'text-gray-500 hover:bg-gray-50 hover:text-tsa-dark')
                     }`}
                   >
                     <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
@@ -125,18 +148,22 @@ const Navbar = () => {
           {navLinks.filter(link => link.show).map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path;
+            const isVotingBtn = link.name === 'Voting';
+
             return (
               <button
                 key={link.name}
                 onClick={() => navigate(link.path)}
                 className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-full gap-1 transition-all ${
-                  isActive ? 'text-tsa-green' : 'text-gray-400 hover:text-gray-600'
+                  isActive 
+                    ? (isVotingBtn ? 'text-tsa-gold' : 'text-tsa-green') 
+                    : (isVotingBtn ? 'text-yellow-600' : 'text-gray-400 hover:text-gray-600')
                 }`}
               >
-                <div className={`p-1.5 rounded-full ${isActive ? 'bg-green-50' : 'bg-transparent'}`}>
+                <div className={`p-1.5 rounded-full ${isActive ? (isVotingBtn ? 'bg-yellow-50' : 'bg-green-50') : 'bg-transparent'}`}>
                   <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
-                <span className={`text-[9px] font-bold tracking-wide ${isActive ? 'text-tsa-green' : 'text-gray-400'}`}>
+                <span className={`text-[9px] font-bold tracking-wide ${isActive ? (isVotingBtn ? 'text-tsa-gold' : 'text-tsa-green') : 'text-gray-400'}`}>
                   {link.name}
                 </span>
               </button>

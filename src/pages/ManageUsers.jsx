@@ -4,7 +4,8 @@ import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
-  Users, CalendarDays, Activity, ShieldCheck, Download, ImagePlus, UploadCloud, Briefcase 
+  Users, CalendarDays, Activity, ShieldCheck, Download, ImagePlus, UploadCloud, Briefcase,
+  AlertTriangle, CheckCircle2, Copy
 } from 'lucide-react';
 
 const ShieldIcon = () => (
@@ -41,9 +42,7 @@ const ManageUsers = () => {
   const [assetsList, setAssetsList] = useState([]);
   const [uploadingAsset, setUploadingAsset] = useState(null);
 
-  // ==========================================
-  // NEW: STATE PROJECT NOMINATIONS
-  // ==========================================
+  // State Project Nominations
   const [projectsList, setProjectsList] = useState([]);
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [isEditingProject, setIsEditingProject] = useState(false);
@@ -52,9 +51,16 @@ const ManageUsers = () => {
     id: null, name: '', description: '', event_date: '', pct: '', photo_url: ''
   });
 
+  // ==========================================
+  // NEW: STATE EVALUATION TRACKER
+  // ==========================================
+  const [trackerData, setTrackerData] = useState([]);
+  const [trackerLoading, setTrackerLoading] = useState(false);
+  const [activeTrackerName, setActiveTrackerName] = useState('');
+
   const adminTabs = [
     { id: 'users', label: 'User Management', icon: Users },
-    { id: 'projects', label: 'Project Nominations', icon: Briefcase }, // TAB BARU
+    { id: 'projects', label: 'Project Nominations', icon: Briefcase },
     { id: 'periods', label: 'Period Settings & Export', icon: CalendarDays },
     { id: 'assets', label: 'Organization Assets', icon: ImagePlus },
     { id: 'tracker', label: 'Evaluation Tracker', icon: Activity },
@@ -64,8 +70,13 @@ const ManageUsers = () => {
     fetchUsers();
     fetchSettings();
     fetchAssets();
-    fetchProjects(); // FETCH PROJECT BARU
+    fetchProjects();
   }, []);
+
+  // Fetch Tracker Data setiap kali tab Tracker dibuka atau App Settings berubah
+  useEffect(() => {
+    if (activeTab === 'tracker') fetchTrackerData();
+  }, [activeTab, appSettings]);
 
   // ==========================================
   // FETCHING LOGIC
@@ -93,7 +104,78 @@ const ManageUsers = () => {
   };
 
   // ==========================================
-  // PROJECT CRUD LOGIC (NEW)
+  // TRACKER LOGIC (NEW)
+  // ==========================================
+  const fetchTrackerData = async () => {
+    setTrackerLoading(true);
+    try {
+      let activeQuarter = null;
+      if (appSettings.q1_status === 'ACTIVE') activeQuarter = 'Q1';
+      else if (appSettings.q2_status === 'ACTIVE') activeQuarter = 'Q2';
+      else if (appSettings.q3_status === 'ACTIVE') activeQuarter = 'Q3';
+      else if (appSettings.q4_status === 'ACTIVE') activeQuarter = 'Q4';
+
+      if (appSettings.voting_status === 'ACTIVE') {
+        setActiveTrackerName('End of Term Voting');
+        const { data: votes } = await supabase.from('end_of_term_votes').select('voter_id');
+        
+        // Populasi target: Semua pengurus aktif (Role 2-5)
+        const votersTarget = usersList.filter(u => u.role !== 1 && u.is_active === true);
+        const votedIds = new Set(votes?.map(v => v.voter_id));
+        
+        const report = votersTarget.map(user => ({
+          ...user,
+          status: votedIds.has(user.id) ? 'COMPLETED' : 'PENDING',
+          detail: votedIds.has(user.id) ? 'Voted' : 'Not yet voted'
+        }));
+        
+        setTrackerData(report.sort((a, b) => a.status.localeCompare(b.status))); // Yang belum vote di atas
+      } 
+      else if (activeQuarter) {
+        setActiveTrackerName(`Quarterly Assessment (${activeQuarter})`);
+        const { data: assessments } = await supabase.from('assessments').select('assessor_id').eq('quarter', activeQuarter);
+        
+        // Populasi target: Semua penilai aktif (Role 2-4)
+        const assessorTarget = usersList.filter(u => u.role >= 2 && u.role <= 4 && u.is_active === true);
+        
+        // Hitung berapa orang yang sudah dinilai oleh tiap assessor
+        const assessCount = {};
+        assessments?.forEach(a => {
+          assessCount[a.assessor_id] = (assessCount[a.assessor_id] || 0) + 1;
+        });
+
+        const report = assessorTarget.map(user => ({
+          ...user,
+          status: assessCount[user.id] > 0 ? 'PROGRESS' : 'PENDING',
+          detail: assessCount[user.id] ? `Assessed ${assessCount[user.id]} targets` : 'No assessments yet'
+        }));
+
+        setTrackerData(report.sort((a, b) => a.status.localeCompare(b.status)));
+      } 
+      else {
+        setActiveTrackerName('');
+        setTrackerData([]);
+      }
+    } catch (error) {
+      console.error("Error fetching tracker data:", error);
+    } finally {
+      setTrackerLoading(false);
+    }
+  };
+
+  const handleCopyReminder = (name, type) => {
+    let text = "";
+    if (type === 'End of Term Voting') {
+      text = `Halo ${name}, mohon segera mengisi Form Voting End of Term di website TSA USU REWARD ya! 🙏`;
+    } else {
+      text = `Halo ${name}, mohon segera menyelesaikan pengisian Assessment Kuartalan untuk staf/TL kamu di website TSA USU REWARD ya! 🙏`;
+    }
+    navigator.clipboard.writeText(text);
+    alert(`Pesan reminder untuk ${name} disalin ke clipboard!`);
+  };
+
+  // ==========================================
+  // PROJECT CRUD LOGIC 
   // ==========================================
   const handleProjectPhotoUpload = async (e) => {
     try {
@@ -780,15 +862,70 @@ const ManageUsers = () => {
         )}
 
         {/* ========================================== */}
-        {/* TAB 5: EVALUATION TRACKER */}
+        {/* TAB 5: EVALUATION TRACKER (NEW) */}
         {/* ========================================== */}
         {activeTab === 'tracker' && (
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm animate-fade-in-up">
-             <h2 className="text-lg font-black text-tsa-dark mb-6">Live Evaluation Progress</h2>
-             <div className="text-center py-10">
-               <Activity size={40} className="text-gray-300 mx-auto mb-3" />
-               <p className="text-sm font-bold text-gray-400">No active evaluation tracking available at the moment.</p>
+             <div className="mb-6">
+                <h2 className="text-lg font-black text-tsa-dark">Live Evaluation Progress</h2>
+                <p className="text-sm text-gray-500 mt-1">Lacak partisipasi pengurus saat periode <span className="font-bold text-tsa-green">{activeTrackerName || 'tertentu'}</span> sedang Active.</p>
              </div>
+
+             {trackerLoading ? (
+               <div className="flex justify-center py-20"><Loader2 className="animate-spin text-tsa-green" size={32} /></div>
+             ) : !activeTrackerName ? (
+               <div className="text-center py-20 border-2 border-dashed border-gray-200 rounded-2xl">
+                 <Activity size={40} className="text-gray-300 mx-auto mb-3" />
+                 <p className="text-sm font-bold text-gray-400">Tidak ada periode Kuartal atau Voting yang sedang ACTIVE.</p>
+               </div>
+             ) : (
+               <div className="overflow-x-auto border border-gray-100 rounded-2xl">
+                 <table className="w-full text-left text-sm">
+                   <thead className="bg-gray-50 border-b border-gray-100">
+                     <tr>
+                       <th className="p-4 font-bold text-gray-500 text-xs uppercase">Target Name</th>
+                       <th className="p-4 font-bold text-gray-500 text-xs uppercase">Status</th>
+                       <th className="p-4 font-bold text-gray-500 text-xs uppercase">Detail</th>
+                       <th className="p-4 font-bold text-gray-500 text-xs uppercase text-right">Action</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-gray-50">
+                     {trackerData.map(user => (
+                       <tr key={user.id} className="hover:bg-gray-50/50">
+                         <td className="p-4">
+                           <div className="font-bold text-tsa-dark">{user.full_name}</div>
+                           <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{user.position} • {user.dept}</div>
+                         </td>
+                         <td className="p-4">
+                           {user.status === 'PENDING' ? (
+                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider border border-red-100">
+                               <AlertTriangle size={12} /> Pending
+                             </span>
+                           ) : (
+                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider border border-emerald-100">
+                               <CheckCircle2 size={12} /> Completed
+                             </span>
+                           )}
+                         </td>
+                         <td className="p-4 text-xs font-medium text-gray-500">
+                           {user.detail}
+                         </td>
+                         <td className="p-4 text-right">
+                           {user.status === 'PENDING' && (
+                             <button 
+                               onClick={() => handleCopyReminder(user.full_name, activeTrackerName)}
+                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors text-xs font-bold"
+                             >
+                               <Copy size={14} /> Tagih
+                             </button>
+                           )}
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+             )}
           </div>
         )}
 

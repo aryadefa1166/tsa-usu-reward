@@ -4,32 +4,40 @@ import { supabase } from '../supabaseClient';
 import { Loader2, Building2, Crown, ShieldCheck } from 'lucide-react';
 
 // ==========================================
-// KOMPONEN CARD MEMBER (TEMA MUTLAK TSA USU)
+// TEMA WARNA DEPARTEMEN MUTLAK
 // ==========================================
-const MemberCard = ({ member }) => {
+const THEMES = {
+  BPH: { border: 'border-pink-200', bg: 'bg-pink-50', text: 'text-pink-600', shadow: 'shadow-pink-100/50', gradient: 'from-pink-400 to-pink-600', line: 'bg-pink-300', iconBg: 'bg-pink-50' },
+  ADV: { border: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-700', shadow: 'shadow-amber-100/50', gradient: 'from-amber-600 to-amber-800', line: 'bg-amber-300', iconBg: 'bg-amber-50' },
+  ERBD: { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-600', shadow: 'shadow-emerald-100/50', gradient: 'from-emerald-400 to-emerald-600', line: 'bg-emerald-300', iconBg: 'bg-emerald-50' },
+  MD: { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-600', shadow: 'shadow-purple-100/50', gradient: 'from-purple-400 to-purple-600', line: 'bg-purple-300', iconBg: 'bg-purple-50' },
+  STD: { border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-600', shadow: 'shadow-blue-100/50', gradient: 'from-blue-400 to-blue-600', line: 'bg-blue-300', iconBg: 'bg-blue-50' },
+};
+
+// ==========================================
+// KOMPONEN CARD MEMBER
+// ==========================================
+const MemberCard = ({ member, deptCode }) => {
   if (!member) return null;
-  // EB menggunakan aksen Emas, Staff menggunakan aksen Hijau
+  const theme = THEMES[deptCode] || THEMES.BPH;
   const isEB = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Dept', 'Head of Division', 'Steering Committee'].includes(member.position);
 
   return (
-    // CARD UTAMA: Putih bersih, shadow halus, tapi border atasnya punya aksen TSA (Emas/Hijau)
-    <div className={`bg-white rounded-2xl border-x border-b border-gray-100 border-t-4 ${isEB ? 'border-t-tsa-gold' : 'border-t-tsa-green'} shadow-sm p-5 flex flex-col items-center text-center hover:shadow-md transition-all duration-300 relative overflow-hidden w-full max-w-[200px] mx-auto z-10`}>
-      
-      {/* Aksesoris Gradien EB (Sangat Halus) */}
-      {isEB && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-300 to-tsa-gold opacity-50"></div>}
+    <div className={`bg-white rounded-2xl border ${theme.border} ${theme.shadow} p-5 flex flex-col items-center text-center hover:shadow-md transition-all duration-300 relative overflow-hidden w-full max-w-[200px] mx-auto z-10`}>
+      {isEB && <div className={`absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r ${theme.gradient}`}></div>}
 
-      <div className={`w-20 h-20 rounded-full border-4 ${isEB ? 'border-yellow-50 bg-yellow-50/50' : 'border-green-50 bg-green-50/50'} overflow-hidden mb-3 relative shadow-inner flex-shrink-0`}>
+      <div className={`w-20 h-20 rounded-full border-4 ${theme.bg} overflow-hidden mb-3 relative shadow-inner flex-shrink-0 bg-white`}>
         {member.photo_url ? (
           <img src={member.photo_url} alt={member.full_name} className="w-full h-full object-cover" />
         ) : (
-          <div className={`w-full h-full flex items-center justify-center font-black text-xl ${isEB ? 'text-tsa-gold' : 'text-tsa-green'}`}>
+          <div className={`w-full h-full flex items-center justify-center font-black text-xl ${theme.text}`}>
             {member.full_name ? member.full_name.charAt(0) : '?'}
           </div>
         )}
       </div>
       
       <h3 className="font-bold text-tsa-dark text-xs leading-tight mb-1">{member.full_name}</h3>
-      <span className={`text-[9px] font-black uppercase tracking-wider mt-0.5 ${isEB ? 'text-tsa-gold' : 'text-tsa-green'}`}>
+      <span className={`text-[9px] font-black uppercase tracking-wider mt-0.5 ${theme.text}`}>
         {member.position || 'Staff'}
       </span>
       
@@ -47,10 +55,9 @@ const MemberCard = ({ member }) => {
 };
 
 // ==========================================
-// KONEKTOR GARIS (UI HELPERS) - WARNA HIJAU TSA
+// KONEKTOR GARIS (UI HELPERS)
 // ==========================================
-const lineColor = "bg-green-100"; // Aksen hijau sangat lembut untuk semua garis hierarki
-const VLine = ({ height = 'h-8' }) => <div className={`w-px ${height} ${lineColor} mx-auto`}></div>;
+const VLine = ({ height = 'h-8', color = 'bg-gray-200' }) => <div className={`w-px ${height} ${color} mx-auto`}></div>;
 
 const OurTeam = () => {
   const [users, setUsers] = useState([]);
@@ -105,13 +112,21 @@ const OurTeam = () => {
   const mdStruct = getDivisionalStructure('MD', ['Education', 'Media']);
   const stdStruct = getDivisionalStructure('STD', ['Staff Management', 'Talent Management']);
 
+  // Komponen Helper untuk Bingkai (Frame) Aksen TSA USU di setiap Section
+  const TSAUSUFrame = () => (
+    <>
+      <div className="absolute inset-0 border-[3px] border-tsa-green rounded-[1.4rem] pointer-events-none z-0 opacity-80"></div>
+      <div className="absolute inset-[5px] border-2 border-tsa-gold rounded-[1.1rem] pointer-events-none z-0 opacity-60"></div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-20 md:pb-10 overflow-x-hidden">
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-6 mt-10">
         
-        {/* HEADER UTAMA */}
+        {/* HEADER */}
         <div className="text-center mb-16 animate-fade-in-up">
           <h1 className="text-3xl md:text-5xl font-black text-tsa-dark tracking-tight mb-2">Organizational Structure</h1>
           <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">TSA USU • Executive Board & Staff</p>
@@ -125,32 +140,31 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 1: BOARD OF DIRECTORS (BPH) */}
             {/* ========================================== */}
-            {/* PERUBAHAN: Background section diubah menjadi putih bersih, border abu-abu, tapi ada aksen hijau di pinggir kiri */}
-            <section className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-10 overflow-hidden">
-              <div className="absolute top-0 left-0 w-2 h-full bg-tsa-green"></div>
-              
-              <div className="flex flex-col items-center mb-10">
-                <div className="p-3 bg-green-50 rounded-2xl mb-3 border border-green-100">
-                  <Crown size={28} className="text-tsa-green" />
+            <section className="relative bg-white rounded-3xl shadow-sm p-10">
+              <TSAUSUFrame />
+              <div className="relative z-10 flex flex-col items-center mb-10">
+                <div className={`p-3 ${THEMES.BPH.iconBg} rounded-2xl mb-3 border ${THEMES.BPH.border}`}>
+                  <Crown size={28} className={THEMES.BPH.text} />
                 </div>
-                <h2 className="text-xl font-black uppercase tracking-widest text-tsa-dark">Board of Directors</h2>
+                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.BPH.text}`}>Board of Directors</h2>
               </div>
               
-              <div className="flex flex-col items-center">
-                <MemberCard member={president} />
-                <VLine height="h-8" />
-                <MemberCard member={vp} />
-                <VLine height="h-8" />
+              <div className="relative z-10 flex flex-col items-center">
+                <MemberCard member={president} deptCode="BPH" />
+                <VLine height="h-8" color={THEMES.BPH.line} />
+                <MemberCard member={vp} deptCode="BPH" />
+                <VLine height="h-8" color={THEMES.BPH.line} />
                 
-                <div className={`w-64 h-px ${lineColor} hidden md:block`}></div>
+                {/* Percabangan Rapi Sec & Treas */}
+                <div className={`w-64 h-px ${THEMES.BPH.line} hidden md:block`}></div>
                 <div className="hidden md:flex justify-between w-64">
-                  <VLine height="h-8" />
-                  <VLine height="h-8" />
+                  <VLine height="h-8" color={THEMES.BPH.line} />
+                  <VLine height="h-8" color={THEMES.BPH.line} />
                 </div>
                 
                 <div className="flex justify-center gap-10 w-full max-w-md mt-6 md:mt-0">
-                  <div className="w-1/2"><MemberCard member={secretary} /></div>
-                  <div className="w-1/2"><MemberCard member={treasurer} /></div>
+                  <div className="w-1/2"><MemberCard member={secretary} deptCode="BPH" /></div>
+                  <div className="w-1/2"><MemberCard member={treasurer} deptCode="BPH" /></div>
                 </div>
               </div>
             </section>
@@ -158,35 +172,37 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 2: ADVISORY BOARD (ADV) */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-10 overflow-hidden">
-              <div className="absolute top-0 left-0 w-2 h-full bg-tsa-gold"></div>
-
-              <div className="flex flex-col items-center mb-10">
-                <div className="p-3 bg-yellow-50 rounded-2xl mb-3 border border-yellow-100">
-                  <ShieldCheck size={28} className="text-tsa-gold" />
+            <section className="relative bg-white rounded-3xl shadow-sm p-10 mt-10">
+              <TSAUSUFrame />
+              <div className="relative z-10 flex flex-col items-center mb-10">
+                <div className={`p-3 ${THEMES.ADV.iconBg} rounded-2xl mb-3 border ${THEMES.ADV.border}`}>
+                  <ShieldCheck size={28} className={THEMES.ADV.text} />
                 </div>
-                <h2 className="text-xl font-black uppercase tracking-widest text-tsa-dark">Advisory Board</h2>
+                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.ADV.text}`}>Advisory Board</h2>
               </div>
               
-              <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
-                <h3 className="text-sm font-black uppercase tracking-widest mb-6 text-gray-400">Steering Committee</h3>
+              <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto">
+                {/* Lapis 1: Steering Committee */}
+                <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Steering Committee</h3>
                 <div className="flex flex-wrap justify-center gap-6 z-10 w-full">
-                  {advSC.map(member => <MemberCard key={member.id} member={member} />)}
+                  {advSC.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
                 </div>
                 
-                <h3 className="text-sm font-black uppercase tracking-widest mt-12 mb-6 text-gray-400">Monitoring & Evaluation</h3>
-                <MemberCard member={advMonevHead} />
-                <VLine height="h-8" />
+                {/* Lapis 2: MONEV Head (Jarak jauh, TANPA garis penghubung dari SC) */}
+                <h3 className={`text-sm font-black uppercase tracking-widest mt-16 mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
+                <MemberCard member={advMonevHead} deptCode="ADV" />
+                <VLine height="h-8" color={THEMES.ADV.line} />
                 
-                <div className={`w-[80%] max-w-[450px] h-px ${lineColor} hidden md:block`}></div>
+                {/* Lapis 3: Percabangan ke 3 Staff Monev */}
+                <div className={`w-[80%] max-w-[450px] h-px ${THEMES.ADV.line} hidden md:block`}></div>
                 <div className="hidden md:flex justify-between w-[80%] max-w-[450px]">
-                  <VLine height="h-8" />
-                  <VLine height="h-8" />
-                  <VLine height="h-8" />
+                  <VLine height="h-8" color={THEMES.ADV.line} />
+                  <VLine height="h-8" color={THEMES.ADV.line} />
+                  <VLine height="h-8" color={THEMES.ADV.line} />
                 </div>
 
                 <div className="flex flex-wrap justify-center gap-4 mt-6 md:mt-0 w-full">
-                  {advMonevStaff.map(member => <MemberCard key={member.id} member={member} />)}
+                  {advMonevStaff.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
                 </div>
               </div>
             </section>
@@ -194,38 +210,38 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 3: ERBD */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-10 overflow-hidden">
-              <div className="absolute top-0 left-0 w-2 h-full bg-tsa-green"></div>
-
-              <div className="flex flex-col items-center mb-10">
-                <div className="p-3 bg-green-50 rounded-2xl mb-3 border border-green-100">
-                  <Building2 size={28} className="text-tsa-green" />
+            <section className="relative bg-white rounded-3xl shadow-sm p-10">
+              <TSAUSUFrame />
+              <div className="relative z-10 flex flex-col items-center mb-10">
+                <div className={`p-3 ${THEMES.ERBD.iconBg} rounded-2xl mb-3 border ${THEMES.ERBD.border}`}>
+                  <Building2 size={28} className={THEMES.ERBD.text} />
                 </div>
-                <h2 className="text-xl font-black uppercase tracking-widest text-tsa-dark">ERBD Department</h2>
+                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.ERBD.text}`}>ERBD Department</h2>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">External Relations & Business Development</p>
               </div>
 
-              <div className="flex flex-col items-center">
-                <MemberCard member={erbdKadep} />
-                <VLine height="h-8" />
-                <MemberCard member={erbdWakadep} />
-                <VLine height="h-8" />
+              <div className="relative z-10 flex flex-col items-center">
+                <MemberCard member={erbdKadep} deptCode="ERBD" />
+                <VLine height="h-8" color={THEMES.ERBD.line} />
+                <MemberCard member={erbdWakadep} deptCode="ERBD" />
+                <VLine height="h-8" color={THEMES.ERBD.line} />
                 
-                <div className={`w-[85%] h-px ${lineColor} hidden lg:block`}></div>
+                {/* Garis Horizontal ke 4 Divisi */}
+                <div className={`w-[85%] h-px ${THEMES.ERBD.line} hidden lg:block`}></div>
                 <div className="hidden lg:flex justify-between w-[85%]">
-                  <VLine height="h-8" />
-                  <VLine height="h-8" />
-                  <VLine height="h-8" />
-                  <VLine height="h-8" />
+                  <VLine height="h-8" color={THEMES.ERBD.line} />
+                  <VLine height="h-8" color={THEMES.ERBD.line} />
+                  <VLine height="h-8" color={THEMES.ERBD.line} />
+                  <VLine height="h-8" color={THEMES.ERBD.line} />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-6 lg:mt-0">
                   {erbdTeams.map(team => (
                     <div key={team.name} className="flex flex-col items-center">
-                      <MemberCard member={team.tl} />
-                      {team.staff.length > 0 && <VLine height="h-8" />}
+                      <MemberCard member={team.tl} deptCode="ERBD" />
+                      {team.staff.length > 0 && <VLine height="h-8" color={THEMES.ERBD.line} />}
                       <div className="flex flex-col gap-4 w-full">
-                        {team.staff.map(member => <MemberCard key={member.id} member={member} />)}
+                        {team.staff.map(member => <MemberCard key={member.id} member={member} deptCode="ERBD" />)}
                       </div>
                     </div>
                   ))}
@@ -236,35 +252,35 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 4: MD */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-10 overflow-hidden">
-              <div className="absolute top-0 left-0 w-2 h-full bg-tsa-green"></div>
-
-              <div className="flex flex-col items-center mb-10">
-                <div className="p-3 bg-green-50 rounded-2xl mb-3 border border-green-100">
-                  <Building2 size={28} className="text-tsa-green" />
+            <section className="relative bg-white rounded-3xl shadow-sm p-10">
+              <TSAUSUFrame />
+              <div className="relative z-10 flex flex-col items-center mb-10">
+                <div className={`p-3 ${THEMES.MD.iconBg} rounded-2xl mb-3 border ${THEMES.MD.border}`}>
+                  <Building2 size={28} className={THEMES.MD.text} />
                 </div>
-                <h2 className="text-xl font-black uppercase tracking-widest text-tsa-dark">MD Department</h2>
+                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.MD.text}`}>MD Department</h2>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Media Education</p>
               </div>
 
-              <div className="flex flex-col items-center">
-                <MemberCard member={mdStruct.kadep} />
-                <VLine height="h-8" />
+              <div className="relative z-10 flex flex-col items-center">
+                <MemberCard member={mdStruct.kadep} deptCode="MD" />
+                <VLine height="h-8" color={THEMES.MD.line} />
                 
-                <div className={`w-[60%] h-px ${lineColor} hidden md:block`}></div>
+                {/* Garis Horizontal ke 2 Divisi */}
+                <div className={`w-[60%] h-px ${THEMES.MD.line} hidden md:block`}></div>
                 <div className="hidden md:flex justify-between w-[60%]">
-                  <VLine height="h-8" />
-                  <VLine height="h-8" />
+                  <VLine height="h-8" color={THEMES.MD.line} />
+                  <VLine height="h-8" color={THEMES.MD.line} />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-4xl">
                   {mdStruct.divs.map(div => (
                     <div key={div.name} className="flex flex-col items-center">
-                      <MemberCard member={div.kadiv} />
-                      {div.staff.length > 0 && <VLine height="h-8" />}
+                      <MemberCard member={div.kadiv} deptCode="MD" />
+                      {div.staff.length > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
                       
                       <div className="grid grid-cols-2 gap-4 w-full">
-                        {div.staff.map(member => <MemberCard key={member.id} member={member} />)}
+                        {div.staff.map(member => <MemberCard key={member.id} member={member} deptCode="MD" />)}
                       </div>
                     </div>
                   ))}
@@ -275,34 +291,33 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 5: STD */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl border border-gray-100 shadow-sm p-10 overflow-hidden">
-              <div className="absolute top-0 left-0 w-2 h-full bg-tsa-green"></div>
-
-              <div className="flex flex-col items-center mb-10">
-                <div className="p-3 bg-green-50 rounded-2xl mb-3 border border-green-100">
-                  <Building2 size={28} className="text-tsa-green" />
+            <section className="relative bg-white rounded-3xl shadow-sm p-10">
+              <TSAUSUFrame />
+              <div className="relative z-10 flex flex-col items-center mb-10">
+                <div className={`p-3 ${THEMES.STD.iconBg} rounded-2xl mb-3 border ${THEMES.STD.border}`}>
+                  <Building2 size={28} className={THEMES.STD.text} />
                 </div>
-                <h2 className="text-xl font-black uppercase tracking-widest text-tsa-dark">STD Department</h2>
+                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.STD.text}`}>STD Department</h2>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Staff & Talent Development</p>
               </div>
 
-              <div className="flex flex-col items-center">
-                <MemberCard member={stdStruct.kadep} />
-                <VLine height="h-8" />
+              <div className="relative z-10 flex flex-col items-center">
+                <MemberCard member={stdStruct.kadep} deptCode="STD" />
+                <VLine height="h-8" color={THEMES.STD.line} />
                 
-                <div className={`w-[60%] h-px ${lineColor} hidden md:block`}></div>
+                <div className={`w-[60%] h-px ${THEMES.STD.line} hidden md:block`}></div>
                 <div className="hidden md:flex justify-between w-[60%]">
-                  <VLine height="h-8" />
-                  <VLine height="h-8" />
+                  <VLine height="h-8" color={THEMES.STD.line} />
+                  <VLine height="h-8" color={THEMES.STD.line} />
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-4xl">
                   {stdStruct.divs.map(div => (
                     <div key={div.name} className="flex flex-col items-center">
-                      <MemberCard member={div.kadiv} />
-                      {div.staff.length > 0 && <VLine height="h-8" />}
+                      <MemberCard member={div.kadiv} deptCode="STD" />
+                      {div.staff.length > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
                       <div className="grid grid-cols-2 gap-4 w-full">
-                        {div.staff.map(member => <MemberCard key={member.id} member={member} />)}
+                        {div.staff.map(member => <MemberCard key={member.id} member={member} deptCode="STD" />)}
                       </div>
                     </div>
                   ))}

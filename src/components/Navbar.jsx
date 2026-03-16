@@ -53,11 +53,14 @@ const Navbar = () => {
     { name: 'Admin', path: '/manage-users', icon: Shield, show: isAdmin },
   ];
 
-  // Helper konversi angka ke teks jabatan untuk di sudut kanan atas
-  const getRoleText = (r) => {
+  // =========================================
+  // PERBAIKAN: HELPER TEKS JABATAN PRESISI
+  // =========================================
+  const getRoleText = (r, position) => {
     switch(r) {
       case 1: return 'ADMIN';
-      case 2: return 'BPH / ADV';
+      // Jika role 2, cek posisinya. Jika BPH, tampilkan posisinya. Jika tidak, tampilkan 'ADV'.
+      case 2: return ['President', 'Vice President', 'Secretary', 'Treasurer'].includes(position) ? position.toUpperCase() : 'ADV';
       case 3: return 'KADEP';
       case 4: return 'KADIV';
       case 5: return 'STAFF';
@@ -119,11 +122,12 @@ const Navbar = () => {
             <div className="flex items-center gap-6">
               <div className="flex flex-col items-end">
                 <span className="text-sm font-black text-tsa-dark uppercase">
-                    {getRoleText(role)}
+                    {getRoleText(role, user?.position)}
                 </span>
-                {user?.position && (
+                {/* Hanya tampilkan nama divisi/departemen di bawahnya jika bukan BPH/Admin */}
+                {role !== 1 && !['President', 'Vice President', 'Secretary', 'Treasurer'].includes(user?.position) && user?.dept && (
                   <span className="text-[9px] font-bold text-tsa-green uppercase mt-0.5 tracking-wider">
-                    {user.position}
+                    {user.dept} {user.division !== '-' ? `• ${user.division}` : ''}
                   </span>
                 )}
               </div>

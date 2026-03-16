@@ -11,22 +11,23 @@ import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Users, Loader2, Star, Sp
 const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClass, iconColor, isGroup, groupPhotoUrl, isEndOfTerm = false }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-  // Tema Hall of Fame: Clean White dengan border aksen (Gold/Green), Kuartalan: Putih biasa
-  const cardBorder = isEndOfTerm ? 'border-yellow-200/60 shadow-md bg-white relative overflow-hidden' : `border-gray-100 shadow-sm bg-white relative overflow-hidden`;
+  // PERBAIKAN BORDER: Disamakan dengan kuartalan (border abu-abu tipis)
+  const cardBorder = isEndOfTerm ? 'border-gray-100 shadow-sm bg-white relative overflow-hidden' : `border-gray-100 shadow-sm bg-white relative overflow-hidden`;
 
   return (
     <div className={`p-6 rounded-3xl border ${cardBorder} hover:-translate-y-1 transition-all duration-300 flex flex-col h-full`}>
-      {/* Aksen Pinggir Khusus Hall of Fame */}
+      {/* Aksen Pinggir Khusus Hall of Fame (Tetap dipertahankan untuk pembeda hierarki) */}
       {isEndOfTerm && <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>}
 
-      {/* Background Icon Watermark */}
-      <div className={`absolute top-0 right-0 p-6 ${isEndOfTerm ? 'opacity-[0.03] text-tsa-gold' : 'opacity-10'}`}>
+      {/* PERBAIKAN ICON WATERMARK: Diubah menjadi abu-abu tipis agar tidak kuning */}
+      <div className={`absolute top-0 right-0 p-6 opacity-10 text-gray-300`}>
         <Icon size={100} />
       </div>
       
       <div className={`relative z-10 flex flex-col flex-grow ${isEndOfTerm ? 'ml-2' : ''}`}>
         <div className="flex items-center gap-3 mb-2">
-          <div className={`p-2 rounded-xl shadow-sm ${isEndOfTerm ? 'bg-yellow-50 border border-yellow-100' : 'bg-white'} ${iconColor}`}>
+          {/* PERBAIKAN ICON CARD: Diubah menjadi TSA Green */}
+          <div className={`p-2 rounded-xl shadow-sm ${isEndOfTerm ? 'bg-green-50 text-tsa-green' : `bg-white ${iconColor}`}`}>
             <Icon size={20} />
           </div>
           <h3 className="font-black text-lg tracking-tight text-tsa-dark">{title}</h3>
@@ -60,7 +61,8 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClas
                 </p>
               </div>
               <div className="flex justify-between items-center p-3 rounded-xl border shadow-sm bg-white border-gray-100">
-                <span className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest bg-yellow-50 text-tsa-gold border border-yellow-100">Total Score</span>
+                {/* PERBAIKAN BADGE SCORE: Diubah menjadi TSA Green */}
+                <span className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest bg-green-50 text-tsa-green border border-green-100">Total Score</span>
                 <span className="text-sm font-black text-tsa-dark">{winner.score?.toFixed(1) || winner.finalScore?.toFixed(1)} / 100</span>
               </div>
             </div>
@@ -71,7 +73,7 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClas
                 {winner.photo_url ? (
                   <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover" />
                 ) : (
-                  <span className={`text-lg font-black ${isEndOfTerm ? 'text-tsa-gold' : 'text-tsa-green'}`}>{getInitials(winner.full_name)}</span>
+                  <span className={`text-lg font-black text-tsa-green`}>{getInitials(winner.full_name)}</span>
                 )}
               </div>
               <div className="overflow-hidden">
@@ -80,7 +82,8 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClas
                   <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-500 border border-gray-200">
                     {winner.cohort}
                   </span>
-                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border truncate max-w-[200px] ${isEndOfTerm ? 'bg-yellow-50 text-tsa-gold border-yellow-200' : 'bg-green-50 text-tsa-green border-green-100'}`}>
+                  {/* PERBAIKAN BADGE JABATAN: Diubah menjadi TSA Green */}
+                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border truncate max-w-[200px] bg-green-50 text-tsa-green border-green-100`}>
                     {winner.position} • {winner.dept}
                   </span>
                 </div>
@@ -177,11 +180,10 @@ const Dashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
+                // PERBAIKAN TAB: Tab End of Term disamakan dengan tab kuartalan (bg-tsa-green jika aktif)
                 className={`flex-shrink-0 px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
                   isActive
-                    ? isEndOfTerm
-                      ? 'bg-yellow-50 text-tsa-gold shadow-sm border border-yellow-200 transform scale-105'
-                      : 'bg-tsa-green text-white shadow-md transform scale-105'
+                    ? 'bg-tsa-green text-white shadow-md transform scale-105'
                     : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50'
                 }`}
               >
@@ -209,8 +211,9 @@ const Dashboard = () => {
             /* UI CLEAN WHITE HALL OF FAME 2026 */
             /* ========================================== */
             <div className="space-y-6 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-6 bg-white p-6 rounded-3xl border border-yellow-200/50 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-2 h-full bg-tsa-gold"></div>
+              {/* PERBAIKAN HEADER HALL OF FAME: Border disamakan dengan border kartu (gray-100) */}
+              <div className="flex items-center justify-between mb-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                 <div className="ml-2">
                   <h2 className="text-2xl font-black text-tsa-dark flex items-center gap-3 tracking-widest uppercase">
                     <Crown size={28} className="text-tsa-gold" /> Hall of Fame 2026
@@ -218,7 +221,8 @@ const Dashboard = () => {
                   <p className="text-xs text-gray-500 mt-2 font-medium max-w-2xl">The most prestigious awards based on Q1-Q4 aggregation, BPH Evaluation, and Ranked Choice Voting.</p>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm border ${isPublished ? 'bg-yellow-50 text-tsa-gold border-yellow-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                  {/* PERBAIKAN STATUS BADGE: Dikembalikan ke TSA Green */}
+                  <span className={`text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm border ${isPublished ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-green-50 text-tsa-green border-green-100'}`}>
                     {isPublished ? '🏆 Results Published' : '🟢 Voting Active'}
                   </span>
                   {isPrivilegedView && <span className="text-[9px] font-bold text-red-500 mt-2 uppercase tracking-widest animate-pulse">Privileged View</span>}

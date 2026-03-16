@@ -5,12 +5,12 @@ import { supabase } from '../supabaseClient';
 import { Vote, Star, Trophy, AlertCircle, CheckCircle2, Save, Loader2, Lock, Crown, Sparkles, Building2, ShieldCheck } from 'lucide-react';
 
 // ==========================================
-// KOMPONEN BINTANG UNTUK EVALUASI BPH
+// KOMPONEN BINTANG UNTUK EVALUASI BPH (Disesuaikan untuk Light Mode)
 // ==========================================
 const StarRating = ({ label, value, onChange, readOnly }) => {
   return (
-    <div className="flex justify-between items-center py-3 border-b border-gray-800 last:border-0 group">
-      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest group-hover:text-gray-300 transition-colors">{label}</span>
+    <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0 group">
+      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-tsa-green transition-colors">{label}</span>
       <div className="flex gap-1.5">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
@@ -20,7 +20,8 @@ const StarRating = ({ label, value, onChange, readOnly }) => {
             onClick={() => onChange(star)}
             className={`transition-all duration-200 ${readOnly ? 'cursor-default' : 'hover:scale-110'}`}
           >
-            <Star size={22} className={star <= value ? "fill-tsa-gold text-tsa-gold drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "fill-gray-800 text-gray-700"} />
+            {/* Hapus drop shadow agar lebih clean di background putih */}
+            <Star size={22} className={star <= value ? "fill-tsa-gold text-tsa-gold" : "fill-gray-100 text-gray-200"} />
           </button>
         ))}
       </div>
@@ -31,7 +32,6 @@ const StarRating = ({ label, value, onChange, readOnly }) => {
 const Voting = () => {
   const { user } = useAuth();
   
-  // Data State
   const [usersList, setUsersList] = useState([]);
   const [projectsList, setProjectsList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,17 +39,14 @@ const Voting = () => {
   const [isVoted, setIsVoted] = useState(false);
   const [votingActive, setVotingActive] = useState(false);
 
-  // Voting State Arrays (Ranked Choice)
-  const [mvpVotes, setMvpVotes] = useState(['', '', '', '', '']); // Top 5
-  const [rookieVotes, setRookieVotes] = useState(['', '', '']); // Top 3
-  const [projectVotes, setProjectVotes] = useState(['', '', '']); // Top 3
-  const [favEbVotes, setFavEbVotes] = useState(['', '', '', '', '']); // Top 5
+  const [mvpVotes, setMvpVotes] = useState(['', '', '', '', '']); 
+  const [rookieVotes, setRookieVotes] = useState(['', '', '']); 
+  const [projectVotes, setProjectVotes] = useState(['', '', '']); 
+  const [favEbVotes, setFavEbVotes] = useState(['', '', '', '', '']); 
 
-  // Evaluasi Khusus BPH/ADV State (Absolut 1-5 Bintang)
   const [evalDeptVotes, setEvalDeptVotes] = useState({ 'ERBD': 0, 'MD': 0, 'STD': 0 });
   const [evalProjectVotes, setEvalProjectVotes] = useState({});
 
-  // Pengecekan Role
   const role = user?.role;
   const isStaff = role === 5;
   const isEB = role >= 3 && role <= 4;
@@ -63,13 +60,11 @@ const Voting = () => {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      // 1. Cek Status Buka/Tutup Voting dari Admin
       const { data: settings } = await supabase.from('app_settings').select('voting_status').eq('id', 1).single();
       const isActive = settings?.voting_status === 'ACTIVE';
       setVotingActive(isActive);
 
       if (isActive && user && !isAdmin) {
-        // 2. Cek apakah user ini sudah pernah vote (Mencegah double vote)
         const { data: existingVotes } = await supabase.from('end_of_term_votes').select('id').eq('voter_id', user.id).limit(1);
         if (existingVotes && existingVotes.length > 0) {
           setIsVoted(true);
@@ -77,18 +72,15 @@ const Voting = () => {
           return; 
         }
 
-        // 3. Tarik Kandidat Pengurus & Project
         const [usersRes, projectsRes] = await Promise.all([
           supabase.from('users').select('*').neq('role', 1).eq('is_active', true).order('full_name', { ascending: true }),
           supabase.from('projects').select('*').order('name', { ascending: true })
         ]);
 
         setUsersList(usersRes.data || []);
-        
         const projs = projectsRes.data || [];
         setProjectsList(projs);
 
-        // Inisialisasi state evaluasi project (untuk BPH) agar default 0 bintang
         if (isBPHADV) {
           const initProjEval = {};
           projs.forEach(p => initProjEval[p.id] = 0);
@@ -102,13 +94,11 @@ const Voting = () => {
     }
   };
 
-  // Helper untuk mengecek duplikasi
   const checkDuplicate = (arr) => {
     const filled = arr.filter(val => val !== '');
     return new Set(filled).size !== filled.length;
   };
 
-  // Handler Perubahan State Voting RCV
   const handleVoteChange = (category, index, value) => {
     if (category === 'mvp') {
       const newVotes = [...mvpVotes]; newVotes[index] = value; setMvpVotes(newVotes);
@@ -125,19 +115,16 @@ const Voting = () => {
     e.preventDefault();
     if (isAdmin) return alert("Administrators are not allowed to participate in voting.");
     
-    // 1. Validasi Duplikasi Mutlak
     if (checkDuplicate(mvpVotes)) return alert('Duplicate candidates found in The Ultimate MVP category!');
     if (checkDuplicate(rookieVotes)) return alert('Duplicate candidates found in Rookie of the Year category!');
     if (checkDuplicate(projectVotes)) return alert('Duplicate nominations found in Best Project category!');
     if (isStaff && checkDuplicate(favEbVotes)) return alert('Duplicate candidates found in Most Favorite EB category!');
 
-    // 2. Validasi Wajib Isi Rank 1 (Top 1 tidak boleh kosong)
     if (!mvpVotes[0]) return alert('You must select a candidate for Rank 1 in The Ultimate MVP!');
     if (!rookieVotes[0]) return alert('You must select a candidate for Rank 1 in Rookie of the Year!');
     if (!projectVotes[0]) return alert('You must select a project for Rank 1 in Best Project!');
     if (isStaff && !favEbVotes[0]) return alert('You must select a candidate for Rank 1 in Most Favorite EB!');
 
-    // 3. Validasi BPH Wajib Evaluasi Bintang
     if (isBPHADV) {
       if (Object.values(evalDeptVotes).includes(0)) return alert("Executive Board must evaluate all departments (minimum 1 star)!");
       if (Object.values(evalProjectVotes).includes(0)) return alert("Executive Board must evaluate all projects (minimum 1 star)!");
@@ -147,17 +134,14 @@ const Voting = () => {
     try {
       const payload = [];
 
-      // A. Payload RCV (Semua Role 2-5)
       payload.push({ voter_id: user.id, category: 'MVP', rank_1: mvpVotes[0], rank_2: mvpVotes[1], rank_3: mvpVotes[2], rank_4: mvpVotes[3], rank_5: mvpVotes[4] });
       payload.push({ voter_id: user.id, category: 'ROOKIE', rank_1: rookieVotes[0], rank_2: rookieVotes[1], rank_3: rookieVotes[2] });
       payload.push({ voter_id: user.id, category: 'PROJECT', rank_1: projectVotes[0], rank_2: projectVotes[1], rank_3: projectVotes[2] });
       
-      // B. Payload Fav EB (Hanya Role 5)
       if (isStaff) {
         payload.push({ voter_id: user.id, category: 'FAV_EB', rank_1: favEbVotes[0], rank_2: favEbVotes[1], rank_3: favEbVotes[2], rank_4: favEbVotes[3], rank_5: favEbVotes[4] });
       }
 
-      // C. Payload Evaluasi (Hanya Role 2) - Konversi Bintang ke 0-100
       if (isBPHADV) {
         Object.entries(evalDeptVotes).forEach(([dept, score]) => {
           payload.push({ voter_id: user.id, category: 'EVAL_DEPT', target_id: dept, evaluation_score: score * 20 });
@@ -167,7 +151,6 @@ const Voting = () => {
         });
       }
 
-      // Tembakkan ke Database
       const { error } = await supabase.from('end_of_term_votes').insert(payload);
       if (error) throw error;
 
@@ -181,7 +164,7 @@ const Voting = () => {
     }
   };
 
-  // --- KANDIDAT FILTERING LOGIC (SUDAH DIKOREKSI) ---
+  // --- KANDIDAT FILTERING LOGIC (SUDAH DIKOREKSI MUTLAK) ---
   // MVP: HANYA Staff / TL (Role 5). EB adalah penilai, bukan yang dinilai.
   const mvpCandidates = usersList.filter(u => u.role === 5);
   
@@ -198,7 +181,7 @@ const Voting = () => {
       <main className="max-w-4xl mx-auto px-6 mt-8">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight flex items-center gap-3">
-            <Vote className="text-tsa-green" size={36} /> End of Term Portal
+            <Crown className="text-tsa-green" size={36} /> End of Term Portal
           </h1>
           <p className="text-sm text-gray-500 mt-1 font-medium">
             The election utilizes a weighted <strong>Ranked Choice Voting</strong> system. Please select your candidates carefully.
@@ -340,29 +323,29 @@ const Voting = () => {
               </section>
             )}
 
-            {/* B. EVALUASI BPH & ADV (HANYA ROLE 2) */}
+            {/* B. EVALUASI BPH & ADV (HANYA ROLE 2) - DIPERBAIKI (CLEAN WHITE + TSA GREEN) */}
             {isBPHADV && (
-              <section className="bg-gradient-to-br from-tsa-dark to-gray-900 p-6 md:p-8 rounded-3xl border border-gray-800 shadow-xl relative overflow-hidden text-white mt-10">
-                <div className="absolute top-0 right-0 p-4 opacity-5"><ShieldCheck size={120} className="text-tsa-gold" /></div>
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-gold"></div>
+              <section className="bg-white p-6 md:p-8 rounded-3xl border border-tsa-green shadow-lg relative overflow-hidden mt-10">
+                <div className="absolute top-0 right-0 p-4 opacity-[0.03]"><ShieldCheck size={120} className="text-tsa-green" /></div>
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
                 
-                <div className="relative z-10 flex items-start gap-4 mb-8 border-b border-gray-800 pb-6">
-                  <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center shrink-0 border border-gray-700"><ShieldCheck size={24} className="text-tsa-gold" /></div>
+                <div className="relative z-10 flex items-start gap-4 mb-8 border-b border-gray-100 pb-6">
+                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><ShieldCheck size={24} className="text-tsa-green" /></div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h2 className="text-lg font-black text-white uppercase tracking-widest">Executive Assessment</h2>
-                      <span className="bg-yellow-500/10 text-tsa-gold text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest border border-tsa-gold/20">Directors Privilege</span>
+                      <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Executive Assessment</h2>
+                      <span className="bg-green-50 text-tsa-green text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest border border-green-200">Directors Privilege</span>
                     </div>
-                    <p className="text-xs text-gray-400 font-medium leading-relaxed">
+                    <p className="text-xs text-gray-500 font-medium leading-relaxed">
                       Absolute qualitative evaluation (1-5 Stars) regarding workflow efficiency, budget utilization, and bureaucracy neatness. This evaluation contributes 20-50% to the final calculation of Department and Project metrics.
                     </p>
                   </div>
                 </div>
                 
-                <div className="relative z-10 space-y-8">
+                <div className="relative z-10 space-y-6">
                   {/* Evaluasi 3 Departemen Inti */}
-                  <div className="bg-gray-900/50 p-6 rounded-2xl border border-gray-800 shadow-inner">
-                    <h3 className="font-bold text-tsa-gold text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Building2 size={16}/> Department Bureaucracy Eval</h3>
+                  <div className="bg-green-50/50 p-6 rounded-2xl border border-green-100">
+                    <h3 className="font-bold text-tsa-green text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Building2 size={16}/> Department Bureaucracy Eval</h3>
                     {['ERBD', 'MD', 'STD'].map(dept => (
                       <StarRating 
                         key={dept} label={`${dept} Department`} value={evalDeptVotes[dept]} 
@@ -372,10 +355,10 @@ const Voting = () => {
                   </div>
 
                   {/* Evaluasi Nominasi Project */}
-                  <div className="bg-gray-900/50 p-6 rounded-2xl border border-gray-800 shadow-inner">
-                    <h3 className="font-bold text-tsa-gold text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Star size={16}/> Project Execution Eval</h3>
+                  <div className="bg-green-50/50 p-6 rounded-2xl border border-green-100">
+                    <h3 className="font-bold text-tsa-green text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Star size={16}/> Project Execution Eval</h3>
                     {projectsList.length === 0 ? (
-                      <div className="py-4 text-center border border-dashed border-gray-700 rounded-xl">
+                      <div className="py-4 text-center border border-dashed border-gray-200 rounded-xl bg-white">
                         <p className="text-xs text-gray-500 font-medium">No project nominations have been registered by the Administrator.</p>
                       </div>
                     ) : (

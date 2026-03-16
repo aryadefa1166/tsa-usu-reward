@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
-import { LogOut, Home, BarChart2, CheckSquare, Users, Shield, ClipboardCheck, Vote } from 'lucide-react';
+import { LogOut, Home, BarChart2, CheckSquare, Users, Shield, ClipboardCheck, Crown } from 'lucide-react';
 import tsaLogo from '../assets/tsa-logo.png';
 
 const Navbar = () => {
@@ -45,12 +45,12 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
-    // PERBAIKAN: Ubah label "My Report" menjadi "Report"
     { name: 'Report', path: '/report', icon: BarChart2, show: isReportViewer },
     { name: 'Assessment', path: '/input-assessment', icon: CheckSquare, show: isAssessor },
     { name: 'Attendance', path: '/input-attendance', icon: ClipboardCheck, show: isSecretary },
     { name: 'Our Team', path: '/our-team', icon: Users, show: true },
-    { name: 'Voting', path: '/voting', icon: Vote, show: showVoting }, // TAB EKSKLUSIF END OF TERM
+    // PERBAIKAN: Nama diubah jadi End of Term, Ikon jadi Crown
+    { name: 'End of Term', path: '/voting', icon: Crown, show: showVoting }, 
     { name: 'Admin', path: '/manage-users', icon: Shield, show: isAdmin },
   ];
 
@@ -83,18 +83,16 @@ const Navbar = () => {
               {navLinks.filter(link => link.show).map((link) => {
                 const Icon = link.icon;
                 const isActive = location.pathname === link.path;
-                
-                // Styling khusus untuk tombol Voting agar stand-out
-                const isVotingBtn = link.name === 'Voting';
 
                 return (
                   <button
                     key={link.name}
                     onClick={() => navigate(link.path)}
+                    // PERBAIKAN: Logika isVotingBtn dihapus, semua pakai tema TSA Green
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                       isActive 
-                        ? (isVotingBtn ? 'bg-tsa-gold text-white shadow-sm' : 'bg-green-50 text-tsa-green') 
-                        : (isVotingBtn ? 'text-tsa-gold hover:bg-yellow-50' : 'text-gray-500 hover:bg-gray-50 hover:text-tsa-dark')
+                        ? 'bg-green-50 text-tsa-green' 
+                        : 'text-gray-500 hover:bg-gray-50 hover:text-tsa-dark'
                     }`}
                   >
                     <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
@@ -144,22 +142,22 @@ const Navbar = () => {
           {navLinks.filter(link => link.show).map((link) => {
             const Icon = link.icon;
             const isActive = location.pathname === link.path;
-            const isVotingBtn = link.name === 'Voting';
 
             return (
               <button
                 key={link.name}
                 onClick={() => navigate(link.path)}
+                // PERBAIKAN: Logika isVotingBtn dihapus, semua diseragamkan
                 className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-full gap-1 transition-all ${
                   isActive 
-                    ? (isVotingBtn ? 'text-tsa-gold' : 'text-tsa-green') 
-                    : (isVotingBtn ? 'text-yellow-600' : 'text-gray-400 hover:text-gray-600')
+                    ? 'text-tsa-green' 
+                    : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                <div className={`p-1.5 rounded-full ${isActive ? (isVotingBtn ? 'bg-yellow-50' : 'bg-green-50') : 'bg-transparent'}`}>
+                <div className={`p-1.5 rounded-full ${isActive ? 'bg-green-50' : 'bg-transparent'}`}>
                   <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
-                <span className={`text-[9px] font-bold tracking-wide ${isActive ? (isVotingBtn ? 'text-tsa-gold' : 'text-tsa-green') : 'text-gray-400'}`}>
+                <span className={`text-[9px] font-bold tracking-wide ${isActive ? 'text-tsa-green' : 'text-gray-400'}`}>
                   {link.name}
                 </span>
               </button>

@@ -45,7 +45,8 @@ const Navbar = () => {
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
-    { name: 'My Report', path: '/report', icon: BarChart2, show: isReportViewer },
+    // PERBAIKAN: Ubah label "My Report" menjadi "Report"
+    { name: 'Report', path: '/report', icon: BarChart2, show: isReportViewer },
     { name: 'Assessment', path: '/input-assessment', icon: CheckSquare, show: isAssessor },
     { name: 'Attendance', path: '/input-attendance', icon: ClipboardCheck, show: isSecretary },
     { name: 'Our Team', path: '/our-team', icon: Users, show: true },

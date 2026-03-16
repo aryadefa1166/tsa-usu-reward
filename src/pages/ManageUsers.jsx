@@ -5,11 +5,12 @@ import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
   Users, CalendarDays, Activity, ShieldCheck, Download, ImagePlus, UploadCloud, Briefcase,
-  AlertTriangle, CheckCircle2, Copy
+  AlertTriangle, CheckCircle2, Copy, Crown // <-- INI DIA PERBAIKANNYA: Crown ditambahkan di sini
 } from 'lucide-react';
 
 const ShieldIcon = () => (
-  <div className="w-10 h-10 bg-tsa-dark rounded-xl flex items-center justify-center shadow-md">
+  // PERBAIKAN: Background Hijau TSA dengan Ikon Emas
+  <div className="w-10 h-10 bg-tsa-green rounded-xl flex items-center justify-center shadow-md border border-emerald-800">
     <ShieldCheck size={20} className="text-tsa-gold" />
   </div>
 );

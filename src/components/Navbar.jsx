@@ -53,21 +53,6 @@ const Navbar = () => {
     { name: 'Admin', path: '/manage-users', icon: Shield, show: isAdmin },
   ];
 
-  // =========================================
-  // PERBAIKAN: HELPER TEKS JABATAN PRESISI
-  // =========================================
-  const getRoleText = (r, position) => {
-    switch(r) {
-      case 1: return 'ADMIN';
-      // Jika role 2, cek posisinya. Jika BPH, tampilkan posisinya. Jika tidak, tampilkan 'ADV'.
-      case 2: return ['President', 'Vice President', 'Secretary', 'Treasurer'].includes(position) ? position.toUpperCase() : 'ADV';
-      case 3: return 'KADEP';
-      case 4: return 'KADIV';
-      case 5: return 'STAFF';
-      default: return 'USER';
-    }
-  };
-
   return (
     <>
       {/* ========================================= */}
@@ -121,13 +106,19 @@ const Navbar = () => {
             {/* Bagian Kanan: Profil Stacked Text & Logout */}
             <div className="flex items-center gap-6">
               <div className="flex flex-col items-end">
-                <span className="text-sm font-black text-tsa-dark uppercase">
-                    {getRoleText(role, user?.position)}
+                {/* Baris 1: Nama Lengkap Presisi */}
+                <span className="text-sm font-black text-tsa-dark capitalize">
+                  {user?.full_name || 'Administrator'}
                 </span>
-                {/* Hanya tampilkan nama divisi/departemen di bawahnya jika bukan BPH/Admin */}
-                {role !== 1 && !['President', 'Vice President', 'Secretary', 'Treasurer'].includes(user?.position) && user?.dept && (
+                
+                {/* Baris 2: Posisi dan Departemen */}
+                {role === 1 ? (
                   <span className="text-[9px] font-bold text-tsa-green uppercase mt-0.5 tracking-wider">
-                    {user.dept} {user.division !== '-' ? `• ${user.division}` : ''}
+                    System Administrator
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-bold text-tsa-green uppercase mt-0.5 tracking-wider">
+                    {user?.position} {user?.dept && user?.dept !== '-' ? `• ${user?.dept}` : ''}
                   </span>
                 )}
               </div>

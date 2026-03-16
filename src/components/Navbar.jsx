@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
-import { LogOut, Home, BarChart2, CheckSquare, Users, Shield, ClipboardCheck, Crown } from 'lucide-react';
+import { LogOut, Home, BarChart2, CheckSquare, Users, Shield, ClipboardCheck, Trophy } from 'lucide-react';
 import tsaLogo from '../assets/tsa-logo.png';
 
 const Navbar = () => {
@@ -52,7 +52,7 @@ const Navbar = () => {
     { name: 'Assessment', path: '/input-assessment', icon: CheckSquare, show: isAssessor },
     { name: 'Attendance', path: '/input-attendance', icon: ClipboardCheck, show: isSecretary },
     { name: 'Our Team', path: '/our-team', icon: Users, show: true },
-    { name: 'End of Term', path: '/voting', icon: Crown, show: canSeeVoting }, 
+    { name: 'End of Term', path: '/voting', icon: Trophy, show: canSeeVoting }, 
     { name: 'Admin', path: '/manage-users', icon: Shield, show: isAdmin },
   ];
 

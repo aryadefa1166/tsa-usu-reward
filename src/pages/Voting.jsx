@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
-import { Vote, Star, Trophy, AlertCircle, CheckCircle2, Save, Loader2, Lock, Crown, Sparkles, Building2, ShieldCheck, Info, Briefcase } from 'lucide-react';
+import { Star, Trophy, AlertCircle, CheckCircle2, Save, Loader2, Lock, Crown, Sparkles, Building2, ShieldCheck, Info, Briefcase } from 'lucide-react';
 
 // ==========================================
 // KOMPONEN BINTANG UNTUK EVALUASI BPH
@@ -221,7 +221,8 @@ const Voting = () => {
       <main className="max-w-4xl mx-auto px-6 mt-8">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight flex items-center gap-3">
-            <Crown className="text-tsa-green" size={36} /> End of Term Portal
+            {/* PERBAIKAN IKON: Trophy untuk Portal Utama */}
+            <Trophy className="text-tsa-green" size={36} /> End of Term Portal
           </h1>
           <p className="text-sm text-gray-500 mt-1 font-medium">
             The election utilizes a weighted <strong>Ranked Choice Voting</strong> system. Please select your candidates carefully.
@@ -265,9 +266,10 @@ const Voting = () => {
             {/* 1. THE ULTIMATE MVP (Top 5) */}
             <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
               <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
-              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Trophy size={120} /></div>
+              {/* PERBAIKAN IKON: Crown untuk The Ultimate MVP */}
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Crown size={120} /></div>
               <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
-                <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Trophy size={24} className="text-tsa-green" /></div>
+                <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Crown size={24} className="text-tsa-green" /></div>
                 <div>
                   <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">The Ultimate MVP of the Year</h2>
                   <p className="text-xs text-gray-500 font-medium mt-1">Select the top 5 officers with the most outstanding and consistent performance throughout the year. (Rank 1 = 5 Pts, Rank 5 = 1 Pt).</p>
@@ -323,9 +325,10 @@ const Voting = () => {
             {/* 3. BEST PROJECT OF THE YEAR (Top 3) */}
             <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
               <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
-              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Star size={120} /></div>
+              {/* PERBAIKAN IKON: Briefcase untuk Best Project */}
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Briefcase size={120} /></div>
               <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
-                <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Star size={24} className="text-tsa-green" /></div>
+                <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Briefcase size={24} className="text-tsa-green" /></div>
                 <div>
                   <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Best Project of the Year</h2>
                   <p className="text-xs text-gray-500 font-medium mt-1">Select the top 3 most impactful and well-executed work programs. (Rank 1 = 3 Pts, Rank 3 = 1 Pt).</p>
@@ -353,10 +356,11 @@ const Voting = () => {
             {isStaff && (
               <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
-                <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Vote size={120} /></div>
+                {/* PERBAIKAN IKON: Star untuk Most Favorite EB */}
+                <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Star size={120} /></div>
                 
                 <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
-                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Vote size={24} className="text-tsa-green" /></div>
+                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Star size={24} className="text-tsa-green" /></div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Most Favorite EB</h2>

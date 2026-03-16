@@ -57,7 +57,7 @@ const ManageUsers = () => {
   const [trackerLoading, setTrackerLoading] = useState(false);
   const [activeTrackerName, setActiveTrackerName] = useState('');
 
-  // PERBAIKAN: Menyeragamkan warna icon header tab (Semua warna hijau jika aktif, text-gray-500 jika tidak)
+  // Menyeragamkan warna icon header tab
   const adminTabs = [
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'projects', label: 'Project Nominations', icon: Briefcase },
@@ -104,7 +104,7 @@ const ManageUsers = () => {
   };
 
   // ==========================================
-  // PERBAIKAN TOTAL TRACKER LOGIC (MULTI-QUOTA)
+  // TRACKER LOGIC (MULTI-QUOTA)
   // ==========================================
   const fetchTrackerData = async () => {
     setTrackerLoading(true);
@@ -116,28 +116,24 @@ const ManageUsers = () => {
       else if (appSettings.q4_status === 'ACTIVE') activeQuarter = 'Q4';
 
       if (appSettings.voting_status === 'ACTIVE') {
-        setActiveTrackerName('End of Term Evaluation'); // Teks 'Voting' dihapus
+        setActiveTrackerName('End of Term Evaluation'); 
         const { data: votes } = await supabase.from('end_of_term_votes').select('voter_id, category');
         
-        // Populasi target: Semua pengurus aktif selain Admin (Role 2,3,4,5)
         const votersTarget = usersList.filter(u => u.role !== 1 && u.is_active === true);
         
-        // Mapping berapa form yg sudah diisi per user
         const userVotesCount = {};
         votersTarget.forEach(u => userVotesCount[u.id] = 0);
         votes?.forEach(v => {
           if (userVotesCount[v.voter_id] !== undefined) {
-             // Mencegah duplikasi hitungan jika 1 user submit kategori yg sama berkali-kali (meskipun di UI sudah diblokir)
              userVotesCount[v.voter_id] += 1; 
           }
         });
 
-        // Hitung status berdasarkan kuota Role
         const report = votersTarget.map(user => {
           const filledForms = userVotesCount[user.id] || 0;
-          let requiredForms = 3; // Default (MVP, Rookie, Project) untuk Role 3 & 4
-          if (user.role === 2) requiredForms = 5; // BPH/ADV (+ Eval Dept, Eval Project)
-          if (user.role === 5) requiredForms = 4; // Staff (+ Fav EB)
+          let requiredForms = 3; 
+          if (user.role === 2) requiredForms = 5; 
+          if (user.role === 5) requiredForms = 4; 
 
           let status = 'PENDING';
           if (filledForms >= requiredForms) status = 'COMPLETED';
@@ -150,7 +146,6 @@ const ManageUsers = () => {
           };
         });
         
-        // Sorting: Pending di atas, Progress di tengah, Completed di bawah
         const sortOrder = { 'PENDING': 1, 'PROGRESS': 2, 'COMPLETED': 3 };
         setTrackerData(report.sort((a, b) => sortOrder[a.status] - sortOrder[b.status]));
       } 
@@ -158,7 +153,6 @@ const ManageUsers = () => {
         setActiveTrackerName(`${activeQuarter} Assessment`);
         const { data: assessments } = await supabase.from('assessments').select('assessor_id').eq('quarter', activeQuarter);
         
-        // Populasi target: Semua penilai aktif (Role 2,3,4)
         const assessorTarget = usersList.filter(u => u.role >= 2 && u.role <= 4 && u.is_active === true);
         
         const assessCount = {};
@@ -170,7 +164,7 @@ const ManageUsers = () => {
           const count = assessCount[user.id] || 0;
           return {
             ...user,
-            status: count > 0 ? 'COMPLETED' : 'PENDING', // Di kuartal, asal sudah nilai 1 orang, dianggap completed/progress baik
+            status: count > 0 ? 'COMPLETED' : 'PENDING', 
             detail: count > 0 ? `Assessed ${count} members` : 'No assessments yet'
           };
         });
@@ -455,10 +449,11 @@ const ManageUsers = () => {
 
   const totalManagement = usersList.filter(u => u.role !== 1).length;
 
+  // PERBAIKAN: Warna ADV dibuat lebih oranye/cokelat agar tidak pucat seperti kuning
   const getDeptColor = (deptName) => {
       const dept = deptName?.toUpperCase();
       if (dept === 'BPH') return 'bg-pink-100 text-pink-700 border-pink-200';
-      if (dept === 'ADV') return 'bg-amber-100 text-amber-700 border-amber-200';
+      if (dept === 'ADV') return 'bg-orange-100 text-orange-800 border-orange-200'; 
       if (dept === 'MD') return 'bg-purple-100 text-purple-700 border-purple-200'; 
       if (dept === 'STD') return 'bg-blue-100 text-blue-700 border-blue-200'; 
       if (dept === 'ERBD') return 'bg-emerald-100 text-emerald-700 border-emerald-200'; 
@@ -612,12 +607,13 @@ const ManageUsers = () => {
                 <table className="w-full text-left text-sm">
                     <thead className="bg-gray-50 border-b border-gray-100">
                     <tr>
-                        <th className="p-5 font-bold text-gray-500 text-xs uppercase w-12">#</th>
-                        <th className="p-5 font-bold text-gray-500 text-xs uppercase">Profile</th>
-                        <th className="p-5 font-bold text-gray-500 text-xs uppercase">Position</th>
-                        <th className="p-5 font-bold text-gray-500 text-xs uppercase">Dept / Div</th>
-                        <th className="p-5 font-bold text-gray-500 text-xs uppercase">Cohort</th>
-                        <th className="p-5 font-bold text-gray-500 text-xs uppercase text-right">Actions</th>
+                        {/* PERBAIKAN: Header Tabel warna Hijau TSA */}
+                        <th className="p-5 font-bold text-tsa-green text-xs uppercase w-12">#</th>
+                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Profile</th>
+                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Position</th>
+                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Dept / Div</th>
+                        <th className="p-5 font-bold text-tsa-green text-xs uppercase">Cohort</th>
+                        <th className="p-5 font-bold text-tsa-green text-xs uppercase text-right">Actions</th>
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -920,10 +916,11 @@ const ManageUsers = () => {
                  <table className="w-full text-left text-sm">
                    <thead className="bg-gray-50 border-b border-gray-100">
                      <tr>
-                       <th className="p-4 font-bold text-gray-500 text-xs uppercase">Target Name</th>
-                       <th className="p-4 font-bold text-gray-500 text-xs uppercase">Status</th>
-                       <th className="p-4 font-bold text-gray-500 text-xs uppercase">Detail</th>
-                       <th className="p-4 font-bold text-gray-500 text-xs uppercase text-right">Action</th>
+                       {/* PERBAIKAN: Header Tabel warna Hijau TSA */}
+                       <th className="p-4 font-bold text-tsa-green text-xs uppercase">Target Name</th>
+                       <th className="p-4 font-bold text-tsa-green text-xs uppercase">Status</th>
+                       <th className="p-4 font-bold text-tsa-green text-xs uppercase">Detail</th>
+                       <th className="p-4 font-bold text-tsa-green text-xs uppercase text-right">Action</th>
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-gray-50">

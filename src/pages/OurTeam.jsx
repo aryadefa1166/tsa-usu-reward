@@ -8,7 +8,8 @@ import { Loader2, Building2, Crown, ShieldCheck } from 'lucide-react';
 // ==========================================
 const THEMES = {
   BPH: { border: 'border-pink-200', bg: 'bg-pink-50', text: 'text-pink-600', shadow: 'shadow-pink-100/50', gradient: 'from-pink-400 to-pink-600', line: 'bg-pink-300', iconBg: 'bg-pink-50' },
-  ADV: { border: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-700', shadow: 'shadow-amber-100/50', gradient: 'from-amber-600 to-amber-800', line: 'bg-amber-300', iconBg: 'bg-amber-50' },
+  // PERBAIKAN: ADV diubah dari Amber menjadi Orange agar lebih cokelat gelap, senada dengan ManageUsers
+  ADV: { border: 'border-orange-200', bg: 'bg-orange-50', text: 'text-orange-800', shadow: 'shadow-orange-100/50', gradient: 'from-orange-500 to-orange-700', line: 'bg-orange-300', iconBg: 'bg-orange-50' },
   ERBD: { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-600', shadow: 'shadow-emerald-100/50', gradient: 'from-emerald-400 to-emerald-600', line: 'bg-emerald-300', iconBg: 'bg-emerald-50' },
   MD: { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-600', shadow: 'shadow-purple-100/50', gradient: 'from-purple-400 to-purple-600', line: 'bg-purple-300', iconBg: 'bg-purple-50' },
   STD: { border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-600', shadow: 'shadow-blue-100/50', gradient: 'from-blue-400 to-blue-600', line: 'bg-blue-300', iconBg: 'bg-blue-50' },

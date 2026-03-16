@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
-import { Vote, Star, Trophy, AlertCircle, CheckCircle2, Save, Loader2, Lock, Crown, Sparkles, Building2, ShieldCheck, Info } from 'lucide-react';
+import { Vote, Star, Trophy, AlertCircle, CheckCircle2, Save, Loader2, Lock, Crown, Sparkles, Building2, ShieldCheck, Info, Briefcase } from 'lucide-react';
 
 // ==========================================
 // KOMPONEN BINTANG UNTUK EVALUASI BPH
@@ -356,7 +356,7 @@ const Voting = () => {
                 <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Vote size={120} /></div>
                 
                 <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
-                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Crown size={24} className="text-tsa-green" /></div>
+                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Vote size={24} className="text-tsa-green" /></div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Most Favorite EB</h2>
@@ -395,7 +395,6 @@ const Voting = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Executive Assessment</h2>
-                      <span className="bg-green-50 text-tsa-green text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest border border-green-200">Directors Privilege</span>
                     </div>
                     <p className="text-xs text-gray-500 font-medium leading-relaxed">
                       Absolute qualitative evaluation (1-5 Stars) regarding workflow efficiency, budget utilization, and bureaucracy neatness. This evaluation contributes 20-50% to the final calculation of Department and Project metrics.
@@ -406,7 +405,7 @@ const Voting = () => {
                 <div className="relative z-10 space-y-6">
                   {/* Evaluasi 3 Departemen Inti */}
                   <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <h3 className="font-bold text-tsa-green text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Building2 size={16}/> Department Bureaucracy Eval</h3>
+                    <h3 className="font-bold text-tsa-green text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Building2 size={16}/> Department Bureaucracy Evaluation</h3>
                     {['ERBD', 'MD', 'STD'].map(dept => (
                       <StarRating 
                         key={dept} label={`${dept} Department`} value={evalDeptVotes[dept]} readOnly={isReadOnly}
@@ -417,7 +416,7 @@ const Voting = () => {
 
                   {/* Evaluasi Nominasi Project */}
                   <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <h3 className="font-bold text-tsa-green text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Star size={16}/> Project Execution Eval</h3>
+                    <h3 className="font-bold text-tsa-green text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Briefcase size={16}/> Project Execution Evaluation</h3>
                     {projectsList.length === 0 ? (
                       <div className="py-4 text-center border border-dashed border-gray-200 rounded-xl bg-gray-50">
                         <p className="text-xs text-gray-500 font-medium">No project nominations have been registered by the Administrator.</p>

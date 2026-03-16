@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
-import { BarChart2, TrendingUp, Users, Loader2, CalendarDays, ChevronRight, ArrowLeft } from 'lucide-react';
+import { BarChart2, TrendingUp, Users, Loader2, CalendarDays, ChevronRight, ArrowLeft, LayoutList } from 'lucide-react';
 
 // ==========================================
 // 1. KOMPONEN VISUAL: PROGRESS BAR (TSA Green)
@@ -40,15 +40,12 @@ const PersonalReportView = ({ targetUser, onBack }) => {
   const fetchMyData = async (quarter) => {
     setLoading(true);
     try {
-      // Kita pakai mesin kalkulator yang sama dengan Dashboard agar nilainya 100% sinkron
       const result = await calculateQuarterlyResults(quarter);
       
       if (result && result.allScores) {
-        // Cari data spesifik milik user ini
         const myData = result.allScores.find(u => u.id === targetUser.id);
         
         if (myData) {
-          // Tarik data kualitatif mentah dari database untuk progress bar
           const { data: assessData } = await supabase
             .from('assessments')
             .select('attitude, discipline, active, agility, cheerful')
@@ -75,7 +72,7 @@ const PersonalReportView = ({ targetUser, onBack }) => {
             sparkScore: myData.theSpark || 0,
           });
         } else {
-          setReportData(null); // Data tidak ditemukan / belum dinilai
+          setReportData(null); 
         }
       }
     } catch (error) {
@@ -89,7 +86,7 @@ const PersonalReportView = ({ targetUser, onBack }) => {
     <div className="animate-fade-in-up">
       {onBack && (
         <button onClick={onBack} className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-tsa-green transition-colors mb-6">
-          <ArrowLeft size={16} /> Back to Manager View
+          <ArrowLeft size={16} /> Back to Directory
         </button>
       )}
 
@@ -184,35 +181,47 @@ const PersonalReportView = ({ targetUser, onBack }) => {
 };
 
 // ==========================================
-// 3. KOMPONEN: MANAGER VIEW (TABEL BAWAHAN)
+// 3. KOMPONEN: MANAGER VIEW (GROUPED LIST)
 // ==========================================
 const ManagerReportView = ({ currentUser, onSelectUser }) => {
-  const [teamMembers, setTeamMembers] = useState([]);
+  const [groupedStaff, setGroupedStaff] = useState({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchTeam(); }, []);
+  useEffect(() => { fetchStaffList(); }, []);
 
-  const fetchTeam = async () => {
+  const fetchStaffList = async () => {
     setLoading(true);
     try {
-      let query = supabase.from('users').select('*').eq('is_active', true).order('full_name', { ascending: true });
+      // WAJIB: Hanya tarik Role 5 (Staff / TL) yang aktif
+      let query = supabase.from('users').select('*').eq('role', 5).eq('is_active', true).order('full_name', { ascending: true });
 
-      // LOGIKA PEMBATASAN AKSES:
-      // Jika BPH/ADV/Admin (Role 1 & 2): Bebas lihat semua, kecuali Admin & diri sendiri
-      if (currentUser.role === 1 || currentUser.role === 2) {
-        query = query.neq('role', 1).neq('id', currentUser.id);
-      } 
-      // Jika Kadep (Role 3): Hanya lihat departemennya
-      else if (currentUser.role === 3) {
-        query = query.eq('dept', currentUser.dept).neq('id', currentUser.id);
+      // Jika Kadep (Role 3): Hanya lihat staff departemennya
+      if (currentUser.role === 3) {
+        query = query.eq('dept', currentUser.dept);
       }
-      // Jika Kadiv (Role 4): Hanya lihat divisinya
+      // Jika Kadiv (Role 4): Hanya lihat staff divisinya
       else if (currentUser.role === 4) {
-        query = query.eq('dept', currentUser.dept).eq('division', currentUser.division).neq('id', currentUser.id);
+        query = query.eq('dept', currentUser.dept).eq('division', currentUser.division);
       }
+      // BPH/ADV (Role 1 & 2) akan melihat semua Role 5 tanpa filter tambahan
 
       const { data, error } = await query;
-      if (!error && data) setTeamMembers(data);
+      
+      if (!error && data) {
+        // Logika Pengelompokan Data (Grouping by Dept -> Division)
+        const grouped = data.reduce((acc, staff) => {
+          const dept = staff.dept || 'Other';
+          const div = staff.division && staff.division !== '-' ? staff.division : 'General';
+          
+          if (!acc[dept]) acc[dept] = {};
+          if (!acc[dept][div]) acc[dept][div] = [];
+          
+          acc[dept][div].push(staff);
+          return acc;
+        }, {});
+        
+        setGroupedStaff(grouped);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -222,62 +231,75 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
 
   return (
     <div className="animate-fade-in-up">
-      <div className="mb-6">
-        <h2 className="text-xl font-black text-tsa-dark">Team Members</h2>
-        <p className="text-sm text-gray-500 mt-1">Select a member to view their detailed performance report.</p>
+      <div className="mb-8">
+        <h2 className="text-xl font-black text-tsa-dark flex items-center gap-2">
+           <LayoutList size={20} className="text-tsa-green" /> Staff Directory
+        </h2>
+        <p className="text-sm text-gray-500 mt-1">Select a staff member to view their detailed performance report.</p>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-20"><Loader2 className="animate-spin text-tsa-green" size={40} /></div>
-      ) : teamMembers.length === 0 ? (
+      ) : Object.keys(groupedStaff).length === 0 ? (
         <div className="bg-white p-12 rounded-3xl border border-gray-100 text-center">
           <Users size={40} className="text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-black text-gray-500">No team members found.</h3>
+          <h3 className="text-lg font-black text-gray-500">No staff found.</h3>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="p-5 font-bold text-tsa-green text-xs uppercase">Profile</th>
-                <th className="p-5 font-bold text-tsa-green text-xs uppercase hidden md:table-cell">Position</th>
-                <th className="p-5 font-bold text-tsa-green text-xs uppercase hidden sm:table-cell">Cohort</th>
-                <th className="p-5 font-bold text-tsa-green text-xs uppercase text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {teamMembers.map((member) => (
-                <tr key={member.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer group" onClick={() => onSelectUser(member)}>
-                  <td className="p-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
-                        {member.photo_url ? (
-                          <img src={member.photo_url} alt="pic" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-xs font-black text-tsa-green">{member.full_name?.charAt(0) || '?'}</span>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-bold text-tsa-dark group-hover:text-tsa-green transition-colors">{member.full_name}</div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider md:hidden">{member.position} • {member.dept}</div>
-                      </div>
+        <div className="space-y-10">
+          {Object.keys(groupedStaff).sort().map((dept) => (
+            <div key={dept} className="animate-fade-in-up">
+              {/* Header Departemen */}
+              <div className="flex items-center gap-3 mb-4 pl-2">
+                <div className="h-6 w-1.5 bg-tsa-green rounded-full"></div>
+                <h3 className="text-lg font-black text-tsa-dark uppercase tracking-widest">{dept} Department</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Object.keys(groupedStaff[dept]).sort().map((div) => (
+                  <div key={div} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+                    {/* Header Divisi */}
+                    <div className="bg-gray-50/50 border-b border-gray-100 px-5 py-3">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        {div === 'General' ? 'Staff' : `${div} Division`}
+                      </span>
                     </div>
-                  </td>
-                  <td className="p-5 hidden md:table-cell">
-                    <span className="px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-600 border border-gray-200">
-                      {member.position} • {member.dept}
-                    </span>
-                  </td>
-                  <td className="p-5 hidden sm:table-cell text-gray-500 font-medium text-xs">{member.cohort}</td>
-                  <td className="p-5 text-right">
-                    <button className="p-2 bg-green-50 text-tsa-green rounded-xl group-hover:bg-tsa-green group-hover:text-white transition-all shadow-sm">
-                      <ChevronRight size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    
+                    {/* Daftar Staff di Divisi Tersebut */}
+                    <div className="divide-y divide-gray-50 flex-grow">
+                      {groupedStaff[dept][div].map((staff) => (
+                        <div 
+                          key={staff.id} 
+                          onClick={() => onSelectUser(staff)}
+                          className="p-4 flex items-center justify-between hover:bg-green-50/30 transition-colors cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden border border-gray-200 bg-gray-100 flex items-center justify-center">
+                              {staff.photo_url ? (
+                                <img src={staff.photo_url} alt="pic" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-xs font-black text-tsa-green">{staff.full_name?.charAt(0) || '?'}</span>
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-bold text-sm text-tsa-dark group-hover:text-tsa-green transition-colors line-clamp-1">{staff.full_name}</div>
+                              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+                                {staff.position} • {staff.cohort}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <button className="p-1.5 text-gray-300 group-hover:text-tsa-green transition-colors flex-shrink-0">
+                            <ChevronRight size={18} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

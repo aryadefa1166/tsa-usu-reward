@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
-import { BarChart2, TrendingUp, Users, Loader2, CalendarDays, ChevronRight, ArrowLeft, LayoutList } from 'lucide-react';
+import { BarChart2, TrendingUp, Users, Loader2, CalendarDays, ChevronRight, ArrowLeft, LayoutList, Lock } from 'lucide-react';
 
 // ==========================================
 // 1. KOMPONEN VISUAL: PROGRESS BAR (TSA Green)
@@ -24,17 +24,25 @@ const ScoreBar = ({ label, score }) => (
 );
 
 // ==========================================
-// 2. KOMPONEN: PERSONAL REPORT VIEW (LENGKAP Q1-Q4)
+// 2. KOMPONEN: PERSONAL REPORT VIEW (DINAMIS Q1-Q4)
 // ==========================================
-const PersonalReportView = ({ targetUser, onBack }) => {
-  const [activeQuarter, setActiveQuarter] = useState('Q1');
+const PersonalReportView = ({ targetUser, onBack, publishedQuarters }) => {
+  const [activeQuarter, setActiveQuarter] = useState('');
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState(null);
-  
-  const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
 
+  // Set tab default ke kuartal pertama yang sudah di-publish
   useEffect(() => {
-    if (targetUser) fetchMyData(activeQuarter);
+    if (publishedQuarters.length > 0 && !activeQuarter) {
+      setActiveQuarter(publishedQuarters[0]);
+    }
+  }, [publishedQuarters, activeQuarter]);
+
+  // Tarik data tiap kali tab kuartal diklik
+  useEffect(() => {
+    if (targetUser && activeQuarter) {
+      fetchMyData(activeQuarter);
+    }
   }, [targetUser, activeQuarter]);
 
   const fetchMyData = async (quarter) => {
@@ -67,9 +75,6 @@ const PersonalReportView = ({ targetUser, onBack }) => {
             ...avgAssess,
             attendance: myData.attendanceScore || 0,
             mvpScore: myData.theUltimateMVP || 0,
-            reliableScore: myData.theReliableOne || 0,
-            achieverScore: myData.theHighAchiever || 0,
-            sparkScore: myData.theSpark || 0,
           });
         } else {
           setReportData(null); 
@@ -81,6 +86,26 @@ const PersonalReportView = ({ targetUser, onBack }) => {
       setLoading(false);
     }
   };
+
+  // JIKA BELUM ADA KUARTAL YANG DI-PUBLISH OLEH ADMIN
+  if (publishedQuarters.length === 0) {
+    return (
+      <div className="animate-fade-in-up">
+        {onBack && (
+          <button onClick={onBack} className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-tsa-green transition-colors mb-6">
+            <ArrowLeft size={16} /> Back to Directory
+          </button>
+        )}
+        <div className="bg-white p-16 rounded-3xl border border-gray-100 border-dashed text-center shadow-sm">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Lock size={24} className="text-gray-400" />
+          </div>
+          <h3 className="text-lg font-black text-tsa-dark mb-1">Reports Locked</h3>
+          <p className="text-sm text-gray-500 max-w-sm mx-auto">No quarterly reports have been published by the Administrator yet.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in-up">
@@ -111,9 +136,9 @@ const PersonalReportView = ({ targetUser, onBack }) => {
          </div>
       </div>
 
-      {/* TAB NAVIGATION Q1-Q4 */}
+      {/* TAB NAVIGATION (HANYA MUNCULKAN YANG PUBLISHED) */}
       <div className="flex overflow-x-auto hide-scrollbar gap-3 mb-6 pb-2">
-        {quarters.map((q) => (
+        {publishedQuarters.map((q) => (
           <button
             key={q}
             onClick={() => setActiveQuarter(q)}
@@ -138,10 +163,10 @@ const PersonalReportView = ({ targetUser, onBack }) => {
            <p className="text-sm text-gray-500 mt-1">There is no evaluation data recorded for {targetUser.full_name} in {activeQuarter}.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           
           {/* KIRI: QUALITATIVE METRICS */}
-          <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+          <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm h-full">
             <h3 className="text-lg font-black text-tsa-dark mb-6 flex items-center gap-2">
               <TrendingUp size={20} className="text-tsa-green" /> Qualitative Breakdown
             </h3>
@@ -152,25 +177,25 @@ const PersonalReportView = ({ targetUser, onBack }) => {
             <ScoreBar label="Cheerful (Positivity & Friendliness)" score={reportData.cheerful} />
           </div>
 
-          {/* KANAN: KUANTITATIF & FINAL SCORE */}
-          <div className="space-y-6">
+          {/* KANAN: KUANTITATIF & FINAL SCORE (HIERARKI UKURAN) */}
+          <div className="flex flex-col gap-6 h-full">
             
-            {/* Attendance Card - Clean White Design */}
-            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center items-center text-center">
-              <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-3">
-                <Users size={20} className="text-blue-500" />
+            {/* Attendance Card - Lebih Compact */}
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-center items-center text-center">
+              <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center mb-2">
+                <Users size={16} className="text-blue-500" />
               </div>
-              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Attendance Rate</h3>
-              <div className="text-4xl font-black text-tsa-dark mb-2">{reportData.attendance.toFixed(1)}<span className="text-xl text-gray-400">%</span></div>
-              <p className="text-[10px] text-gray-400 font-medium">Validated real-field presence.</p>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Attendance Rate</h3>
+              <div className="text-3xl font-black text-tsa-dark mb-1">{reportData.attendance.toFixed(1)}<span className="text-lg text-gray-400">%</span></div>
+              <p className="text-[9px] text-gray-400 font-medium">Validated real-field presence.</p>
             </div>
 
-            {/* Final Score MVP Card */}
-            <div className="bg-white p-8 rounded-3xl border border-yellow-200/60 shadow-md relative overflow-hidden flex flex-col justify-center items-center text-center">
+            {/* Final Score MVP Card - Lebih Besar dan Mendominasi (flex-grow) */}
+            <div className="bg-white p-8 flex-grow rounded-3xl border border-yellow-200/60 shadow-md relative overflow-hidden flex flex-col justify-center items-center text-center min-h-[200px]">
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-tsa-gold to-tsa-green"></div>
-              <h3 className="text-[10px] font-black text-tsa-gold uppercase tracking-widest mb-1 mt-2">The Ultimate MVP</h3>
+              <h3 className="text-xs font-black text-tsa-gold uppercase tracking-widest mb-2 mt-2">The Ultimate MVP</h3>
               <p className="text-[10px] text-gray-400 font-medium mb-3">Aggregated Final Score</p>
-              <div className="text-4xl font-black text-tsa-dark">{reportData.mvpScore.toFixed(1)}</div>
+              <div className="text-6xl font-black text-tsa-dark tracking-tighter">{reportData.mvpScore.toFixed(1)}</div>
             </div>
 
           </div>
@@ -203,23 +228,17 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
   const fetchStaffList = async () => {
     setLoading(true);
     try {
-      // WAJIB: Hanya tarik Role 5 (Staff / TL) yang aktif
       let query = supabase.from('users').select('*').eq('role', 5).eq('is_active', true);
 
-      // Jika Kadep (Role 3): Hanya lihat staff departemennya
       if (currentUser.role === 3) {
         query = query.eq('dept', currentUser.dept);
-      }
-      // Jika Kadiv (Role 4): Hanya lihat staff divisinya
-      else if (currentUser.role === 4) {
+      } else if (currentUser.role === 4) {
         query = query.eq('dept', currentUser.dept).eq('division', currentUser.division);
       }
-      // BPH/ADV (Role 1 & 2) akan melihat semua Role 5 tanpa filter tambahan
 
       const { data, error } = await query;
       
       if (!error && data) {
-        // Logika Pengelompokan Data (Grouping by Dept -> Division)
         const grouped = data.reduce((acc, staff) => {
           const dept = staff.dept || 'Other';
           const div = staff.division && staff.division !== '-' ? staff.division : 'General';
@@ -240,24 +259,21 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
     }
   };
 
-  // Fungsi Pengurutan Ganda (Cohort Tertua -> Alfabetis Nama)
   const sortStaff = (a, b) => {
     const getCohortNum = (cohortStr) => {
       const num = parseInt((cohortStr || '').replace(/\D/g, ''));
-      return isNaN(num) ? 999 : num; // Jika tidak ada angka, taruh paling bawah
+      return isNaN(num) ? 999 : num; 
     };
 
     const cohortA = getCohortNum(a.cohort);
     const cohortB = getCohortNum(b.cohort);
 
     if (cohortA !== cohortB) {
-      return cohortA - cohortB; // Angka lebih kecil (senior) diurutkan lebih dulu
+      return cohortA - cohortB; 
     }
-    // Jika angkatannya sama, urutkan berdasarkan abjad A-Z
     return (a.full_name || '').localeCompare(b.full_name || '');
   };
 
-  // Helper untuk mendapatkan urutan divisi
   const getDivWeight = (dept, div) => {
     const order = DIV_ORDER[dept] || [];
     const index = order.indexOf(div);
@@ -282,29 +298,24 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
         </div>
       ) : (
         <div className="space-y-10">
-          {/* URUTAN MUTLAK DEPARTEMEN */}
           {DEPT_ORDER.filter(dept => groupedStaff[dept]).map((dept) => (
             <div key={dept} className="animate-fade-in-up">
-              {/* Header Departemen */}
               <div className="flex items-center gap-3 mb-4 pl-2">
                 <div className="h-6 w-1.5 bg-tsa-green rounded-full"></div>
                 <h3 className="text-lg font-black text-tsa-dark uppercase tracking-widest">{dept} Department</h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* URUTAN MUTLAK DIVISI */}
                 {Object.keys(groupedStaff[dept])
                   .sort((a, b) => getDivWeight(dept, a) - getDivWeight(dept, b))
                   .map((div) => (
                   <div key={div} className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
-                    {/* Header Divisi */}
                     <div className="bg-gray-50/50 border-b border-gray-100 px-5 py-3">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                         {div === 'General' ? 'Staff' : `${div} Division`}
                       </span>
                     </div>
                     
-                    {/* URUTAN GANDA STAFF (COHORT -> ALFABETIS) */}
                     <div className="divide-y divide-gray-50 flex-grow">
                       {[...groupedStaff[dept][div]].sort(sortStaff).map((staff) => (
                         <div 
@@ -351,18 +362,46 @@ const ManagerReportView = ({ currentUser, onSelectUser }) => {
 const Report = () => {
   const { user } = useAuth();
   
-  // State navigasi: null = Tampilan Manager, berisi Objek User = Tampilan Personal
   const [selectedUser, setSelectedUser] = useState(null);
+  const [publishedQuarters, setPublishedQuarters] = useState([]);
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
-  // Set initial view berdasarkan Role
+  // Tarik Data Settings untuk mengecek Kuartal apa saja yang sudah PUBLISHED
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data, error } = await supabase.from('app_settings').select('*').eq('id', 1).single();
+        if (!error && data) {
+          const published = [];
+          if (data.q1_status === 'PUBLISHED') published.push('Q1');
+          if (data.q2_status === 'PUBLISHED') published.push('Q2');
+          if (data.q3_status === 'PUBLISHED') published.push('Q3');
+          if (data.q4_status === 'PUBLISHED') published.push('Q4');
+          setPublishedQuarters(published);
+        }
+      } catch (err) {
+        console.error("Failed to load settings", err);
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   useEffect(() => {
     if (user && user.role === 5) {
-      // Jika Staff biasa (Role 5), langsung tembak ke rapor pribadinya
       setSelectedUser(user);
     }
   }, [user]);
 
-  if (!user) return null;
+  if (!user || settingsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 md:pb-10 flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex justify-center items-center"><Loader2 className="animate-spin text-tsa-green" size={40} /></div>
+      </div>
+    );
+  }
 
   const isManager = user.role >= 1 && user.role <= 4;
   const isViewingPersonal = selectedUser !== null;
@@ -388,7 +427,8 @@ const Report = () => {
         {isViewingPersonal ? (
           <PersonalReportView 
             targetUser={selectedUser} 
-            onBack={isManager ? () => setSelectedUser(null) : null} // Tombol Back hanya muncul untuk Manager
+            onBack={isManager ? () => setSelectedUser(null) : null}
+            publishedQuarters={publishedQuarters} // Di-pass ke bawah agar jadi filter tab
           />
         ) : (
           <ManagerReportView 

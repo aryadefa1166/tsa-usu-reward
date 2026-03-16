@@ -63,7 +63,6 @@ const Voting = () => {
       const status = settings?.voting_status || 'LOCKED';
       setVotingStatus(status);
 
-      // PERBAIKAN: Izinkan fetch data jika ACTIVE, PUBLISHED, atau READ_ONLY
       if (['ACTIVE', 'PUBLISHED', 'READ_ONLY'].includes(status) && user && !isAdmin) {
         
         const [usersRes, projectsRes, existingVotesRes] = await Promise.all([
@@ -213,7 +212,6 @@ const Voting = () => {
   const rookieCandidates = usersList.filter(u => u.role === 5 && (u.cohort || '').includes('26')); 
   const ebCandidates = usersList.filter(u => u.role >= 2 && u.role <= 4);
 
-  // PERBAIKAN: Status Read-Only MENGUASAI jika PUBLISHED, READ_ONLY, atau sudah Voted.
   const isReadOnly = votingStatus === 'PUBLISHED' || votingStatus === 'READ_ONLY' || isVoted;
 
   return (
@@ -248,7 +246,6 @@ const Voting = () => {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-8 animate-fade-in-up">
             
-            {/* PERBAIKAN: BANNER INFORMASI READ ONLY CERDAS */}
             {isReadOnly && (
               <div className="bg-emerald-50 border border-emerald-100 p-5 rounded-2xl flex items-start gap-4 shadow-sm mb-6">
                 <CheckCircle2 className="text-emerald-500 shrink-0 mt-0.5" size={24} />
@@ -266,16 +263,17 @@ const Voting = () => {
             )}
             
             {/* 1. THE ULTIMATE MVP (Top 5) */}
-            <section className={`bg-white p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-gray-100'}`}>
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
-              <div className="flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
+            <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Trophy size={120} /></div>
+              <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
                 <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Trophy size={24} className="text-tsa-green" /></div>
                 <div>
                   <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">The Ultimate MVP of the Year</h2>
                   <p className="text-xs text-gray-500 font-medium mt-1">Select the top 5 officers with the most outstanding and consistent performance throughout the year. (Rank 1 = 5 Pts, Rank 5 = 1 Pt).</p>
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="relative z-10 space-y-3">
                 {[1, 2, 3, 4, 5].map((rank, index) => (
                   <div key={`mvp-${rank}`} className="flex items-center gap-3">
                     <span className="w-20 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white px-3 py-3 rounded-xl text-center border border-gray-200 shrink-0">Rank {rank}</span>
@@ -294,16 +292,17 @@ const Voting = () => {
             </section>
 
             {/* 2. ROOKIE OF THE YEAR (Top 3) */}
-            <section className={`bg-white p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-gray-100'}`}>
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
-              <div className="flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
+            <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Sparkles size={120} /></div>
+              <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
                 <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Sparkles size={24} className="text-tsa-green" /></div>
                 <div>
                   <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Rookie of the Year</h2>
                   <p className="text-xs text-gray-500 font-medium mt-1">Select the top 3 youngest generation staff (Cohort 26) showing the most progressive adaptability. (Rank 1 = 3 Pts, Rank 3 = 1 Pt).</p>
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="relative z-10 space-y-3">
                 {[1, 2, 3].map((rank, index) => (
                   <div key={`rookie-${rank}`} className="flex items-center gap-3">
                     <span className="w-20 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white px-3 py-3 rounded-xl text-center border border-gray-200 shrink-0">Rank {rank}</span>
@@ -322,16 +321,17 @@ const Voting = () => {
             </section>
 
             {/* 3. BEST PROJECT OF THE YEAR (Top 3) */}
-            <section className={`bg-white p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-gray-100'}`}>
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
-              <div className="flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
+            <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Star size={120} /></div>
+              <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
                 <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Star size={24} className="text-tsa-green" /></div>
                 <div>
                   <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Best Project of the Year</h2>
                   <p className="text-xs text-gray-500 font-medium mt-1">Select the top 3 most impactful and well-executed work programs. (Rank 1 = 3 Pts, Rank 3 = 1 Pt).</p>
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="relative z-10 space-y-3">
                 {[1, 2, 3].map((rank, index) => (
                   <div key={`proj-${rank}`} className="flex items-center gap-3">
                     <span className="w-20 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white px-3 py-3 rounded-xl text-center border border-gray-200 shrink-0">Rank {rank}</span>
@@ -351,7 +351,7 @@ const Voting = () => {
 
             {/* A. MOST FAVORITE EB (HANYA STAFF - ROLE 5) */}
             {isStaff && (
-              <section className={`bg-white p-6 md:p-8 rounded-3xl border shadow-md relative overflow-hidden ${isReadOnly ? 'border-yellow-100 bg-yellow-50/30' : 'border-yellow-200/60'}`}>
+              <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                 <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-gold"><Vote size={120} /></div>
                 
@@ -387,9 +387,9 @@ const Voting = () => {
 
             {/* B. EVALUASI BPH & ADV (HANYA ROLE 2) */}
             {isBPHADV && (
-              <section className={`bg-white p-6 md:p-8 rounded-3xl border shadow-lg relative overflow-hidden mt-10 ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-tsa-green'}`}>
-                <div className="absolute top-0 right-0 p-4 opacity-[0.03]"><ShieldCheck size={120} className="text-tsa-green" /></div>
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
+              <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden mt-10 ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+                <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><ShieldCheck size={120} /></div>
                 
                 <div className="relative z-10 flex items-start gap-4 mb-8 border-b border-gray-100 pb-6">
                   <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><ShieldCheck size={24} className="text-tsa-green" /></div>

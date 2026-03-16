@@ -39,7 +39,8 @@ const Navbar = () => {
   // =========================================
   const role = user?.role;
   const isAdmin = role === 1;
-  const isReportViewer = role >= 2 && role <= 5; 
+  // PERBAIKAN: Admin (Role 1) sekarang diberikan akses untuk melihat menu Report
+  const isReportViewer = role >= 1 && role <= 5; 
   const isAssessor = role >= 2 && role <= 4; 
   const isSecretary = role === 2 && user?.position === 'Secretary';
   

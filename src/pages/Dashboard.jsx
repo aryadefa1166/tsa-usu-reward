@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -11,22 +11,18 @@ import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Users, Loader2, Star, Sp
 const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClass, iconColor, isGroup, groupPhotoUrl, isEndOfTerm = false }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-  // PERBAIKAN: Jika EOT, gunakan background gradasi hijau tipis. Jika Kuartalan, gunakan putih.
   const cardBackground = isEndOfTerm ? 'bg-gradient-to-br from-green-50/50 to-white' : 'bg-white';
 
   return (
     <div className={`p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden ${cardBackground} hover:-translate-y-1 transition-all duration-300 flex flex-col h-full`}>
-      {/* Aksen Pinggir Khusus Hall of Fame */}
       {isEndOfTerm && <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>}
 
-      {/* Watermark Icon */}
       <div className={`absolute top-0 right-0 p-6 opacity-10 ${isEndOfTerm ? 'text-tsa-green' : 'text-gray-300'}`}>
         <Icon size={100} />
       </div>
       
       <div className={`relative z-10 flex flex-col flex-grow ${isEndOfTerm ? 'ml-2' : ''}`}>
         <div className="flex items-center gap-3 mb-2">
-          {/* Ikon Card */}
           <div className={`p-2 rounded-xl shadow-sm ${isEndOfTerm ? 'bg-green-50 text-tsa-green' : `bg-white ${iconColor}`}`}>
             <Icon size={20} />
           </div>
@@ -47,7 +43,6 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClas
               <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Data Not Available</p>
             </div>
           ) : isGroup ? (
-            /* --- RENDER UNTUK BEST DEPARTMENT / PROJECT --- */
             <div>
               <div className="w-full h-32 rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-gray-100 mb-3 relative flex items-center justify-center">
                 {groupPhotoUrl || winner.photo_url ? (
@@ -66,7 +61,6 @@ const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClas
               </div>
             </div>
           ) : (
-            /* --- RENDER UNTUK INDIVIDU --- */
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-full border shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center border-gray-200 bg-gray-100">
                 {winner.photo_url ? (
@@ -102,13 +96,13 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('Q1');
   const [loading, setLoading] = useState(true);
   
-  // State Data
   const [periodStatus, setPeriodStatus] = useState({
     Q1: 'LOCKED', Q2: 'LOCKED', Q3: 'LOCKED', Q4: 'LOCKED', 'End of Term': 'LOCKED'
   });
-  const [winners, setWinners] = useState(null);
-  const [hofWinners, setHofWinners] = useState(null); // Hall of Fame State
   const [deptPhotos, setDeptPhotos] = useState({});
+  
+  // PERBAIKAN: Implementasi State Caching agar tidak spam fetch API
+  const [dataCache, setDataCache] = useState({});
 
   const tabs = ['Q1', 'Q2', 'Q3', 'Q4', 'End of Term'];
 
@@ -118,7 +112,10 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchWinnersData(activeTab);
+    // Hanya fetch data jika belum ada di cache
+    if (!dataCache[activeTab]) {
+      fetchWinnersData(activeTab);
+    }
   }, [activeTab]);
 
   const fetchAdminSettings = async () => {
@@ -143,20 +140,31 @@ const Dashboard = () => {
 
   const fetchWinnersData = async (tabName) => {
     setLoading(true);
-    if (tabName === 'End of Term') {
-      const result = await calculateEndOfTermResults();
-      setHofWinners(result);
-    } else {
-      const result = await calculateQuarterlyResults(tabName);
-      setWinners(result);
+    try {
+      let result;
+      if (tabName === 'End of Term') {
+        result = await calculateEndOfTermResults();
+      } else {
+        result = await calculateQuarterlyResults(tabName);
+      }
+      
+      // Simpan hasil tarikan ke dalam state Cache
+      setDataCache(prev => ({ ...prev, [tabName]: result }));
+    } catch (error) {
+      console.error(`Error calculating results for ${tabName}:`, error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
+  // Logika Filter Status dan Hak Akses UI
   const currentStatus = periodStatus[activeTab];
   const isPublished = currentStatus === 'PUBLISHED';
   const isPrivilegedView = (currentStatus === 'ACTIVE' || currentStatus === 'READ_ONLY') && (user?.role === 1 || user?.role === 2);
   const showWinners = isPublished || isPrivilegedView;
+  
+  // Ambil data aktif dari Cache
+  const activeData = dataCache[activeTab];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
@@ -164,7 +172,6 @@ const Dashboard = () => {
       
       <main className="max-w-7xl mx-auto px-6 mt-8">
         
-        {/* HEADER DIBERSIHKAN (Tanpa Welcome Back) */}
         <div className="mb-10">
           <h1 className="text-3xl md:text-5xl font-black text-tsa-dark tracking-tight">Dashboard Awards</h1>
         </div>
@@ -173,7 +180,6 @@ const Dashboard = () => {
         <div className="flex overflow-x-auto hide-scrollbar gap-3 mb-8 pb-2">
           {tabs.map((tab) => {
             const isActive = activeTab === tab;
-            const isEndOfTerm = tab === 'End of Term';
             return (
               <button
                 key={tab}
@@ -192,7 +198,12 @@ const Dashboard = () => {
 
         {/* DYNAMIC CONTENT AREA */}
         <div className="transition-all duration-500">
-          {currentStatus === 'LOCKED' ? (
+          {/* PERBAIKAN: Loading state harus dieksekusi PERTAMA agar 
+            tidak memunculkan "Period Locked" saat aplikasi masih mencari data dari database. 
+          */}
+          {loading && !activeData ? (
+             <div className="flex justify-center items-center py-20"><Loader2 className="animate-spin text-tsa-green" size={40} /></div>
+          ) : currentStatus === 'LOCKED' ? (
             <div className="bg-white border border-gray-100 border-dashed rounded-3xl p-16 flex flex-col items-center justify-center text-center animate-fade-in-up">
               <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                 <Lock size={24} className="text-gray-400" />
@@ -200,8 +211,6 @@ const Dashboard = () => {
               <h2 className="text-lg font-black text-tsa-dark mb-2">Period Locked</h2>
               <p className="text-sm text-gray-500 max-w-sm">The evaluation period for <span className="font-bold text-gray-700">{activeTab}</span> has not yet started or is currently closed.</p>
             </div>
-          ) : loading ? (
-             <div className="flex justify-center items-center py-20"><Loader2 className="animate-spin text-tsa-green" size={40} /></div>
           ) : activeTab === 'End of Term' ? (
             
             /* ========================================== */
@@ -212,7 +221,6 @@ const Dashboard = () => {
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                 <div className="ml-2">
                   <h2 className="text-2xl font-black text-tsa-dark flex items-center gap-3 tracking-widest uppercase">
-                    {/* PERBAIKAN: Ikon Trophy jadi hijau */}
                     <Trophy size={28} className="text-tsa-green" /> Hall of Fame 2026
                   </h2>
                   <p className="text-xs text-gray-500 mt-2 font-medium max-w-2xl">The most prestigious awards based on Q1-Q4 aggregation, BPH Evaluation, and Ranked Choice Voting.</p>
@@ -226,13 +234,12 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-                {/* BARIS 1: BEST DEPT & BEST PROJECT (Kategori Entitas) */}
                 <div className="md:col-span-3">
                   <AwardCard 
                     isEndOfTerm={true} title="Best Department of the Year" 
                     description="Outstanding bureaucratic execution and solid teamwork, validated by the Executive Board."
                     icon={Building2} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={hofWinners?.bestDeptOfYear} isGroup={true} groupPhotoUrl={hofWinners?.bestDeptOfYear ? deptPhotos[hofWinners.bestDeptOfYear.dept] : null}
+                    isPublished={showWinners} winner={activeData?.bestDeptOfYear} isGroup={true} groupPhotoUrl={activeData?.bestDeptOfYear ? deptPhotos[activeData.bestDeptOfYear.dept] : null}
                   />
                 </div>
                 <div className="md:col-span-3">
@@ -240,17 +247,15 @@ const Dashboard = () => {
                     isEndOfTerm={true} title="Best Project of the Year" 
                     description="The most impactful work program chosen by the masses and validated by the Executive Board."
                     icon={Briefcase} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={hofWinners?.bestProjectOfYear} isGroup={true}
+                    isPublished={showWinners} winner={activeData?.bestProjectOfYear} isGroup={true}
                   />
                 </div>
-
-                {/* BARIS 2: MVP, ROOKIE, & FAV EB (Kategori Individu) */}
                 <div className="md:col-span-2">
                   <AwardCard 
                     isEndOfTerm={true} title="The Ultimate MVP of the Year" 
                     description="The absolute highest honor for the most consistent, agile, and impactful officer."
                     icon={Crown} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={hofWinners?.mvpOfYear}
+                    isPublished={showWinners} winner={activeData?.mvpOfYear}
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -258,7 +263,7 @@ const Dashboard = () => {
                     isEndOfTerm={true} title="Rookie of the Year" 
                     description="The most progressive and adaptive talent from the youngest generation (TLD 26)."
                     icon={Sparkles} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={hofWinners?.rookieOfYear}
+                    isPublished={showWinners} winner={activeData?.rookieOfYear}
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -266,7 +271,7 @@ const Dashboard = () => {
                     isEndOfTerm={true} title="Most Favorite EB" 
                     description="The most inspiring and supportive leader chosen 100% by the Staffs."
                     icon={Star} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={hofWinners?.favEb}
+                    isPublished={showWinners} winner={activeData?.favEb}
                   />
                 </div>
               </div>
@@ -281,7 +286,6 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-black text-tsa-dark flex items-center gap-2">
-                    {/* PERBAIKAN: Ikon Trophy jadi hijau */}
                     <Trophy size={20} className="text-tsa-green" /> {activeTab} Quarterly Awards
                   </h2>
                   <p className="text-xs text-gray-500 mt-1 font-medium">Based on automated calculation of performance metrics and attendance.</p>
@@ -298,31 +302,31 @@ const Dashboard = () => {
                 <div className="md:col-span-3">
                   <AwardCard 
                     title="The Ultimate MVP" description="The most balanced performance across 5 qualitative aspects and real-field attendance."
-                    icon={Crown} iconColor="text-blue-500" isPublished={showWinners} winner={winners?.mvp}
+                    icon={Crown} iconColor="text-blue-500" isPublished={showWinners} winner={activeData?.mvp}
                   />
                 </div>
                 <div className="md:col-span-3">
                   <AwardCard 
                     title="Best Department" description="The department with the highest average MVP score per capita."
-                    icon={Building2} iconColor="text-tsa-gold" isPublished={showWinners} winner={winners?.bestDept} isGroup={true} groupPhotoUrl={winners?.bestDept ? deptPhotos[winners.bestDept.dept] : null}
+                    icon={Building2} iconColor="text-tsa-gold" isPublished={showWinners} winner={activeData?.bestDept} isGroup={true} groupPhotoUrl={activeData?.bestDept ? deptPhotos[activeData.bestDept.dept] : null}
                   />
                 </div>
                 <div className="md:col-span-2">
                   <AwardCard 
                     title="The Reliable One" description="The highest SOP compliance (Discipline) and attendance consistency."
-                    icon={ShieldCheck} iconColor="text-emerald-500" isPublished={showWinners} winner={winners?.reliable}
+                    icon={ShieldCheck} iconColor="text-emerald-500" isPublished={showWinners} winner={activeData?.reliable}
                   />
                 </div>
                 <div className="md:col-span-2">
                   <AwardCard 
                     title="The High Achiever" description="Superior execution quality (Agility) and rapid-response initiative (Active)."
-                    icon={Target} iconColor="text-red-500" isPublished={showWinners} winner={winners?.achiever}
+                    icon={Target} iconColor="text-red-500" isPublished={showWinners} winner={activeData?.achiever}
                   />
                 </div>
                 <div className="md:col-span-2">
                   <AwardCard 
                     title="The Spark" description="Highly communicative and friendly (Cheerful) with outstanding manners (Attitude)."
-                    icon={Zap} iconColor="text-amber-500" isPublished={showWinners} winner={winners?.spark}
+                    icon={Zap} iconColor="text-amber-500" isPublished={showWinners} winner={activeData?.spark}
                   />
                 </div>
               </div>

@@ -153,6 +153,7 @@ const Voting = () => {
     e.preventDefault();
     if (isAdmin) return alert("Administrators are not allowed to participate in voting.");
     
+    // 1. Client-Side Validations
     if (checkDuplicate(mvpVotes)) return alert('Duplicate candidates found in The Ultimate MVP category!');
     if (checkDuplicate(rookieVotes)) return alert('Duplicate candidates found in Rookie of the Year category!');
     if (checkDuplicate(projectVotes)) return alert('Duplicate nominations found in Best Project category!');
@@ -202,7 +203,25 @@ const Voting = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error) {
-      alert('Failed to submit votes: ' + error.message);
+      console.error("Voting submission error:", error);
+      
+      // 2. Server-Side (SQL) Constraint Error Handling
+      let errorMessage = "Failed to submit votes. Please check your internet connection and try again.";
+      
+      // Tangkap Error Code 23505 (Unique Violation: anti_double_vote)
+      if (error.code === '23505' || error.message?.includes('anti_double_vote')) {
+        errorMessage = "SECURITY ALERT: You have already submitted votes for one or more categories! Double-voting is strictly prohibited by the system.";
+      } 
+      // Tangkap Error Code 23514 (Check Violation: anti_duplicate_ranks)
+      else if (error.code === '23514' || error.message?.includes('anti_duplicate_ranks')) {
+        errorMessage = "SECURITY ALERT: System detected duplicate candidates across different ranks! Please ensure you do not place the same candidate in multiple ranks.";
+      } 
+      // Error database lainnya
+      else if (error.message) {
+        errorMessage = `Failed to submit votes: ${error.message}`;
+      }
+
+      alert(errorMessage);
     } finally {
       setSubmitting(false);
     }

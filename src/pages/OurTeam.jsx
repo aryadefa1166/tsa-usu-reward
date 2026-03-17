@@ -84,10 +84,8 @@ const OurTeam = () => {
   const secretary = users.find(u => u.dept === 'BPH' && u.position === 'Secretary');
   const treasurer = users.find(u => u.dept === 'BPH' && u.position === 'Treasurer');
 
-  // PERBAIKAN: 2. ADV (Disesuaikan dengan restrukturisasi tabel users)
-  // SC difilter berdasarkan position, karena divisinya sekarang '-'
+  // 2. ADV
   const advSC = users.filter(u => u.dept === 'ADV' && u.position === 'Steering Committee');
-  // MONEV difilter menggunakan ejaan panjang yang baru
   const advMonevHead = users.find(u => u.dept === 'ADV' && u.division === 'Monitoring Evaluation' && u.position === 'Head of Division');
   const advMonevStaff = users.filter(u => u.dept === 'ADV' && u.division === 'Monitoring Evaluation' && u.position !== 'Head of Division');
 
@@ -189,25 +187,33 @@ const OurTeam = () => {
                   {advSC.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
                 </div>
                 
-                {/* Lapis 2: MONEV Head (Jarak jauh, TANPA garis penghubung dari SC) */}
-                <div className="flex flex-col items-center mt-10">
+                {/* Lapis 2: MONEV Head */}
+                <div className="flex flex-col items-center mt-10 w-full">
                   <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
                   <MemberCard member={advMonevHead} deptCode="ADV" />
                   {advMonevStaff.length > 0 && <VLine height="h-8" color={THEMES.ADV.line} />}
                   
-                  {/* Lapis 3: Percabangan ke 3 Staff Monev */}
+                  {/* Lapis 3: Percabangan ke 3 Staff Monev (PERBAIKAN GRID LAYOUT) */}
                   {advMonevStaff.length > 0 && (
-                    <>
-                      <div className={`w-[80%] max-w-[450px] h-px ${THEMES.ADV.line} hidden md:block`}></div>
-                      <div className="hidden md:flex justify-between w-[80%] max-w-[450px]">
+                    <div className="w-full max-w-[750px] flex flex-col items-center">
+                      {/* Garis horizontal selebar persis jarak dari titik tengah card 1 ke card 3 */}
+                      <div className={`w-[66%] h-px ${THEMES.ADV.line} hidden md:block`}></div>
+                      
+                      {/* 3 Garis vertikal sejajar sempurna */}
+                      <div className="hidden md:grid grid-cols-3 w-full justify-items-center">
                         {advMonevStaff.map((_, i) => <VLine key={i} height="h-8" color={THEMES.ADV.line} />)}
                       </div>
-                    </>
+                      
+                      {/* 3 Card dipaksa grid 3 kolom agar tidak pernah membungkus ke bawah */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-6 md:mt-0">
+                        {advMonevStaff.map(member => (
+                          <div key={member.id} className="flex justify-center w-full">
+                            <MemberCard member={member} deptCode="ADV" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
-
-                  <div className="flex flex-wrap justify-center gap-4 mt-6 md:mt-0 w-full">
-                    {advMonevStaff.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
-                  </div>
                 </div>
               </div>
             </section>

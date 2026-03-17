@@ -8,7 +8,6 @@ import { Loader2, Building2, Crown, ShieldCheck } from 'lucide-react';
 // ==========================================
 const THEMES = {
   BPH: { border: 'border-pink-200', bg: 'bg-pink-50', text: 'text-pink-600', shadow: 'shadow-pink-100/50', gradient: 'from-pink-400 to-pink-600', line: 'bg-pink-300', iconBg: 'bg-pink-50' },
-  // PERBAIKAN: ADV diubah dari Amber menjadi Orange agar lebih cokelat gelap, senada dengan ManageUsers
   ADV: { border: 'border-orange-200', bg: 'bg-orange-50', text: 'text-orange-800', shadow: 'shadow-orange-100/50', gradient: 'from-orange-500 to-orange-700', line: 'bg-orange-300', iconBg: 'bg-orange-50' },
   ERBD: { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-600', shadow: 'shadow-emerald-100/50', gradient: 'from-emerald-400 to-emerald-600', line: 'bg-emerald-300', iconBg: 'bg-emerald-50' },
   MD: { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-600', shadow: 'shadow-purple-100/50', gradient: 'from-purple-400 to-purple-600', line: 'bg-purple-300', iconBg: 'bg-purple-50' },
@@ -85,10 +84,12 @@ const OurTeam = () => {
   const secretary = users.find(u => u.dept === 'BPH' && u.position === 'Secretary');
   const treasurer = users.find(u => u.dept === 'BPH' && u.position === 'Treasurer');
 
-  // 2. ADV
-  const advSC = users.filter(u => u.dept === 'ADV' && u.division === 'SC');
-  const advMonevHead = users.find(u => u.dept === 'ADV' && u.division === 'MONEV' && u.position === 'Head of Division');
-  const advMonevStaff = users.filter(u => u.dept === 'ADV' && u.division === 'MONEV' && u.position !== 'Head of Division');
+  // PERBAIKAN: 2. ADV (Disesuaikan dengan restrukturisasi tabel users)
+  // SC difilter berdasarkan position, karena divisinya sekarang '-'
+  const advSC = users.filter(u => u.dept === 'ADV' && u.position === 'Steering Committee');
+  // MONEV difilter menggunakan ejaan panjang yang baru
+  const advMonevHead = users.find(u => u.dept === 'ADV' && u.division === 'Monitoring Evaluation' && u.position === 'Head of Division');
+  const advMonevStaff = users.filter(u => u.dept === 'ADV' && u.division === 'Monitoring Evaluation' && u.position !== 'Head of Division');
 
   // 3. ERBD
   const erbdKadep = users.find(u => u.dept === 'ERBD' && u.position === 'Head of Department');
@@ -113,7 +114,6 @@ const OurTeam = () => {
   const mdStruct = getDivisionalStructure('MD', ['Education', 'Media']);
   const stdStruct = getDivisionalStructure('STD', ['Staff Management', 'Talent Management']);
 
-  // Komponen Helper untuk Bingkai (Frame) Aksen TSA USU di setiap Section
   const TSAUSUFrame = () => (
     <>
       <div className="absolute inset-0 border-[3px] border-tsa-green rounded-[1.4rem] pointer-events-none z-0 opacity-80"></div>
@@ -190,20 +190,24 @@ const OurTeam = () => {
                 </div>
                 
                 {/* Lapis 2: MONEV Head (Jarak jauh, TANPA garis penghubung dari SC) */}
-                <h3 className={`text-sm font-black uppercase tracking-widest mt-16 mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
-                <MemberCard member={advMonevHead} deptCode="ADV" />
-                <VLine height="h-8" color={THEMES.ADV.line} />
-                
-                {/* Lapis 3: Percabangan ke 3 Staff Monev */}
-                <div className={`w-[80%] max-w-[450px] h-px ${THEMES.ADV.line} hidden md:block`}></div>
-                <div className="hidden md:flex justify-between w-[80%] max-w-[450px]">
-                  <VLine height="h-8" color={THEMES.ADV.line} />
-                  <VLine height="h-8" color={THEMES.ADV.line} />
-                  <VLine height="h-8" color={THEMES.ADV.line} />
-                </div>
+                <div className="flex flex-col items-center mt-10">
+                  <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
+                  <MemberCard member={advMonevHead} deptCode="ADV" />
+                  {advMonevStaff.length > 0 && <VLine height="h-8" color={THEMES.ADV.line} />}
+                  
+                  {/* Lapis 3: Percabangan ke 3 Staff Monev */}
+                  {advMonevStaff.length > 0 && (
+                    <>
+                      <div className={`w-[80%] max-w-[450px] h-px ${THEMES.ADV.line} hidden md:block`}></div>
+                      <div className="hidden md:flex justify-between w-[80%] max-w-[450px]">
+                        {advMonevStaff.map((_, i) => <VLine key={i} height="h-8" color={THEMES.ADV.line} />)}
+                      </div>
+                    </>
+                  )}
 
-                <div className="flex flex-wrap justify-center gap-4 mt-6 md:mt-0 w-full">
-                  {advMonevStaff.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
+                  <div className="flex flex-wrap justify-center gap-4 mt-6 md:mt-0 w-full">
+                    {advMonevStaff.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
+                  </div>
                 </div>
               </div>
             </section>

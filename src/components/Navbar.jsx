@@ -45,7 +45,6 @@ const Navbar = () => {
   // Tampilkan tab End of Term hanya jika statusnya memungkinkan DAN user bukan admin
   const canSeeVoting = showEndOfTermMenu && role >= 2 && role <= 5;
 
-  // PERBAIKAN: Penyesuaian Path URL yang baru
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
     { name: 'Report', path: '/report', icon: BarChart2, show: isReportViewer },
@@ -109,15 +108,20 @@ const Navbar = () => {
                 <span className="text-sm font-black text-tsa-dark capitalize">
                   {user?.full_name || 'Administrator'}
                 </span>
-                {role === 1 ? (
-                  <span className="text-[9px] font-bold text-tsa-green uppercase mt-0.5 tracking-wider">
-                    System Administrator
-                  </span>
-                ) : (
-                  <span className="text-[9px] font-bold text-tsa-green uppercase mt-0.5 tracking-wider">
-                    {user?.position} {user?.dept && user?.dept !== '-' ? `• ${user?.dept}` : ''}
-                  </span>
-                )}
+                
+                {/* PERBAIKAN: Logika Array Filter untuk membuang '-' dan merakit string posisi dengan rapi */}
+                <span className="text-[9px] font-bold text-tsa-green uppercase mt-0.5 tracking-wider">
+                  {role === 1 
+                    ? 'System Administrator' 
+                    : [
+                        user?.position, 
+                        user?.division && user?.division !== '-' ? user?.division : null, 
+                        user?.dept && user?.dept !== '-' ? user?.dept : null
+                      ]
+                      .filter(Boolean)
+                      .join(' • ')
+                  }
+                </span>
               </div>
               
               <div className="w-px h-8 bg-gray-200"></div>

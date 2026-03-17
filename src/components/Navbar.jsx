@@ -17,7 +17,6 @@ const Navbar = () => {
     const fetchSettings = async () => {
       const { data, error } = await supabase.from('app_settings').select('voting_status').eq('id', 1).single();
       if (!error && data) {
-        // PERBAIKAN: Menu End of Term muncul jika status ACTIVE, READ_ONLY, atau PUBLISHED
         setShowEndOfTermMenu(
           data.voting_status === 'ACTIVE' || 
           data.voting_status === 'PUBLISHED' || 
@@ -39,7 +38,6 @@ const Navbar = () => {
   // =========================================
   const role = user?.role;
   const isAdmin = role === 1;
-  // PERBAIKAN: Admin (Role 1) sekarang diberikan akses untuk melihat menu Report
   const isReportViewer = role >= 1 && role <= 5; 
   const isAssessor = role >= 2 && role <= 4; 
   const isSecretary = role === 2 && user?.position === 'Secretary';
@@ -47,14 +45,15 @@ const Navbar = () => {
   // Tampilkan tab End of Term hanya jika statusnya memungkinkan DAN user bukan admin
   const canSeeVoting = showEndOfTermMenu && role >= 2 && role <= 5;
 
+  // PERBAIKAN: Penyesuaian Path URL yang baru
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home, show: true },
     { name: 'Report', path: '/report', icon: BarChart2, show: isReportViewer },
-    { name: 'Assessment', path: '/input-assessment', icon: CheckSquare, show: isAssessor },
-    { name: 'Attendance', path: '/input-attendance', icon: ClipboardCheck, show: isSecretary },
+    { name: 'Assessment', path: '/assessment', icon: CheckSquare, show: isAssessor },
+    { name: 'Attendance', path: '/attendance', icon: ClipboardCheck, show: isSecretary },
     { name: 'Our Team', path: '/our-team', icon: Users, show: true },
-    { name: 'End of Term', path: '/voting', icon: Trophy, show: canSeeVoting }, 
-    { name: 'Admin', path: '/manage-users', icon: Shield, show: isAdmin },
+    { name: 'End of Term', path: '/end-of-term', icon: Trophy, show: canSeeVoting }, 
+    { name: 'Admin', path: '/admin-panel', icon: Shield, show: isAdmin },
   ];
 
   return (

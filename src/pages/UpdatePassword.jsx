@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { ShieldAlert, Lock, Save, Loader2 } from 'lucide-react';
-import tsaLogo from '../assets/tsa-logo.png'; // Pastikan path logo sesuai
 
 const UpdatePassword = () => {
-  const { user, login } = useAuth(); // Asumsi ada fungsi untuk me-refresh state user
+  const { user } = useAuth();
   const navigate = useNavigate();
   
   const [newPassword, setNewPassword] = useState('');
@@ -18,8 +17,9 @@ const UpdatePassword = () => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (newPassword === '123') {
-      return setErrorMsg('Password baru tidak boleh sama dengan password default (123)!');
+    // PERBAIKAN: Validasi terhadap password default yang baru
+    if (newPassword === 'tsausu2026') {
+      return setErrorMsg('Password baru tidak boleh sama dengan password default (tsausu2026)!');
     }
     if (newPassword.length < 6) {
       return setErrorMsg('Password minimal harus 6 karakter demi keamanan.');
@@ -30,7 +30,7 @@ const UpdatePassword = () => {
 
     setLoading(true);
     try {
-      // Update password di database public.users
+      // 1. Update password di database Supabase
       const { error } = await supabase
         .from('users')
         .update({ password: newPassword })
@@ -40,8 +40,16 @@ const UpdatePassword = () => {
 
       alert('Security Update Successful! Password berhasil diubah.');
       
-      // Paksa reload agar state AuthContext ter-refresh dengan data password baru
+      // 2. Update session di LocalStorage agar tidak terjebak loop 'needsPasswordUpdate'
+      const currentSession = JSON.parse(localStorage.getItem('tsa_session'));
+      if (currentSession) {
+        currentSession.needsPasswordUpdate = false;
+        localStorage.setItem('tsa_session', JSON.stringify(currentSession));
+      }
+      
+      // 3. Paksa reload di dashboard agar Context menelan state yang baru
       window.location.href = '/dashboard'; 
+
     } catch (error) {
       setErrorMsg(error.message);
     } finally {

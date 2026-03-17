@@ -30,22 +30,24 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Username tidak ditemukan!');
       }
 
-      // 2. Cek password (masih plain text sesuai request awal)
+      // 2. Cek password
       if (data.password !== password) {
         throw new Error('Password salah!');
       }
 
       // 3. Simpan SELURUH data user krusial ke State & LocalStorage
+      // PERBAIKAN: Menambahkan flag keamanan tanpa mengekspos password asli ke localStorage
       const userData = {
         id: data.id,
         username: data.username,
         role: data.role,
         dept: data.dept,
-        full_name: data.full_name,   // DITAMBAHKAN
-        position: data.position,     // DITAMBAHKAN
-        division: data.division,     // DITAMBAHKAN
-        cohort: data.cohort,         // DITAMBAHKAN
-        photo_url: data.photo_url    // DITAMBAHKAN
+        full_name: data.full_name,
+        position: data.position,
+        division: data.division,
+        cohort: data.cohort,
+        photo_url: data.photo_url,
+        needsPasswordUpdate: data.password === 'tsausu2026' // <-- FLAG SATPAM
       };
 
       setUser(userData);

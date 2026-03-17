@@ -1,6 +1,85 @@
 import { supabase } from '../supabaseClient';
 
 // ============================================================================
+// HELPER: CORE ENGINE KALKULASI KUARTALAN (Pemisahan Logika & Fetching)
+// ============================================================================
+const computeQuarterData = (users, assessments, attendance) => {
+  // O(1) Akses Absensi
+  const attendMap = {};
+  attendance.forEach(a => {
+    const present = a.total_present || 0;
+    const total = a.total_events || 0;
+    attendMap[a.target_id] = total > 0 ? (present / total) * 100 : 0;
+  });
+
+  // O(M) Agregasi Data EB
+  const assessMap = {};
+  assessments.forEach(a => {
+    if (!assessMap[a.target_id]) {
+      assessMap[a.target_id] = { count: 0, attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0 };
+    }
+    assessMap[a.target_id].attitude += a.attitude;
+    assessMap[a.target_id].discipline += a.discipline;
+    assessMap[a.target_id].active += a.active;
+    assessMap[a.target_id].agility += a.agility;
+    assessMap[a.target_id].cheerful += a.cheerful;
+    assessMap[a.target_id].count += 1;
+  });
+
+  // O(N) Kalkulasi Blueprint
+  const results = users.map(user => {
+    const uAttend = attendMap[user.id] || 0;
+    const uAssess = assessMap[user.id];
+
+    const avg = uAssess ? {
+      attitude: uAssess.attitude / uAssess.count,
+      discipline: uAssess.discipline / uAssess.count,
+      active: uAssess.active / uAssess.count,
+      agility: uAssess.agility / uAssess.count,
+      cheerful: uAssess.cheerful / uAssess.count,
+    } : { attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0 };
+
+    const theReliableOne = (0.50 * uAttend) + (0.50 * avg.discipline);
+    const theHighAchiever = (0.60 * avg.agility) + (0.40 * avg.active);
+    const theSpark = (0.60 * avg.cheerful) + (0.40 * avg.attitude);
+    
+    const avgQualitative = (avg.attitude + avg.discipline + avg.active + avg.agility + avg.cheerful) / 5;
+    const theUltimateMVP = (0.75 * avgQualitative) + (0.25 * uAttend);
+
+    return { ...user, attendanceScore: uAttend, qualitativeScore: avgQualitative, theReliableOne, theHighAchiever, theSpark, theUltimateMVP };
+  });
+
+  // Kalkulasi Best Dept
+  const deptMap = {};
+  results.forEach(r => {
+    if (r.dept && r.dept !== 'General' && r.dept !== '-') {
+      if (!deptMap[r.dept]) deptMap[r.dept] = { totalMVP: 0, count: 0 };
+      deptMap[r.dept].totalMVP += r.theUltimateMVP;
+      deptMap[r.dept].count += 1;
+    }
+  });
+
+  const deptResults = Object.keys(deptMap).map(dept => ({
+    dept, score: deptMap[dept].count > 0 ? deptMap[dept].totalMVP / deptMap[dept].count : 0
+  }));
+
+  const getWinner = (arr, scoreKey) => {
+    const sorted = [...arr].sort((a, b) => b[scoreKey] - a[scoreKey]);
+    return sorted.length > 0 && sorted[0][scoreKey] > 0 ? sorted[0] : null;
+  };
+
+  return {
+    reliable: getWinner(results, 'theReliableOne'),
+    achiever: getWinner(results, 'theHighAchiever'),
+    spark: getWinner(results, 'theSpark'),
+    mvp: getWinner(results, 'theUltimateMVP'),
+    bestDept: getWinner(deptResults, 'score'),
+    allScores: results,
+    allDeptScores: deptResults 
+  };
+};
+
+// ============================================================================
 // 1. MESIN KALKULASI KUARTALAN (Q1 - Q4)
 // ============================================================================
 export const calculateQuarterlyResults = async (quarter) => {
@@ -15,84 +94,8 @@ export const calculateQuarterlyResults = async (quarter) => {
     if (assessRes.error) throw assessRes.error;
     if (attendRes.error) throw attendRes.error;
 
-    const users = usersRes.data || [];
-    const assessments = assessRes.data || [];
-    const attendance = attendRes.data || [];
-
-    // O(1) Akses Absensi
-    const attendMap = {};
-    attendance.forEach(a => {
-      const present = a.total_present || 0;
-      const total = a.total_events || 0;
-      attendMap[a.target_id] = total > 0 ? (present / total) * 100 : 0;
-    });
-
-    // O(M) Agregasi Data EB
-    const assessMap = {};
-    assessments.forEach(a => {
-      if (!assessMap[a.target_id]) {
-        assessMap[a.target_id] = { count: 0, attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0 };
-      }
-      assessMap[a.target_id].attitude += a.attitude;
-      assessMap[a.target_id].discipline += a.discipline;
-      assessMap[a.target_id].active += a.active;
-      assessMap[a.target_id].agility += a.agility;
-      assessMap[a.target_id].cheerful += a.cheerful;
-      assessMap[a.target_id].count += 1;
-    });
-
-    // O(N) Kalkulasi Blueprint
-    const results = users.map(user => {
-      const uAttend = attendMap[user.id] || 0;
-      const uAssess = assessMap[user.id];
-
-      const avg = uAssess ? {
-        attitude: uAssess.attitude / uAssess.count,
-        discipline: uAssess.discipline / uAssess.count,
-        active: uAssess.active / uAssess.count,
-        agility: uAssess.agility / uAssess.count,
-        cheerful: uAssess.cheerful / uAssess.count,
-      } : { attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0 };
-
-      const theReliableOne = (0.50 * uAttend) + (0.50 * avg.discipline);
-      const theHighAchiever = (0.60 * avg.agility) + (0.40 * avg.active);
-      const theSpark = (0.60 * avg.cheerful) + (0.40 * avg.attitude);
-      
-      const avgQualitative = (avg.attitude + avg.discipline + avg.active + avg.agility + avg.cheerful) / 5;
-      const theUltimateMVP = (0.75 * avgQualitative) + (0.25 * uAttend);
-
-      return { ...user, attendanceScore: uAttend, qualitativeScore: avgQualitative, theReliableOne, theHighAchiever, theSpark, theUltimateMVP };
-    });
-
-    // Kalkulasi Best Dept
-    const deptMap = {};
-    results.forEach(r => {
-      if (r.dept && r.dept !== 'General' && r.dept !== '-') {
-        if (!deptMap[r.dept]) deptMap[r.dept] = { totalMVP: 0, count: 0 };
-        deptMap[r.dept].totalMVP += r.theUltimateMVP;
-        deptMap[r.dept].count += 1;
-      }
-    });
-
-    const deptResults = Object.keys(deptMap).map(dept => ({
-      dept, score: deptMap[dept].totalMVP / deptMap[dept].count
-    }));
-
-    const getWinner = (arr, scoreKey) => {
-      const sorted = [...arr].sort((a, b) => b[scoreKey] - a[scoreKey]);
-      return sorted.length > 0 && sorted[0][scoreKey] > 0 ? sorted[0] : null;
-    };
-
-    return {
-      reliable: getWinner(results, 'theReliableOne'),
-      achiever: getWinner(results, 'theHighAchiever'),
-      spark: getWinner(results, 'theSpark'),
-      mvp: getWinner(results, 'theUltimateMVP'),
-      bestDept: getWinner(deptResults, 'score'),
-      allScores: results,
-      allDeptScores: deptResults 
-    };
-
+    // Memanfaatkan core engine yang sudah dioptimasi
+    return computeQuarterData(usersRes.data || [], assessRes.data || [], attendRes.data || []);
   } catch (error) {
     console.error("Quarterly Engine Error:", error);
     return null;
@@ -101,26 +104,34 @@ export const calculateQuarterlyResults = async (quarter) => {
 
 
 // ============================================================================
-// 2. MESIN KALKULASI END OF TERM (HALL OF FAME 2026)
+// 2. MESIN KALKULASI END OF TERM (HALL OF FAME 2026) -> "THE ONE-FETCH ENGINE"
 // ============================================================================
 export const calculateEndOfTermResults = async () => {
   try {
-    // 1. Eksekusi Tarikan Data Mutlak (Paralel)
-    const [q1, q2, q3, q4, votesRes, projectsRes, usersRes] = await Promise.all([
-      calculateQuarterlyResults('Q1'),
-      calculateQuarterlyResults('Q2'),
-      calculateQuarterlyResults('Q3'),
-      calculateQuarterlyResults('Q4'),
+    // 1. Eksekusi Tarikan Data Mutlak (HANYA 5 API CALLS TOTAL UTK SELURUH PROSES)
+    const [usersRes, assessRes, attendRes, votesRes, projectsRes] = await Promise.all([
+      supabase.from('users').select('*').neq('role', 1).eq('is_active', true),
+      supabase.from('assessments').select('*'),
+      supabase.from('attendance').select('*'),
       supabase.from('end_of_term_votes').select('*'),
-      supabase.from('projects').select('*'),
-      supabase.from('users').select('*').neq('role', 1).eq('is_active', true)
+      supabase.from('projects').select('*')
     ]);
 
+    const allUsers = usersRes.data || [];
+    const assessments = assessRes.data || [];
+    const attendance = attendRes.data || [];
     const votes = votesRes.data || [];
     const projects = projectsRes.data || [];
-    const users = usersRes.data || [];
 
-    const quarters = [q1, q2, q3, q4];
+    // Pisahkan user staff untuk kalkulasi kuartalan
+    const staffUsers = allUsers.filter(u => u.role === 5);
+
+    // Proses Q1 - Q4 di dalam RAM (Sangat Cepat, 0 API Call Tambahan)
+    const quarters = ['Q1', 'Q2', 'Q3', 'Q4'].map(q => {
+      const qAssess = assessments.filter(a => a.quarter === q);
+      const qAttend = attendance.filter(a => a.quarter === q);
+      return computeQuarterData(staffUsers, qAssess, qAttend);
+    });
 
     // ==========================================
     // A. AGREGASI RATA-RATA SISTEM (Q1-Q4)
@@ -128,7 +139,7 @@ export const calculateEndOfTermResults = async () => {
     const userSystemAvg = {};
     const deptSystemAvg = {};
 
-    users.forEach(u => userSystemAvg[u.id] = { total: 0, count: 0 });
+    allUsers.forEach(u => userSystemAvg[u.id] = { total: 0, count: 0 });
     const ALL_DEPTS = ['ERBD', 'MD', 'STD'];
     ALL_DEPTS.forEach(d => deptSystemAvg[d] = { total: 0, count: 0 });
 
@@ -198,7 +209,7 @@ export const calculateEndOfTermResults = async () => {
       return maxTheoretical > 0 ? (rawPoints / maxTheoretical) * 100 : 0;
     };
 
-    // Helper Normalisasi Bintang (PERBAIKAN: Hapus perkalian 20 karena data dari DB sudah 0-100)
+    // Helper Normalisasi Bintang 
     const normalizeEval = (totalScoreFromDB, count) => {
       return count > 0 ? (totalScoreFromDB / count) : 0;
     };
@@ -208,9 +219,9 @@ export const calculateEndOfTermResults = async () => {
     // ==========================================
     
     // 1 & 2 & 5. Kalkulasi User (MVP, Rookie, Fav EB)
-    const userFinalScores = users.map(user => {
+    const userFinalScores = allUsers.map(user => {
       // System Rata-rata
-      const sysAvg = userSystemAvg[user.id].count > 0 ? (userSystemAvg[user.id].total / userSystemAvg[user.id].count) : 0;
+      const sysAvg = userSystemAvg[user.id] && userSystemAvg[user.id].count > 0 ? (userSystemAvg[user.id].total / userSystemAvg[user.id].count) : 0;
       
       // Normalisasi Vote
       const mvpVoteScore = normalizeVoting(votePoints.MVP[user.id] || 0, voterCounts.MVP.size, 5);
@@ -247,7 +258,7 @@ export const calculateEndOfTermResults = async () => {
     // ==========================================
     
     // Filter Rookie (Hanya TLD 26) & EB (Hanya BPH/ADV/Kadep/Kadiv)
-    const rookieList = userFinalScores.filter(u => u.cohort.includes('26') && u.role === 5);
+    const rookieList = userFinalScores.filter(u => u.cohort && u.cohort.includes('26') && u.role === 5);
     const ebList = userFinalScores.filter(u => u.role >= 2 && u.role <= 4);
     
     // Filter MVP (Hanya Staff)

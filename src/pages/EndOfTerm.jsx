@@ -52,7 +52,7 @@ const Voting = () => {
   const isBPHADV = role === 2;
   const isAdmin = role === 1;
   
-  // PERBAIKAN: Deteksi spesifik untuk angkatan 26
+  // Deteksi spesifik untuk angkatan 26
   const isTLD26 = (user?.cohort || '').includes('26');
 
   useEffect(() => {
@@ -128,18 +128,6 @@ const Voting = () => {
     return new Set(filled).size !== filled.length;
   };
 
-  const checkConsecutiveRanks = (arr, categoryName) => {
-    let foundEmpty = false;
-    for (let i = 0; i < arr.length; i++) {
-      if (arr[i] === '') {
-        foundEmpty = true;
-      } else if (foundEmpty) {
-        return `Please fill the ranks consecutively for ${categoryName} (do not skip ranks)!`;
-      }
-    }
-    return null;
-  };
-
   const handleVoteChange = (category, index, value) => {
     if (category === 'mvp') {
       const newVotes = [...mvpVotes]; newVotes[index] = value; setMvpVotes(newVotes);
@@ -156,23 +144,25 @@ const Voting = () => {
     e.preventDefault();
     if (isAdmin) return alert("Administrators are not allowed to participate in voting.");
     
-    // 1. Client-Side Validations (Bypass Rookie untuk TLD26)
+    // ==========================================
+    // 1. VALIDASI WAJIB TERISI PENUH (STRICT MODE)
+    // ==========================================
+    if (mvpVotes.includes('')) return alert('You must fill all 5 ranks for The Ultimate MVP!');
+    if (!isTLD26 && rookieVotes.includes('')) return alert('You must fill all 3 ranks for Rookie of the Year!');
+    if (projectVotes.includes('')) return alert('You must fill all 3 ranks for Best Project!');
+    if (isStaff && favEbVotes.includes('')) return alert('You must fill all 5 ranks for Most Favorite EB!');
+
+    // ==========================================
+    // 2. VALIDASI ANTI DUPLIKAT
+    // ==========================================
     if (checkDuplicate(mvpVotes)) return alert('Duplicate candidates found in The Ultimate MVP category!');
     if (!isTLD26 && checkDuplicate(rookieVotes)) return alert('Duplicate candidates found in Rookie of the Year category!');
     if (checkDuplicate(projectVotes)) return alert('Duplicate nominations found in Best Project category!');
     if (isStaff && checkDuplicate(favEbVotes)) return alert('Duplicate candidates found in Most Favorite EB category!');
 
-    const consecutiveError = checkConsecutiveRanks(mvpVotes, 'The Ultimate MVP') ||
-                             (!isTLD26 ? checkConsecutiveRanks(rookieVotes, 'Rookie of the Year') : null) ||
-                             checkConsecutiveRanks(projectVotes, 'Best Project') ||
-                             (isStaff ? checkConsecutiveRanks(favEbVotes, 'Most Favorite EB') : null);
-    if (consecutiveError) return alert(consecutiveError);
-
-    if (!mvpVotes[0]) return alert('You must select a candidate for Rank 1 in The Ultimate MVP!');
-    if (!isTLD26 && !rookieVotes[0]) return alert('You must select a candidate for Rank 1 in Rookie of the Year!');
-    if (!projectVotes[0]) return alert('You must select a project for Rank 1 in Best Project!');
-    if (isStaff && !favEbVotes[0]) return alert('You must select a candidate for Rank 1 in Most Favorite EB!');
-
+    // ==========================================
+    // 3. VALIDASI BINTANG EKSEKUTIF (BPH/ADV)
+    // ==========================================
     if (isBPHADV) {
       if (Object.values(evalDeptVotes).includes(0)) return alert("Executive Board must evaluate all departments (minimum 1 star)!");
       if (Object.values(evalProjectVotes).includes(0)) return alert("Executive Board must evaluate all projects (minimum 1 star)!");
@@ -182,9 +172,9 @@ const Voting = () => {
     try {
       const payload = [];
 
+      // Data dipastikan 100% penuh dan valid saat mencapai baris ini.
       payload.push({ voter_id: user.id, category: 'MVP', rank_1: mvpVotes[0], rank_2: mvpVotes[1], rank_3: mvpVotes[2], rank_4: mvpVotes[3], rank_5: mvpVotes[4] });
       
-      // PERBAIKAN: Hanya kirim payload Rookie jika bukan angkatan 26
       if (!isTLD26) {
         payload.push({ voter_id: user.id, category: 'ROOKIE', rank_1: rookieVotes[0], rank_2: rookieVotes[1], rank_3: rookieVotes[2] });
       }
@@ -213,16 +203,12 @@ const Voting = () => {
     } catch (error) {
       console.error("Voting submission error:", error);
       
-      // 2. Server-Side (SQL) Constraint Error Handling
       let errorMessage = "Failed to submit votes. Please check your internet connection and try again.";
-      
       if (error.code === '23505' || error.message?.includes('anti_double_vote')) {
         errorMessage = "SECURITY ALERT: You have already submitted votes for one or more categories! Double-voting is strictly prohibited by the system.";
-      } 
-      else if (error.code === '23514' || error.message?.includes('anti_duplicate_ranks')) {
+      } else if (error.code === '23514' || error.message?.includes('anti_duplicate_ranks')) {
         errorMessage = "SECURITY ALERT: System detected duplicate candidates across different ranks! Please ensure you do not place the same candidate in multiple ranks.";
-      } 
-      else if (error.message) {
+      } else if (error.message) {
         errorMessage = `Failed to submit votes: ${error.message}`;
       }
 
@@ -315,7 +301,7 @@ const Voting = () => {
               </div>
             </section>
 
-            {/* PERBAIKAN: 2. ROOKIE OF THE YEAR (Top 3) - Sembunyikan untuk TLD26 */}
+            {/* 2. ROOKIE OF THE YEAR (Top 3) - Sembunyikan untuk TLD26 */}
             {!isTLD26 && (
               <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>

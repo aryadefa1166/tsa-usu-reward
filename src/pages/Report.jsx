@@ -135,8 +135,9 @@ const PersonalReportView = ({ targetUser, onBack, publishedQuarters }) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-          <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm h-full relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
+          {/* PERBAIKAN: Desain Card Diseragamkan */}
+          <div className="lg:col-span-2 bg-gradient-to-br from-green-50/50 to-white p-8 rounded-3xl border border-gray-100 shadow-sm h-full relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
             <div className="absolute top-0 right-0 p-6 opacity-[0.03] text-tsa-green pointer-events-none"><TrendingUp size={120} /></div>
             <div className="relative z-10">
               <h3 className="text-lg font-black text-tsa-dark mb-6 flex items-center gap-2"><TrendingUp size={20} className="text-tsa-green" /> Qualitative Breakdown</h3>
@@ -149,17 +150,20 @@ const PersonalReportView = ({ targetUser, onBack, publishedQuarters }) => {
           </div>
 
           <div className="flex flex-col gap-6 h-full">
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden flex flex-col justify-center items-center text-center">
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
-              <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center mb-2"><ClipboardCheck size={16} className="text-tsa-green" /></div>
-              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Attendance Rate</h3>
-              <div className="text-3xl font-black text-tsa-dark mb-1">{reportData.attendance.toFixed(1)}<span className="text-lg text-gray-400">%</span></div>
-              <p className="text-[9px] text-gray-400 font-medium">Validated real-field presence.</p>
+            {/* PERBAIKAN: Desain Card Diseragamkan */}
+            <div className="bg-gradient-to-br from-green-50/50 to-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden flex flex-col justify-center items-center text-center">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green pointer-events-none"><ClipboardCheck size={80} /></div>
+              <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center mb-2 relative z-10"><ClipboardCheck size={16} className="text-tsa-green" /></div>
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1 relative z-10">Attendance Rate</h3>
+              <div className="text-3xl font-black text-tsa-dark mb-1 relative z-10">{reportData.attendance.toFixed(1)}<span className="text-lg text-gray-400">%</span></div>
+              <p className="text-[9px] text-gray-400 font-medium relative z-10">Validated real-field presence.</p>
             </div>
 
-            <div className="bg-white p-8 flex-grow rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden flex flex-col justify-center items-center text-center min-h-[200px]">
+            {/* PERBAIKAN: Desain Card Diseragamkan */}
+            <div className="bg-gradient-to-br from-green-50/50 to-white p-8 flex-grow rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden flex flex-col justify-center items-center text-center min-h-[200px]">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
-              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Crown size={120} /></div>
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green pointer-events-none"><Crown size={120} /></div>
               <h3 className="text-xs font-black text-tsa-green uppercase tracking-widest mb-2 mt-2 relative z-10">The Ultimate MVP</h3>
               <p className="text-[10px] text-gray-400 font-medium mb-3 relative z-10">Aggregated Final Score</p>
               <div className="text-6xl font-black text-tsa-dark tracking-tighter relative z-10">{reportData.mvpScore.toFixed(1)}</div>
@@ -183,7 +187,6 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
   const [viewMode, setViewMode] = useState('hierarchy'); // 'hierarchy' | 'global'
   const [navState, setNavState] = useState({ dept: null, div: null });
 
-  // Inisialisasi Akses Default Berdasarkan Wewenang
   useEffect(() => {
     if (currentUser.role === 3) setNavState({ dept: currentUser.dept, div: null });
     if (currentUser.role === 4) setNavState({ dept: currentUser.dept, div: currentUser.division });
@@ -246,24 +249,23 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
     if (!rawStaffData || rawStaffData.length === 0) return null;
 
     let activeStaff = rawStaffData;
-    let currentScopeName = 'TSA Overall';
+    let currentScopeName = 'TSA OVERALL';
 
-    if (viewMode === 'hierarchy') {
-      if (navState.div) {
-        activeStaff = rawStaffData.filter(s => {
-          const sDiv = s.division && s.division !== '-' ? s.division : 'General';
-          return s.dept === navState.dept && sDiv === navState.div;
-        });
-        currentScopeName = navState.div === '-' || navState.div === 'General' ? `${navState.dept} Staff` : `${navState.div} Div`;
-      } else if (navState.dept) {
-        activeStaff = rawStaffData.filter(s => s.dept === navState.dept);
-        currentScopeName = `${navState.dept} Dept`;
-      }
+    // 1. Filter Context-Aware (Berlaku untuk mode Folders & Staff Rank)
+    if (navState.div) {
+      activeStaff = rawStaffData.filter(s => {
+        const sDiv = s.division && s.division !== '-' ? s.division : 'General';
+        return s.dept === navState.dept && sDiv === navState.div;
+      });
+      currentScopeName = navState.div === '-' || navState.div === 'General' ? `${navState.dept} STAFF` : `${navState.div} DIV`;
+    } else if (navState.dept) {
+      activeStaff = rawStaffData.filter(s => s.dept === navState.dept);
+      currentScopeName = `${navState.dept} DEPT`;
     } else {
-      currentScopeName = 'Global Staff';
+      currentScopeName = 'TSA OVERALL';
     }
 
-    // Averages
+    // 2. Kalkulasi Rata-rata Scope Aktif
     const avgMvp = activeStaff.length ? activeStaff.reduce((acc, s) => acc + s.mvp, 0) / activeStaff.length : 0;
     const avgAtt = activeStaff.length ? activeStaff.reduce((acc, s) => acc + s.attendance, 0) / activeStaff.length : 0;
     
@@ -277,11 +279,17 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
       avgTraits.active /= activeStaff.length; avgTraits.agility /= activeStaff.length; avgTraits.cheerful /= activeStaff.length;
     }
 
-    // List Building
+    // 3. Render List Berdasarkan View Mode
     let list = [];
     if (viewMode === 'global') {
-      list = activeStaff.map(s => ({ type: 'staff', id: s.id, name: s.full_name, score: s.mvp, subtext: `${s.position} • ${s.dept}`, obj: s }));
+      // MODE: STAFF RANK (Context-Aware Flattening)
+      list = activeStaff.map(s => ({ 
+        type: 'staff', id: s.id, name: s.full_name, score: s.mvp, 
+        subtext: navState.dept ? s.position : `${s.position} • ${s.dept}`, // Sederhanakan subtext jika sudah di dalam folder Dept
+        obj: s 
+      }));
     } else {
+      // MODE: FOLDERS (Hierarchy Drill-Down)
       if (navState.div) {
         list = activeStaff.map(s => ({ type: 'staff', id: s.id, name: s.full_name, score: s.mvp, subtext: s.position, obj: s }));
       } else if (navState.dept) {
@@ -306,8 +314,8 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
 
   // Click Handlers
   const handleItemClick = (item) => {
-    if (item.type === 'dept') setNavState({ dept: item.id, div: null });
-    else if (item.type === 'div') setNavState({ ...navState, div: item.id });
+    if (item.type === 'dept') { setNavState({ dept: item.id, div: null }); setViewMode('hierarchy'); }
+    else if (item.type === 'div') { setNavState({ ...navState, div: item.id }); setViewMode('hierarchy'); }
     else if (item.type === 'staff') onSelectUser(item.obj);
   };
 
@@ -333,14 +341,14 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
       </div>
 
       <div className="mb-12">
-        <div className="flex flex-col mb-6 gap-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
            <h2 className="text-xl font-black text-tsa-dark flex items-center gap-2">
               <Activity size={20} className="text-tsa-green" /> Team Analytics Overview
            </h2>
-           {/* PERBAIKAN: Badge Scope dipindahkan ke atas */}
+           {/* PERBAIKAN: Scope Indicator diletakkan sebaris dengan Title */}
            {dashboardData && (
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] px-3 py-1 rounded-lg bg-green-50 text-tsa-green font-black uppercase tracking-widest border border-green-100 shadow-sm">
+              <div className="flex items-center">
+                <span className="text-[10px] px-3 py-1.5 rounded-lg bg-green-50 text-tsa-green font-black uppercase tracking-widest border border-green-100 shadow-sm">
                   Scope: {dashboardData.currentScopeName}
                 </span>
               </div>
@@ -356,8 +364,8 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
             
             {/* BARIS 1: HIGHLIGHT CARDS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* PERBAIKAN: Card Average MVP (Disamakan dengan EOT Dashboard) */}
-              <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 relative overflow-hidden">
+              {/* PERBAIKAN: Card Average MVP Diseragamkan Desainnya */}
+              <div className="bg-gradient-to-br from-green-50/50 to-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                 <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green pointer-events-none"><Crown size={80} /></div>
                 
@@ -370,9 +378,9 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
                 </div>
               </div>
 
-              {/* PERBAIKAN: Card Average Attendance */}
-              <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
+              {/* PERBAIKAN: Card Average Attendance Diseragamkan Desain & Ikonnya */}
+              <div className="bg-gradient-to-br from-green-50/50 to-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                 <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green pointer-events-none"><ClipboardCheck size={80} /></div>
                 
                 <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center shadow-sm shrink-0 ml-2 relative z-10">
@@ -389,8 +397,8 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* LEADERBOARD (DRILL DOWN) */}
-              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-full relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
+              <div className="bg-gradient-to-br from-green-50/50 to-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-full relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                 <div className="absolute top-0 right-0 p-6 opacity-[0.03] text-tsa-green pointer-events-none"><BarChart2 size={120} /></div>
 
                 <div className="flex items-center justify-between mb-4 relative z-10">
@@ -398,8 +406,8 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
                     <BarChart2 size={18} className="text-tsa-green" /> Leaderboard
                   </h3>
                   
-                  {/* Mode Switcher */}
-                  <div className="flex bg-gray-50 rounded-lg p-1 border border-gray-100 shadow-sm">
+                  {/* Context-Aware View Switcher */}
+                  <div className="flex bg-white/50 backdrop-blur-sm rounded-lg p-1 border border-gray-200 shadow-sm">
                      <button onClick={() => setViewMode('hierarchy')} className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest flex items-center gap-1 transition-all ${viewMode === 'hierarchy' ? 'bg-white text-tsa-green shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
                         <FolderTree size={12}/> Folders
                      </button>
@@ -411,7 +419,7 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
 
                 {/* BREADCRUMBS (Hanya di Hierarchy Mode) */}
                 {viewMode === 'hierarchy' && (
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 mb-5 bg-gray-50 px-3 py-2 rounded-xl inline-flex self-start border border-gray-100 relative z-10 shadow-sm">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 mb-5 bg-white/70 px-3 py-2 rounded-xl inline-flex self-start border border-gray-200 relative z-10 shadow-sm">
                     {currentUser.role <= 2 && (
                         <button onClick={() => setNavState({dept:null, div:null})} className={`uppercase tracking-widest hover:text-tsa-green transition-colors ${!navState.dept ? 'text-tsa-green' : ''}`}>TSA Overall</button>
                     )}
@@ -432,7 +440,7 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
 
                 <div className="space-y-3 max-h-[350px] overflow-y-auto pr-3 hide-scrollbar flex-grow relative z-10">
                   {dashboardData.list.length === 0 ? (
-                    <div className="text-center text-xs text-gray-400 font-medium py-10 border border-dashed border-gray-100 rounded-xl bg-gray-50">No evaluation data yet.</div>
+                    <div className="text-center text-xs text-gray-400 font-medium py-10 border border-dashed border-gray-200 rounded-xl bg-white/50">No evaluation data yet.</div>
                   ) : (
                     dashboardData.list.map((item, idx) => (
                       <div 
@@ -441,22 +449,24 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
                         className="p-4 rounded-2xl border border-gray-100 bg-white hover:border-tsa-green hover:shadow-sm transition-all cursor-pointer group relative overflow-hidden"
                       >
                         {/* Hover Chevron */}
-                        <div className="absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-green-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end pr-3">
+                        <div className="absolute top-0 right-0 h-full w-10 bg-gradient-to-l from-green-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-end pr-3 pointer-events-none">
                            <ChevronRight size={14} className="text-tsa-green" />
                         </div>
                         
-                        {/* PERBAIKAN: Struktur Flexbox List dirapikan agar teks tidak menabrak panah chevron */}
+                        {/* PERBAIKAN: Spasi flexbox untuk angka dan hover pointer */}
                         <div className="flex justify-between items-end mb-2 relative z-10 pr-6">
-                          <div className="flex flex-col max-w-[75%]">
+                          <div className="flex flex-col max-w-[85%]">
                             <span className="text-xs font-bold text-gray-700 truncate group-hover:text-tsa-green transition-colors">
                               <span className="text-gray-300 mr-2 font-black">#{idx+1}</span>{item.name}
                             </span>
                             {item.subtext && <span className="text-[9px] text-gray-400 mt-0.5 uppercase tracking-wider truncate font-bold">{item.subtext}</span>}
                           </div>
-                          <span className="text-xs font-black text-tsa-dark group-hover:text-tsa-green transition-colors shrink-0">{item.score > 0 ? item.score.toFixed(1) : '0.0'}</span>
+                          <span className="text-xs font-black text-tsa-dark group-hover:text-tsa-green transition-colors shrink-0 whitespace-nowrap pl-2">
+                            {item.score > 0 ? item.score.toFixed(1) : '0.0'}
+                          </span>
                         </div>
                         
-                        <div className="w-full bg-gray-50 rounded-full h-1.5 overflow-hidden relative z-10 max-w-[calc(100%-1.5rem)]">
+                        <div className="w-full bg-gray-50 rounded-full h-1.5 overflow-hidden relative z-10 max-w-[95%]">
                           <div className={`h-full rounded-full transition-all duration-1000 ${idx === 0 && item.score > 0 ? 'bg-tsa-gold' : 'bg-tsa-green'}`} style={{ width: `${item.score}%` }}></div>
                         </div>
                       </div>
@@ -466,9 +476,10 @@ const ManagerReportView = ({ currentUser, onSelectUser, publishedQuarters }) => 
               </div>
 
               {/* TRAIT RADAR PANEL */}
-              <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm h-full relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-tsa-green"></div>
-                <div className="absolute top-0 right-0 p-6 opacity-[0.03] text-tsa-green pointer-events-none"><Navigation size={120} /></div>
+              <div className="bg-gradient-to-br from-green-50/50 to-white p-8 rounded-3xl border border-gray-100 shadow-sm h-full relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+                {/* PERBAIKAN: Ikon diselaraskan dengan ikon judul (TrendingUp) */}
+                <div className="absolute top-0 right-0 p-6 opacity-[0.03] text-tsa-green pointer-events-none"><TrendingUp size={120} /></div>
                 
                 <div className="flex justify-between items-start mb-8 relative z-10">
                   <h3 className="text-base font-black text-tsa-dark flex items-center gap-2">

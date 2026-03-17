@@ -51,6 +51,9 @@ const Voting = () => {
   const isEB = role >= 3 && role <= 4;
   const isBPHADV = role === 2;
   const isAdmin = role === 1;
+  
+  // PERBAIKAN: Deteksi spesifik untuk angkatan 26
+  const isTLD26 = (user?.cohort || '').includes('26');
 
   useEffect(() => {
     fetchInitialData();
@@ -153,20 +156,20 @@ const Voting = () => {
     e.preventDefault();
     if (isAdmin) return alert("Administrators are not allowed to participate in voting.");
     
-    // 1. Client-Side Validations
+    // 1. Client-Side Validations (Bypass Rookie untuk TLD26)
     if (checkDuplicate(mvpVotes)) return alert('Duplicate candidates found in The Ultimate MVP category!');
-    if (checkDuplicate(rookieVotes)) return alert('Duplicate candidates found in Rookie of the Year category!');
+    if (!isTLD26 && checkDuplicate(rookieVotes)) return alert('Duplicate candidates found in Rookie of the Year category!');
     if (checkDuplicate(projectVotes)) return alert('Duplicate nominations found in Best Project category!');
     if (isStaff && checkDuplicate(favEbVotes)) return alert('Duplicate candidates found in Most Favorite EB category!');
 
     const consecutiveError = checkConsecutiveRanks(mvpVotes, 'The Ultimate MVP') ||
-                             checkConsecutiveRanks(rookieVotes, 'Rookie of the Year') ||
+                             (!isTLD26 ? checkConsecutiveRanks(rookieVotes, 'Rookie of the Year') : null) ||
                              checkConsecutiveRanks(projectVotes, 'Best Project') ||
                              (isStaff ? checkConsecutiveRanks(favEbVotes, 'Most Favorite EB') : null);
     if (consecutiveError) return alert(consecutiveError);
 
     if (!mvpVotes[0]) return alert('You must select a candidate for Rank 1 in The Ultimate MVP!');
-    if (!rookieVotes[0]) return alert('You must select a candidate for Rank 1 in Rookie of the Year!');
+    if (!isTLD26 && !rookieVotes[0]) return alert('You must select a candidate for Rank 1 in Rookie of the Year!');
     if (!projectVotes[0]) return alert('You must select a project for Rank 1 in Best Project!');
     if (isStaff && !favEbVotes[0]) return alert('You must select a candidate for Rank 1 in Most Favorite EB!');
 
@@ -180,7 +183,12 @@ const Voting = () => {
       const payload = [];
 
       payload.push({ voter_id: user.id, category: 'MVP', rank_1: mvpVotes[0], rank_2: mvpVotes[1], rank_3: mvpVotes[2], rank_4: mvpVotes[3], rank_5: mvpVotes[4] });
-      payload.push({ voter_id: user.id, category: 'ROOKIE', rank_1: rookieVotes[0], rank_2: rookieVotes[1], rank_3: rookieVotes[2] });
+      
+      // PERBAIKAN: Hanya kirim payload Rookie jika bukan angkatan 26
+      if (!isTLD26) {
+        payload.push({ voter_id: user.id, category: 'ROOKIE', rank_1: rookieVotes[0], rank_2: rookieVotes[1], rank_3: rookieVotes[2] });
+      }
+
       payload.push({ voter_id: user.id, category: 'PROJECT', rank_1: projectVotes[0], rank_2: projectVotes[1], rank_3: projectVotes[2] });
       
       if (isStaff) {
@@ -208,15 +216,12 @@ const Voting = () => {
       // 2. Server-Side (SQL) Constraint Error Handling
       let errorMessage = "Failed to submit votes. Please check your internet connection and try again.";
       
-      // Tangkap Error Code 23505 (Unique Violation: anti_double_vote)
       if (error.code === '23505' || error.message?.includes('anti_double_vote')) {
         errorMessage = "SECURITY ALERT: You have already submitted votes for one or more categories! Double-voting is strictly prohibited by the system.";
       } 
-      // Tangkap Error Code 23514 (Check Violation: anti_duplicate_ranks)
       else if (error.code === '23514' || error.message?.includes('anti_duplicate_ranks')) {
         errorMessage = "SECURITY ALERT: System detected duplicate candidates across different ranks! Please ensure you do not place the same candidate in multiple ranks.";
       } 
-      // Error database lainnya
       else if (error.message) {
         errorMessage = `Failed to submit votes: ${error.message}`;
       }
@@ -240,7 +245,6 @@ const Voting = () => {
       <main className="max-w-4xl mx-auto px-6 mt-8">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight flex items-center gap-3">
-            {/* PERBAIKAN IKON: Trophy untuk Portal Utama */}
             <Trophy className="text-tsa-green" size={36} /> End of Term Portal
           </h1>
           <p className="text-sm text-gray-500 mt-1 font-medium">
@@ -285,7 +289,6 @@ const Voting = () => {
             {/* 1. THE ULTIMATE MVP (Top 5) */}
             <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
               <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
-              {/* PERBAIKAN IKON: Crown untuk The Ultimate MVP */}
               <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Crown size={120} /></div>
               <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
                 <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Crown size={24} className="text-tsa-green" /></div>
@@ -312,39 +315,40 @@ const Voting = () => {
               </div>
             </section>
 
-            {/* 2. ROOKIE OF THE YEAR (Top 3) */}
-            <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
-              <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Sparkles size={120} /></div>
-              <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
-                <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Sparkles size={24} className="text-tsa-green" /></div>
-                <div>
-                  <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Rookie of the Year</h2>
-                  <p className="text-xs text-gray-500 font-medium mt-1">Select the top 3 youngest generation staff (Cohort 26) showing the most progressive adaptability. (Rank 1 = 3 Pts, Rank 3 = 1 Pt).</p>
-                </div>
-              </div>
-              <div className="relative z-10 space-y-3">
-                {[1, 2, 3].map((rank, index) => (
-                  <div key={`rookie-${rank}`} className="flex items-center gap-3">
-                    <span className="w-20 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white px-3 py-3 rounded-xl text-center border border-gray-200 shrink-0">Rank {rank}</span>
-                    <select 
-                      disabled={isReadOnly}
-                      value={rookieVotes[index]} 
-                      onChange={(e) => handleVoteChange('rookie', index, e.target.value)} 
-                      className="w-full border border-gray-200 p-3 rounded-xl text-sm font-bold text-tsa-dark focus:outline-none focus:border-tsa-green focus:ring-1 focus:ring-tsa-green bg-white shadow-sm transition-all disabled:opacity-70 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    >
-                      <option value="">-- Select Rookie Candidate --</option>
-                      {rookieCandidates.map(u => <option key={u.id} value={u.id}>{u.full_name} ({u.dept})</option>)}
-                    </select>
+            {/* PERBAIKAN: 2. ROOKIE OF THE YEAR (Top 3) - Sembunyikan untuk TLD26 */}
+            {!isTLD26 && (
+              <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+                <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Sparkles size={120} /></div>
+                <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
+                  <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Sparkles size={24} className="text-tsa-green" /></div>
+                  <div>
+                    <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">Rookie of the Year</h2>
+                    <p className="text-xs text-gray-500 font-medium mt-1">Select the top 3 youngest generation staff (Cohort 26) showing the most progressive adaptability. (Rank 1 = 3 Pts, Rank 3 = 1 Pt).</p>
                   </div>
-                ))}
-              </div>
-            </section>
+                </div>
+                <div className="relative z-10 space-y-3">
+                  {[1, 2, 3].map((rank, index) => (
+                    <div key={`rookie-${rank}`} className="flex items-center gap-3">
+                      <span className="w-20 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white px-3 py-3 rounded-xl text-center border border-gray-200 shrink-0">Rank {rank}</span>
+                      <select 
+                        disabled={isReadOnly}
+                        value={rookieVotes[index]} 
+                        onChange={(e) => handleVoteChange('rookie', index, e.target.value)} 
+                        className="w-full border border-gray-200 p-3 rounded-xl text-sm font-bold text-tsa-dark focus:outline-none focus:border-tsa-green focus:ring-1 focus:ring-tsa-green bg-white shadow-sm transition-all disabled:opacity-70 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      >
+                        <option value="">-- Select Rookie Candidate --</option>
+                        {rookieCandidates.map(u => <option key={u.id} value={u.id}>{u.full_name} ({u.dept})</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* 3. BEST PROJECT OF THE YEAR (Top 3) */}
             <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
               <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
-              {/* PERBAIKAN IKON: Briefcase untuk Best Project */}
               <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Briefcase size={120} /></div>
               <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
                 <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center shrink-0 border border-green-100"><Briefcase size={24} className="text-tsa-green" /></div>
@@ -375,7 +379,6 @@ const Voting = () => {
             {isStaff && (
               <section className={`p-6 md:p-8 rounded-3xl border shadow-sm relative overflow-hidden ${isReadOnly ? 'border-gray-200 bg-gray-50/50' : 'border-green-100/80 bg-gradient-to-br from-green-50/50 to-white'}`}>
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
-                {/* PERBAIKAN IKON: Star untuk Most Favorite EB */}
                 <div className="absolute top-0 right-0 p-4 opacity-[0.03] text-tsa-green"><Star size={120} /></div>
                 
                 <div className="relative z-10 flex items-start gap-4 mb-6 border-b border-gray-100 pb-4">
@@ -426,7 +429,6 @@ const Voting = () => {
                 </div>
                 
                 <div className="relative z-10 space-y-6">
-                  {/* Evaluasi 3 Departemen Inti */}
                   <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                     <h3 className="font-bold text-tsa-green text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Building2 size={16}/> Department Bureaucracy Evaluation</h3>
                     {['ERBD', 'MD', 'STD'].map(dept => (
@@ -437,7 +439,6 @@ const Voting = () => {
                     ))}
                   </div>
 
-                  {/* Evaluasi Nominasi Project */}
                   <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                     <h3 className="font-bold text-tsa-green text-sm mb-4 uppercase tracking-widest flex items-center gap-2"><Briefcase size={16}/> Project Execution Evaluation</h3>
                     {projectsList.length === 0 ? (

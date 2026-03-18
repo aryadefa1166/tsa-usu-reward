@@ -110,8 +110,6 @@ const OurTeam = () => {
     };
   };
   const mdStruct = getDivisionalStructure('MD', ['Education', 'Media']);
-  
-  // PERBAIKAN: Mengganti 'Staff Management' dengan 'Staff Performance' di array parameter
   const stdStruct = getDivisionalStructure('STD', ['Staff Performance', 'Talent Management']);
 
   const TSAUSUFrame = () => (
@@ -184,18 +182,18 @@ const OurTeam = () => {
               
               <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto">
                 {/* Lapis 1: Steering Committee */}
-                <h3 className={`text-sm font-black uppercase tracking-widest mb-2 ${THEMES.ADV.text}`}>Steering Committee</h3>
+                <h3 className={`text-sm font-black uppercase tracking-widest mb-1 ${THEMES.ADV.text}`}>Steering Committee</h3>
                 
-                {/* PERBAIKAN SC: Garis mendatar langsung di bawah teks */}
+                {/* PERBAIKAN SC: Mendekatkan garis ke teks */}
                 {advSC.length === 3 ? (
-                  <div className="w-full max-w-[750px] flex flex-col items-center">
+                  <div className="w-full flex flex-col items-center mt-2">
                     <div className={`w-[66%] h-px ${THEMES.ADV.line} hidden md:block`}></div>
-                    <div className="hidden md:grid grid-cols-3 w-full justify-items-center">
+                    <div className="hidden md:grid grid-cols-3 w-[66%] justify-items-center">
                       <VLine height="h-8" color={THEMES.ADV.line} />
                       <VLine height="h-8" color={THEMES.ADV.line} />
                       <VLine height="h-8" color={THEMES.ADV.line} />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-6 md:mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-[66%] mt-6 md:mt-0">
                       {advSC.map(member => (
                         <div key={member.id} className="flex justify-center w-full">
                           <MemberCard member={member} deptCode="ADV" />
@@ -217,14 +215,14 @@ const OurTeam = () => {
                   
                   {/* Lapis 3: Percabangan ke 3 Staff Monev */}
                   {advMonevStaff.length === 3 ? (
-                    <div className="w-full max-w-[750px] flex flex-col items-center">
+                    <div className="w-full flex flex-col items-center">
                       <div className={`w-[66%] h-px ${THEMES.ADV.line} hidden md:block`}></div>
-                      <div className="hidden md:grid grid-cols-3 w-full justify-items-center">
+                      <div className="hidden md:grid grid-cols-3 w-[66%] justify-items-center">
                         <VLine height="h-8" color={THEMES.ADV.line} />
                         <VLine height="h-8" color={THEMES.ADV.line} />
                         <VLine height="h-8" color={THEMES.ADV.line} />
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-6 md:mt-0">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-[66%] mt-6 md:mt-0">
                         {advMonevStaff.map(member => (
                           <div key={member.id} className="flex justify-center w-full">
                             <MemberCard member={member} deptCode="ADV" />
@@ -260,11 +258,10 @@ const OurTeam = () => {
                 <MemberCard member={erbdWakadep} deptCode="ERBD" />
                 <VLine height="h-8" color={THEMES.ERBD.line} />
                 
-                {/* PERBAIKAN ERBD: Garis Cabang Wakadep ke 4 TL (Presisi 75%) */}
+                {/* PERBAIKAN ERBD: Garis Cabang Wakadep ke TL Presisi */}
                 <div className="w-full flex flex-col items-center">
                   <div className={`w-[75%] h-px ${THEMES.ERBD.line} hidden lg:block`}></div>
-                  {/* justify-around akan membagi garis vertikal pas di tengah-tengah ke 4 grid item */}
-                  <div className="hidden lg:flex justify-around w-[75%]">
+                  <div className="hidden lg:grid grid-cols-4 w-[75%] justify-items-center">
                     <VLine height="h-8" color={THEMES.ERBD.line} />
                     <VLine height="h-8" color={THEMES.ERBD.line} />
                     <VLine height="h-8" color={THEMES.ERBD.line} />
@@ -272,12 +269,13 @@ const OurTeam = () => {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-6 lg:mt-0">
+                {/* Pastikan grid TL juga memakan lebar yang sama dengan garisnya */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full lg:w-[75%] mt-6 lg:mt-0">
                   {erbdTeams.map(team => (
                     <div key={team.name} className="flex flex-col items-center w-full">
                       <MemberCard member={team.tl} deptCode="ERBD" />
                       
-                      {/* PERBAIKAN ERBD STAFF: Tumpuk vertikal ke bawah dari TL */}
+                      {/* ERBD Staff tumpuk ke bawah bersambung garis */}
                       <div className="flex flex-col items-center w-full">
                         {team.staff.map((member) => (
                           <div key={member.id} className="flex flex-col items-center w-full">
@@ -309,33 +307,28 @@ const OurTeam = () => {
                 <MemberCard member={mdStruct.kadep} deptCode="MD" />
                 <VLine height="h-8" color={THEMES.MD.line} />
                 
-                {/* Garis Horizontal ke 2 Kadiv */}
-                <div className={`w-[50%] h-px ${THEMES.MD.line} hidden md:block`}></div>
-                <div className="hidden md:flex justify-between w-[50%]">
-                  <VLine height="h-8" color={THEMES.MD.line} />
-                  <VLine height="h-8" color={THEMES.MD.line} />
+                {/* Garis Horizontal ke Kadiv */}
+                <div className="w-full flex flex-col items-center">
+                  <div className={`w-[50%] h-px ${THEMES.MD.line} hidden md:block`}></div>
+                  <div className="hidden md:grid grid-cols-2 w-[50%] justify-items-center">
+                    <VLine height="h-8" color={THEMES.MD.line} />
+                    <VLine height="h-8" color={THEMES.MD.line} />
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-5xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full md:w-[50%] mt-6 md:mt-0">
                   {mdStruct.divs.map(div => (
                     <div key={div.name} className="flex flex-col items-center w-full">
                       <MemberCard member={div.kadiv} deptCode="MD" />
-                      {div.staff.length > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
                       
-                      {/* PERBAIKAN MD STAFF: Berjejer (grid-cols-2) lengkap dengan garis vertikal ganda di atasnya */}
-                      <div className="w-full flex flex-col items-center">
-                        <div className={`w-[50%] h-px ${THEMES.MD.line} hidden md:block`}></div>
-                        <div className="hidden md:flex justify-between w-[50%]">
-                           <VLine height="h-8" color={THEMES.MD.line} />
-                           <VLine height="h-8" color={THEMES.MD.line} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 w-full mt-6 md:mt-0">
-                           {div.staff.map(member => (
-                             <div key={member.id} className="flex justify-center w-full">
-                               <MemberCard member={member} deptCode="MD" />
-                             </div>
-                           ))}
-                        </div>
+                      {/* PERBAIKAN MD STAFF: Tumpuk vertikal ke bawah dari Kadiv */}
+                      <div className="flex flex-col items-center w-full">
+                        {div.staff.map((member) => (
+                          <div key={member.id} className="flex flex-col items-center w-full">
+                            <VLine height="h-8" color={THEMES.MD.line} />
+                            <MemberCard member={member} deptCode="MD" />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
@@ -360,33 +353,28 @@ const OurTeam = () => {
                 <MemberCard member={stdStruct.kadep} deptCode="STD" />
                 <VLine height="h-8" color={THEMES.STD.line} />
                 
-                {/* Garis Horizontal ke 2 Kadiv */}
-                <div className={`w-[50%] h-px ${THEMES.STD.line} hidden md:block`}></div>
-                <div className="hidden md:flex justify-between w-[50%]">
-                  <VLine height="h-8" color={THEMES.STD.line} />
-                  <VLine height="h-8" color={THEMES.STD.line} />
+                {/* Garis Horizontal ke Kadiv */}
+                <div className="w-full flex flex-col items-center">
+                  <div className={`w-[50%] h-px ${THEMES.STD.line} hidden md:block`}></div>
+                  <div className="hidden md:grid grid-cols-2 w-[50%] justify-items-center">
+                    <VLine height="h-8" color={THEMES.STD.line} />
+                    <VLine height="h-8" color={THEMES.STD.line} />
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-5xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full md:w-[50%] mt-6 md:mt-0">
                   {stdStruct.divs.map(div => (
                     <div key={div.name} className="flex flex-col items-center w-full">
                       <MemberCard member={div.kadiv} deptCode="STD" />
-                      {div.staff.length > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
                       
-                      {/* PERBAIKAN STD STAFF: Berjejer (grid-cols-2) lengkap dengan garis vertikal ganda di atasnya */}
-                      <div className="w-full flex flex-col items-center">
-                        <div className={`w-[50%] h-px ${THEMES.STD.line} hidden md:block`}></div>
-                        <div className="hidden md:flex justify-between w-[50%]">
-                           <VLine height="h-8" color={THEMES.STD.line} />
-                           <VLine height="h-8" color={THEMES.STD.line} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 w-full mt-6 md:mt-0">
-                           {div.staff.map(member => (
-                             <div key={member.id} className="flex justify-center w-full">
-                               <MemberCard member={member} deptCode="STD" />
-                             </div>
-                           ))}
-                        </div>
+                      {/* PERBAIKAN STD STAFF: Tumpuk vertikal ke bawah dari Kadiv */}
+                      <div className="flex flex-col items-center w-full">
+                        {div.staff.map((member) => (
+                          <div key={member.id} className="flex flex-col items-center w-full">
+                            <VLine height="h-8" color={THEMES.STD.line} />
+                            <MemberCard member={member} deptCode="STD" />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}

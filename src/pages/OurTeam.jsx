@@ -167,8 +167,9 @@ const OurTeam = () => {
                 
                 {/* Percabangan Rapi Sec & Treas */}
                 <div className="w-full flex flex-col items-center">
-                  <div className={`w-[50%] h-px ${THEMES.BPH.line} hidden md:block`}></div>
-                  <div className="hidden md:flex justify-between w-[50%]">
+                  {/* Kalkulasi Lebar Garis yang Lebih Akurat */}
+                  <div className={`w-[calc(100%-24px)] md:w-[calc(50%+24px)] h-px ${THEMES.BPH.line} hidden md:block`}></div>
+                  <div className="hidden md:flex justify-between w-[calc(100%-24px)] md:w-[calc(50%+24px)]">
                     <VLine height="h-8" color={THEMES.BPH.line} />
                     <VLine height="h-8" color={THEMES.BPH.line} />
                   </div>
@@ -196,11 +197,11 @@ const OurTeam = () => {
                 {/* Lapis 1: Steering Committee */}
                 <h3 className={`text-sm font-black uppercase tracking-widest mb-1 ${THEMES.ADV.text}`}>Steering Committee</h3>
                 
-                {/* PERBAIKAN SC: Garis mendatar presisi sejajar dengan grid card */}
+                {/* PERBAIKAN SC: Garis mendatar akurat membentang di dalam grid 3 kolom */}
                 {advSC.length === 3 ? (
                   <div className="w-full flex flex-col items-center mt-2">
-                    <div className={`w-[66.66%] h-px ${THEMES.ADV.line} hidden md:block`}></div>
-                    <div className="hidden md:flex justify-between w-[66.66%] relative">
+                    <div className={`w-[calc(66.666%-24px)] h-px ${THEMES.ADV.line} hidden md:block`}></div>
+                    <div className="hidden md:flex justify-between w-[calc(66.666%-24px)] relative">
                       <VLine height="h-8" color={THEMES.ADV.line} />
                       <div className="absolute left-1/2 -translate-x-1/2"><VLine height="h-8" color={THEMES.ADV.line} /></div>
                       <VLine height="h-8" color={THEMES.ADV.line} />
@@ -225,11 +226,11 @@ const OurTeam = () => {
                   <MemberCard member={advMonevHead} deptCode="ADV" />
                   {advMonevStaff.length > 0 && <VLine height="h-8" color={THEMES.ADV.line} />}
                   
-                  {/* Lapis 3: Percabangan ke 3 Staff Monev (Sama presisinya dgn SC) */}
+                  {/* Lapis 3: Percabangan ke 3 Staff Monev */}
                   {advMonevStaff.length === 3 ? (
                     <div className="w-full flex flex-col items-center">
-                      <div className={`w-[66.66%] h-px ${THEMES.ADV.line} hidden md:block`}></div>
-                      <div className="hidden md:flex justify-between w-[66.66%] relative">
+                      <div className={`w-[calc(66.666%-24px)] h-px ${THEMES.ADV.line} hidden md:block`}></div>
+                      <div className="hidden md:flex justify-between w-[calc(66.666%-24px)] relative">
                         <VLine height="h-8" color={THEMES.ADV.line} />
                         <div className="absolute left-1/2 -translate-x-1/2"><VLine height="h-8" color={THEMES.ADV.line} /></div>
                         <VLine height="h-8" color={THEMES.ADV.line} />
@@ -270,13 +271,14 @@ const OurTeam = () => {
                 <MemberCard member={erbdWakadep} deptCode="ERBD" />
                 <VLine height="h-8" color={THEMES.ERBD.line} />
                 
-                {/* PERBAIKAN ERBD: Garis Cabang Wakadep ke TL Presisi */}
+                {/* PERBAIKAN ERBD: Garis Cabang Wakadep ke TL dengan Kalkulasi Presisi */}
                 <div className="w-full flex flex-col items-center">
-                  <div className={`w-[75%] h-px ${THEMES.ERBD.line} hidden lg:block`}></div>
-                  <div className="hidden lg:flex justify-between w-[75%] relative">
+                  {/* Menghitung jarak presisi untuk 4 kolom grid */}
+                  <div className={`w-[calc(75%-18px)] h-px ${THEMES.ERBD.line} hidden lg:block`}></div>
+                  <div className="hidden lg:flex justify-between w-[calc(75%-18px)] relative">
                     <VLine height="h-8" color={THEMES.ERBD.line} />
-                    <div className="absolute left-[33.33%] -translate-x-1/2"><VLine height="h-8" color={THEMES.ERBD.line} /></div>
-                    <div className="absolute left-[66.66%] -translate-x-1/2"><VLine height="h-8" color={THEMES.ERBD.line} /></div>
+                    <div className="absolute left-[33.333%] -translate-x-1/2"><VLine height="h-8" color={THEMES.ERBD.line} /></div>
+                    <div className="absolute left-[66.666%] -translate-x-1/2"><VLine height="h-8" color={THEMES.ERBD.line} /></div>
                     <VLine height="h-8" color={THEMES.ERBD.line} />
                   </div>
                 </div>
@@ -318,10 +320,10 @@ const OurTeam = () => {
                 <MemberCard member={mdStruct.kadep} deptCode="MD" />
                 <VLine height="h-8" color={THEMES.MD.line} />
                 
-                {/* Garis Horizontal ke 2 Kadiv (Sejajar dengan kolom 1.5 dan 3.5 dari bawah) */}
+                {/* Garis Horizontal ke 2 Kadiv */}
                 <div className="w-full flex flex-col items-center">
-                  <div className={`w-[50%] h-px ${THEMES.MD.line} hidden lg:block`}></div>
-                  <div className="hidden lg:flex justify-between w-[50%]">
+                  <div className={`w-[calc(100%-24px)] lg:w-[calc(50%+12px)] h-px ${THEMES.MD.line} hidden lg:block`}></div>
+                  <div className="hidden lg:flex justify-between w-[calc(100%-24px)] lg:w-[calc(50%+12px)]">
                     <VLine height="h-8" color={THEMES.MD.line} />
                     <VLine height="h-8" color={THEMES.MD.line} />
                   </div>
@@ -337,18 +339,18 @@ const OurTeam = () => {
                         <MemberCard member={div.kadiv} deptCode="MD" />
                         {div.staff.length > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
                         
-                        {/* Garis Pecah Payung dari Kadiv ke 2 Kolom Staff */}
+                        {/* Garis Pecah Payung dari Kadiv ke 2 Kolom Staff secara Presisi */}
                         {div.staff.length > 0 && (
                           <div className="w-full flex flex-col items-center">
-                            <div className={`w-[50%] h-px ${THEMES.MD.line} hidden md:block`}></div>
-                            <div className="hidden md:flex justify-between w-[50%]">
+                            <div className={`w-[calc(100%-24px)] md:w-[calc(50%+12px)] h-px ${THEMES.MD.line} hidden md:block`}></div>
+                            <div className="hidden md:flex justify-between w-[calc(100%-24px)] md:w-[calc(50%+12px)]">
                               <VLine height="h-8" color={THEMES.MD.line} />
                               <VLine height="h-8" color={THEMES.MD.line} />
                             </div>
                           </div>
                         )}
 
-                        {/* GRID 2 KOLOM STAFF (Total jadi 4 kolom di layar besar) */}
+                        {/* GRID 2 KOLOM STAFF */}
                         <div className="grid grid-cols-2 gap-6 w-full mt-6 md:mt-0">
                           {/* Kolom Kiri Staff */}
                           <div className="flex flex-col items-center w-full">
@@ -397,8 +399,8 @@ const OurTeam = () => {
                 
                 {/* Garis Horizontal ke 2 Kadiv */}
                 <div className="w-full flex flex-col items-center">
-                  <div className={`w-[50%] h-px ${THEMES.STD.line} hidden lg:block`}></div>
-                  <div className="hidden lg:flex justify-between w-[50%]">
+                  <div className={`w-[calc(100%-24px)] lg:w-[calc(50%+12px)] h-px ${THEMES.STD.line} hidden lg:block`}></div>
+                  <div className="hidden lg:flex justify-between w-[calc(100%-24px)] lg:w-[calc(50%+12px)]">
                     <VLine height="h-8" color={THEMES.STD.line} />
                     <VLine height="h-8" color={THEMES.STD.line} />
                   </div>
@@ -414,18 +416,18 @@ const OurTeam = () => {
                         <MemberCard member={div.kadiv} deptCode="STD" />
                         {div.staff.length > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
                         
-                        {/* Garis Pecah Payung dari Kadiv ke 2 Kolom Staff */}
+                        {/* Garis Pecah Payung dari Kadiv ke 2 Kolom Staff secara Presisi */}
                         {div.staff.length > 0 && (
                           <div className="w-full flex flex-col items-center">
-                            <div className={`w-[50%] h-px ${THEMES.STD.line} hidden md:block`}></div>
-                            <div className="hidden md:flex justify-between w-[50%]">
+                            <div className={`w-[calc(100%-24px)] md:w-[calc(50%+12px)] h-px ${THEMES.STD.line} hidden md:block`}></div>
+                            <div className="hidden md:flex justify-between w-[calc(100%-24px)] md:w-[calc(50%+12px)]">
                               <VLine height="h-8" color={THEMES.STD.line} />
                               <VLine height="h-8" color={THEMES.STD.line} />
                             </div>
                           </div>
                         )}
 
-                        {/* GRID 2 KOLOM STAFF (Total jadi 4 kolom di layar besar) */}
+                        {/* GRID 2 KOLOM STAFF */}
                         <div className="grid grid-cols-2 gap-6 w-full mt-6 md:mt-0">
                           {/* Kolom Kiri Staff */}
                           <div className="flex flex-col items-center w-full">

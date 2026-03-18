@@ -15,12 +15,13 @@ const THEMES = {
 };
 
 // ==========================================
-// KOMPONEN CARD MEMBER (ASLI DARI KAMU)
+// KOMPONEN CARD MEMBER
 // ==========================================
 const MemberCard = ({ member, deptCode }) => {
   if (!member) return null;
   const theme = THEMES[deptCode] || THEMES.BPH;
-  const isEB = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Dept', 'Head of Division', 'Steering Committee'].includes(member.position);
+  // Perbaikan isEB untuk "Vice Head of Department"
+  const isEB = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Department', 'Head of Division', 'Steering Committee'].includes(member.position);
 
   return (
     <div className={`bg-white rounded-2xl border ${theme.border} ${theme.shadow} p-5 flex flex-col items-center text-center hover:shadow-md transition-all duration-300 relative overflow-hidden w-full max-w-[200px] mx-auto z-10`}>
@@ -60,9 +61,8 @@ const MemberCard = ({ member, deptCode }) => {
 // Garis Lurus Tunggal
 const VLine = ({ height = 'h-8', color = 'bg-gray-200' }) => <div className={`w-px ${height} ${color} mx-auto relative z-0`}></div>;
 
-// Garis Bercabang (SVG)
+// Garis Bercabang (SVG) - Disempurnakan
 const BranchSVG = ({ count, strokeColor }) => {
-  // Hitung persentase posisi garis turun berdasarkan jumlah cabang
   const lines = [];
   if (count === 2) {
     lines.push(25, 75);
@@ -72,29 +72,23 @@ const BranchSVG = ({ count, strokeColor }) => {
     lines.push(12.5, 37.5, 62.5, 87.5);
   }
 
-  // Koordinat SVG: viewbox 0 0 100 100
-  // M 50 0 -> Pindah ke atas tengah
-  // L 50 50 -> Tarik garis ke tengah (vertikal)
-  // M x1 50 -> Pindah ke ujung kiri
-  // L x2 50 -> Tarik garis ke ujung kanan (horizontal)
-  // M x 50 L x 100 -> Tarik garis turun di setiap posisi 'x'
-  
   const minX = lines[0];
   const maxX = lines[lines.length - 1];
 
+  // Mengubah rasio tinggi. Turun sampai 35%, lalu belok. Sisa 65% untuk turun ke card.
   return (
-    <div className="hidden md:block w-full h-8 relative z-0">
+    <div className="hidden md:block w-full h-12 relative z-0">
       <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute top-0 left-0">
         <path
           d={`
-            M 50 0 L 50 50 
-            M ${minX} 50 L ${maxX} 50
-            ${lines.map(x => `M ${x} 50 L ${x} 100`).join(' ')}
+            M 50 0 L 50 35 
+            M ${minX} 35 L ${maxX} 35
+            ${lines.map(x => `M ${x} 35 L ${x} 100`).join(' ')}
           `}
           stroke={strokeColor}
           strokeWidth="1"
           fill="none"
-          vectorEffect="non-scaling-stroke" // Rahasia garis tetap setebal 1px walau di stretch!
+          vectorEffect="non-scaling-stroke"
         />
       </svg>
     </div>
@@ -134,7 +128,7 @@ const OurTeam = () => {
 
   // 3. ERBD
   const erbdKadep = users.find(u => u.dept === 'ERBD' && u.position === 'Head of Department');
-  const erbdWakadep = users.find(u => u.dept === 'ERBD' && u.position === 'Vice Head of Dept');
+  const erbdWakadep = users.find(u => u.dept === 'ERBD' && u.position === 'Vice Head of Department'); // Perbaikan Typo
   const erbdTeams = ['Product Partnership', 'University Network', 'Government Relations', 'Alumni & Ext. Outreach'].map(div => ({
     name: div,
     tl: users.find(u => u.dept === 'ERBD' && u.division === div && u.position === 'Team Leader'),
@@ -227,7 +221,7 @@ const OurTeam = () => {
                 <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto">
                   <h3 className={`text-sm font-black uppercase tracking-widest mb-1 ${THEMES.ADV.text}`}>Steering Committee</h3>
                   
-                  {/* SVG CONNECT: ADV SC (3 Kolom) */}
+                  {/* SVG CONNECT: ADV SC (3 Kolom) - VLine Dihapus agar SVG sentuh card */}
                   {advSC.length === 3 ? (
                     <div className="w-full mt-2">
                       <BranchSVG count={3} strokeColor={THEMES.ADV.stroke} />

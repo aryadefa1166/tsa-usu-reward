@@ -8,8 +8,7 @@ import { Loader2, Building2, Crown, ShieldCheck } from 'lucide-react';
 // ==========================================
 const THEMES = {
   BPH: { border: 'border-pink-200', bg: 'bg-pink-50', text: 'text-pink-600', shadow: 'shadow-pink-100/50', gradient: 'from-pink-400 to-pink-600', line: 'border-pink-300', vline: 'bg-pink-300', iconBg: 'bg-pink-50' },
-  // PERBAIKAN ADV: Menggunakan palet Coklat Elegan (Amber/Stone)
-  ADV: { border: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-800', shadow: 'shadow-amber-100/50', gradient: 'from-amber-600 to-amber-800', line: 'border-amber-300', vline: 'bg-amber-300', iconBg: 'bg-amber-50' },
+  ADV: { border: 'border-orange-200', bg: 'bg-orange-50', text: 'text-orange-800', shadow: 'shadow-orange-100/50', gradient: 'from-orange-500 to-orange-700', line: 'border-orange-300', vline: 'bg-orange-300', iconBg: 'bg-orange-50' },
   ERBD: { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-600', shadow: 'shadow-emerald-100/50', gradient: 'from-emerald-400 to-emerald-600', line: 'border-emerald-300', vline: 'bg-emerald-300', iconBg: 'bg-emerald-50' },
   MD: { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-600', shadow: 'shadow-purple-100/50', gradient: 'from-purple-400 to-purple-600', line: 'border-purple-300', vline: 'bg-purple-300', iconBg: 'bg-purple-50' },
   STD: { border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-600', shadow: 'shadow-blue-100/50', gradient: 'from-blue-400 to-blue-600', line: 'border-blue-300', vline: 'bg-blue-300', iconBg: 'bg-blue-50' },
@@ -58,7 +57,7 @@ const MemberCard = ({ member, deptCode }) => {
 // ==========================================
 // KONEKTOR GARIS (UI HELPERS)
 // ==========================================
-const VLine = ({ height = 'h-8', color }) => <div className={`w-px ${height} ${color} mx-auto relative z-0`}></div>;
+const VLine = ({ height = 'h-8', color = 'bg-gray-200' }) => <div className={`w-px ${height} ${color} mx-auto relative z-0`}></div>;
 
 const OurTeam = () => {
   const [users, setUsers] = useState([]);
@@ -162,12 +161,10 @@ const OurTeam = () => {
                   <div className="w-full max-w-4xl mx-auto">
                     <div className="hidden md:grid grid-cols-2 gap-6 w-full relative">
                       <div className="w-full flex justify-end">
-                        {/* Sudut Kiri (Batas Atas dan Kanan) */}
-                        <div className={`w-1/2 h-8 border-t border-r ${THEMES.BPH.line} rounded-tr-none`}></div>
+                        <div className={`w-1/2 h-8 border-t border-r ${THEMES.BPH.line}`}></div>
                       </div>
                       <div className="w-full flex justify-start">
-                        {/* Sudut Kanan (Batas Atas dan Kiri) */}
-                        <div className={`w-1/2 h-8 border-t border-l ${THEMES.BPH.line} rounded-tl-none`}></div>
+                        <div className={`w-1/2 h-8 border-t border-l ${THEMES.BPH.line}`}></div>
                       </div>
                     </div>
                     
@@ -200,17 +197,14 @@ const OurTeam = () => {
                     <div className="w-full mt-2">
                       <div className="hidden md:grid grid-cols-3 gap-6 w-full relative">
                         <div className="w-full flex justify-end">
-                          {/* Sudut Kiri */}
                           <div className={`w-1/2 h-8 border-t border-r ${THEMES.ADV.line}`}></div>
                         </div>
                         <div className="w-full flex justify-center">
-                          {/* T-Junction Tengah */}
-                          <div className={`w-full h-8 border-t border-x-0 ${THEMES.ADV.line} relative`}>
+                          <div className={`w-full h-8 border-t ${THEMES.ADV.line} relative`}>
                              <div className={`absolute top-0 bottom-0 left-1/2 w-px -translate-x-1/2 ${THEMES.ADV.vline}`}></div>
                           </div>
                         </div>
                         <div className="w-full flex justify-start">
-                          {/* Sudut Kanan */}
                           <div className={`w-1/2 h-8 border-t border-l ${THEMES.ADV.line}`}></div>
                         </div>
                       </div>

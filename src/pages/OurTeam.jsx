@@ -8,7 +8,7 @@ import { Loader2, Building2, Crown, ShieldCheck } from 'lucide-react';
 // ==========================================
 const THEMES = {
   BPH: { border: 'border-pink-200', bg: 'bg-pink-50', text: 'text-pink-600', shadow: 'shadow-pink-100/50', gradient: 'from-pink-400 to-pink-600', line: 'border-pink-300', vline: 'bg-pink-300', iconBg: 'bg-pink-50' },
-  ADV: { border: 'border-amber-200', bg: 'bg-amber-50', text: 'text-amber-800', shadow: 'shadow-amber-100/50', gradient: 'from-amber-600 to-amber-800', line: 'border-amber-300', vline: 'bg-amber-300', iconBg: 'bg-amber-50' },
+  ADV: { border: 'border-stone-200', bg: 'bg-stone-50', text: 'text-stone-800', shadow: 'shadow-stone-100/50', gradient: 'from-stone-600 to-stone-800', line: 'border-stone-300', vline: 'bg-stone-300', iconBg: 'bg-stone-50' },
   ERBD: { border: 'border-emerald-200', bg: 'bg-emerald-50', text: 'text-emerald-600', shadow: 'shadow-emerald-100/50', gradient: 'from-emerald-400 to-emerald-600', line: 'border-emerald-300', vline: 'bg-emerald-300', iconBg: 'bg-emerald-50' },
   MD: { border: 'border-purple-200', bg: 'bg-purple-50', text: 'text-purple-600', shadow: 'shadow-purple-100/50', gradient: 'from-purple-400 to-purple-600', line: 'border-purple-300', vline: 'bg-purple-300', iconBg: 'bg-purple-50' },
   STD: { border: 'border-blue-200', bg: 'bg-blue-50', text: 'text-blue-600', shadow: 'shadow-blue-100/50', gradient: 'from-blue-400 to-blue-600', line: 'border-blue-300', vline: 'bg-blue-300', iconBg: 'bg-blue-50' },

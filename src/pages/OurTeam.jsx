@@ -60,7 +60,7 @@ const MemberCard = ({ member, deptCode }) => {
 // Garis Lurus Tunggal
 const VLine = ({ height = 'h-8', color = 'bg-gray-200' }) => <div className={`w-px ${height} ${color} mx-auto relative z-0`}></div>;
 
-// Garis Bercabang (SVG) - Versi Sempurna
+// Garis Bercabang (SVG) - Versi Sempurna (The 2x Rule Proporsi)
 const BranchSVG = ({ count, strokeColor, hideTopLine = false }) => {
   const lines = [];
   if (count === 2) {
@@ -74,11 +74,12 @@ const BranchSVG = ({ count, strokeColor, hideTopLine = false }) => {
   const minX = lines[0];
   const maxX = lines[lines.length - 1];
 
-  // Jika hideTopLine true (seperti untuk SC), maka garis tengah atas ditiadakan
+  // Garis atas akan digambar sampai titik tengah (50) jika tidak disembunyikan
   const topLine = hideTopLine ? '' : 'M 50 0 L 50 50';
 
+  // Tinggi diubah menjadi h-16 (64px) agar jarak garis vertikal sama dengan VLine biasa
   return (
-    <div className="hidden md:block w-full h-8 relative z-0">
+    <div className="hidden md:block w-full h-16 relative z-0">
       <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute top-0 left-0">
         <path
           d={`

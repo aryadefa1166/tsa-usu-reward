@@ -15,7 +15,7 @@ const THEMES = {
 };
 
 // ==========================================
-// KOMPONEN CARD MEMBER (ASLI)
+// KOMPONEN CARD MEMBER (ASLI DARI KAMU)
 // ==========================================
 const MemberCard = ({ member, deptCode }) => {
   if (!member) return null;
@@ -57,7 +57,7 @@ const MemberCard = ({ member, deptCode }) => {
 // ==========================================
 // KONEKTOR GARIS (UI HELPERS)
 // ==========================================
-const VLine = ({ height = 'h-8', color = 'bg-gray-200' }) => <div className={`w-px ${height} ${color} mx-auto`}></div>;
+const VLine = ({ height = 'h-8', color = 'bg-gray-200' }) => <div className={`w-px ${height} ${color} mx-auto relative z-0`}></div>;
 
 const OurTeam = () => {
   const [users, setUsers] = useState([]);
@@ -122,13 +122,6 @@ const OurTeam = () => {
     return [col1, col2];
   };
 
-  const TSAUSUFrame = () => (
-    <>
-      <div className="absolute inset-0 border-[3px] border-tsa-green rounded-[1.4rem] pointer-events-none z-0 opacity-80"></div>
-      <div className="absolute inset-[5px] border-2 border-tsa-gold rounded-[1.1rem] pointer-events-none z-0 opacity-60"></div>
-    </>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-20 md:pb-10 overflow-x-hidden">
       <Navbar />
@@ -149,37 +142,38 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 1: BOARD OF DIRECTORS (BPH) */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl shadow-sm p-10">
-              <TSAUSUFrame />
-              <div className="relative z-10 flex flex-col items-center mb-10">
-                <div className={`p-3 ${THEMES.BPH.iconBg} rounded-2xl mb-3 border ${THEMES.BPH.border}`}>
-                  <Crown size={28} className={THEMES.BPH.text} />
-                </div>
-                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.BPH.text}`}>Board of Directors</h2>
-              </div>
-              
-              <div className="relative z-10 flex flex-col items-center">
-                <MemberCard member={president} deptCode="BPH" />
-                <VLine height="h-8" color={THEMES.BPH.line} />
-                <MemberCard member={vp} deptCode="BPH" />
-                <VLine height="h-8" color={THEMES.BPH.line} />
-                
-                {/* SYSTEM CETAKAN KEMBAR (GRID MIRRORING): BPH (2 Kolom) */}
-                <div className="w-full max-w-4xl mx-auto">
-                  <div className="hidden md:grid grid-cols-2 gap-6 w-full relative">
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 right-0 w-1/2 h-px ${THEMES.BPH.line}`}></div>
-                      <VLine height="h-8" color={THEMES.BPH.line} />
-                    </div>
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 left-0 w-1/2 h-px ${THEMES.BPH.line}`}></div>
-                      <VLine height="h-8" color={THEMES.BPH.line} />
-                    </div>
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10">
+              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+                <div className="relative z-10 flex flex-col items-center mb-10">
+                  <div className={`p-3 ${THEMES.BPH.iconBg} rounded-2xl mb-3 border ${THEMES.BPH.border}`}>
+                    <Crown size={28} className={THEMES.BPH.text} />
                   </div>
+                  <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.BPH.text}`}>Board of Directors</h2>
+                </div>
+                
+                <div className="relative z-10 flex flex-col items-center">
+                  <MemberCard member={president} deptCode="BPH" />
+                  <VLine height="h-8" color={THEMES.BPH.line} />
+                  <MemberCard member={vp} deptCode="BPH" />
+                  <VLine height="h-8" color={THEMES.BPH.line} />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6 md:mt-0">
-                    <div className="flex justify-center"><MemberCard member={secretary} deptCode="BPH" /></div>
-                    <div className="flex justify-center"><MemberCard member={treasurer} deptCode="BPH" /></div>
+                  {/* SYSTEM CETAKAN KEMBAR OVERLAP: BPH (2 Kolom) */}
+                  <div className="w-full max-w-4xl mx-auto">
+                    <div className="hidden md:grid grid-cols-2 gap-6 w-full relative">
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -right-[1px] w-[calc(50%+2px)] h-px ${THEMES.BPH.line}`}></div>
+                        <VLine height="h-8" color={THEMES.BPH.line} />
+                      </div>
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -left-[1px] w-[calc(50%+2px)] h-px ${THEMES.BPH.line}`}></div>
+                        <VLine height="h-8" color={THEMES.BPH.line} />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6 md:mt-0">
+                      <div className="flex justify-center"><MemberCard member={secretary} deptCode="BPH" /></div>
+                      <div className="flex justify-center"><MemberCard member={treasurer} deptCode="BPH" /></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -188,76 +182,38 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 2: ADVISORY BOARD (ADV) */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl shadow-sm p-10 mt-10">
-              <TSAUSUFrame />
-              <div className="relative z-10 flex flex-col items-center mb-10">
-                <div className={`p-3 ${THEMES.ADV.iconBg} rounded-2xl mb-3 border ${THEMES.ADV.border}`}>
-                  <ShieldCheck size={28} className={THEMES.ADV.text} />
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10 mt-10">
+              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+                <div className="relative z-10 flex flex-col items-center mb-10">
+                  <div className={`p-3 ${THEMES.ADV.iconBg} rounded-2xl mb-3 border ${THEMES.ADV.border}`}>
+                    <ShieldCheck size={28} className={THEMES.ADV.text} />
+                  </div>
+                  <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.ADV.text}`}>Advisory Board</h2>
                 </div>
-                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.ADV.text}`}>Advisory Board</h2>
-              </div>
-              
-              <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto">
-                <h3 className={`text-sm font-black uppercase tracking-widest mb-1 ${THEMES.ADV.text}`}>Steering Committee</h3>
                 
-                {/* SYSTEM CETAKAN KEMBAR: ADV SC (3 Kolom) */}
-                {advSC.length === 3 ? (
-                  <div className="w-full mt-2">
-                    <div className="hidden md:grid grid-cols-3 gap-6 w-full relative">
-                      <div className="w-full relative">
-                        <div className={`absolute top-0 right-0 w-1/2 h-px ${THEMES.ADV.line}`}></div>
-                        <VLine height="h-8" color={THEMES.ADV.line} />
-                      </div>
-                      <div className="w-full relative">
-                        <div className={`absolute top-0 left-0 w-full h-px ${THEMES.ADV.line}`}></div>
-                        <VLine height="h-8" color={THEMES.ADV.line} />
-                      </div>
-                      <div className="w-full relative">
-                        <div className={`absolute top-0 left-0 w-1/2 h-px ${THEMES.ADV.line}`}></div>
-                        <VLine height="h-8" color={THEMES.ADV.line} />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-6 md:mt-0">
-                      {advSC.map(member => (
-                        <div key={member.id} className="flex justify-center w-full">
-                          <MemberCard member={member} deptCode="ADV" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap justify-center gap-6 z-10 w-full mt-4">
-                    {advSC.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
-                  </div>
-                )}
-                
-                {/* Lapis 2: MONEV Head */}
-                <div className="flex flex-col items-center mt-16 w-full">
-                  <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
-                  <MemberCard member={advMonevHead} deptCode="ADV" />
-                  {advMonevStaff.length > 0 && <VLine height="h-8" color={THEMES.ADV.line} />}
+                <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto">
+                  <h3 className={`text-sm font-black uppercase tracking-widest mb-1 ${THEMES.ADV.text}`}>Steering Committee</h3>
                   
-                  {/* SYSTEM CETAKAN KEMBAR: ADV MONEV (3 Kolom) */}
-                  {advMonevStaff.length === 3 ? (
-                    <div className="w-full">
+                  {/* SYSTEM CETAKAN KEMBAR OVERLAP: ADV SC (3 Kolom) */}
+                  {advSC.length === 3 ? (
+                    <div className="w-full mt-2">
                       <div className="hidden md:grid grid-cols-3 gap-6 w-full relative">
                         <div className="w-full relative">
-                          <div className={`absolute top-0 right-0 w-1/2 h-px ${THEMES.ADV.line}`}></div>
+                          <div className={`absolute top-0 -right-[1px] w-[calc(50%+2px)] h-px ${THEMES.ADV.line}`}></div>
                           <VLine height="h-8" color={THEMES.ADV.line} />
                         </div>
                         <div className="w-full relative">
-                          <div className={`absolute top-0 left-0 w-full h-px ${THEMES.ADV.line}`}></div>
+                          <div className={`absolute top-0 -left-[2px] w-[calc(100%+4px)] h-px ${THEMES.ADV.line}`}></div>
                           <VLine height="h-8" color={THEMES.ADV.line} />
                         </div>
                         <div className="w-full relative">
-                          <div className={`absolute top-0 left-0 w-1/2 h-px ${THEMES.ADV.line}`}></div>
+                          <div className={`absolute top-0 -left-[1px] w-[calc(50%+2px)] h-px ${THEMES.ADV.line}`}></div>
                           <VLine height="h-8" color={THEMES.ADV.line} />
                         </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-6 md:mt-0">
-                        {advMonevStaff.map(member => (
+                        {advSC.map(member => (
                           <div key={member.id} className="flex justify-center w-full">
                             <MemberCard member={member} deptCode="ADV" />
                           </div>
@@ -265,10 +221,49 @@ const OurTeam = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-wrap justify-center gap-4 mt-6 md:mt-0 w-full">
-                      {advMonevStaff.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
+                    <div className="flex flex-wrap justify-center gap-6 z-10 w-full mt-4">
+                      {advSC.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
                     </div>
                   )}
+                  
+                  {/* Lapis 2: MONEV Head */}
+                  <div className="flex flex-col items-center mt-16 w-full">
+                    <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
+                    <MemberCard member={advMonevHead} deptCode="ADV" />
+                    {advMonevStaff.length > 0 && <VLine height="h-8" color={THEMES.ADV.line} />}
+                    
+                    {/* SYSTEM CETAKAN KEMBAR OVERLAP: ADV MONEV (3 Kolom) */}
+                    {advMonevStaff.length === 3 ? (
+                      <div className="w-full">
+                        <div className="hidden md:grid grid-cols-3 gap-6 w-full relative">
+                          <div className="w-full relative">
+                            <div className={`absolute top-0 -right-[1px] w-[calc(50%+2px)] h-px ${THEMES.ADV.line}`}></div>
+                            <VLine height="h-8" color={THEMES.ADV.line} />
+                          </div>
+                          <div className="w-full relative">
+                            <div className={`absolute top-0 -left-[2px] w-[calc(100%+4px)] h-px ${THEMES.ADV.line}`}></div>
+                            <VLine height="h-8" color={THEMES.ADV.line} />
+                          </div>
+                          <div className="w-full relative">
+                            <div className={`absolute top-0 -left-[1px] w-[calc(50%+2px)] h-px ${THEMES.ADV.line}`}></div>
+                            <VLine height="h-8" color={THEMES.ADV.line} />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-6 md:mt-0">
+                          {advMonevStaff.map(member => (
+                            <div key={member.id} className="flex justify-center w-full">
+                              <MemberCard member={member} deptCode="ADV" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap justify-center gap-4 mt-6 md:mt-0 w-full">
+                        {advMonevStaff.map(member => <MemberCard key={member.id} member={member} deptCode="ADV" />)}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </section>
@@ -276,232 +271,231 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 3: ERBD */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl shadow-sm p-10">
-              <TSAUSUFrame />
-              <div className="relative z-10 flex flex-col items-center mb-10">
-                <div className={`p-3 ${THEMES.ERBD.iconBg} rounded-2xl mb-3 border ${THEMES.ERBD.border}`}>
-                  <Building2 size={28} className={THEMES.ERBD.text} />
-                </div>
-                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.ERBD.text}`}>ERBD Department</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">External Relations & Business Development</p>
-              </div>
-
-              <div className="relative z-10 flex flex-col items-center w-full">
-                <MemberCard member={erbdKadep} deptCode="ERBD" />
-                <VLine height="h-8" color={THEMES.ERBD.line} />
-                <MemberCard member={erbdWakadep} deptCode="ERBD" />
-                <VLine height="h-8" color={THEMES.ERBD.line} />
-                
-                {/* SYSTEM CETAKAN KEMBAR: ERBD (4 Kolom) */}
-                <div className="w-full">
-                  <div className="hidden lg:grid grid-cols-4 gap-6 w-full relative">
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 right-0 w-1/2 h-px ${THEMES.ERBD.line}`}></div>
-                      <VLine height="h-8" color={THEMES.ERBD.line} />
-                    </div>
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 left-0 w-full h-px ${THEMES.ERBD.line}`}></div>
-                      <VLine height="h-8" color={THEMES.ERBD.line} />
-                    </div>
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 left-0 w-full h-px ${THEMES.ERBD.line}`}></div>
-                      <VLine height="h-8" color={THEMES.ERBD.line} />
-                    </div>
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 left-0 w-1/2 h-px ${THEMES.ERBD.line}`}></div>
-                      <VLine height="h-8" color={THEMES.ERBD.line} />
-                    </div>
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10">
+              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+                <div className="relative z-10 flex flex-col items-center mb-10">
+                  <div className={`p-3 ${THEMES.ERBD.iconBg} rounded-2xl mb-3 border ${THEMES.ERBD.border}`}>
+                    <Building2 size={28} className={THEMES.ERBD.text} />
                   </div>
+                  <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.ERBD.text}`}>ERBD Department</h2>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">External Relations & Business Development</p>
+                </div>
+
+                <div className="relative z-10 flex flex-col items-center w-full">
+                  <MemberCard member={erbdKadep} deptCode="ERBD" />
+                  <VLine height="h-8" color={THEMES.ERBD.line} />
+                  <MemberCard member={erbdWakadep} deptCode="ERBD" />
+                  <VLine height="h-8" color={THEMES.ERBD.line} />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-6 lg:mt-0">
-                    {erbdTeams.map(team => (
-                      <div key={team.name} className="flex flex-col items-center w-full">
-                        <MemberCard member={team.tl} deptCode="ERBD" />
-                        
-                        <div className="flex flex-col items-center w-full">
-                          {team.staff.map((member) => (
-                            <div key={member.id} className="flex flex-col items-center w-full">
-                              <VLine height="h-8" color={THEMES.ERBD.line} />
-                              <MemberCard member={member} deptCode="ERBD" />
-                            </div>
-                          ))}
-                        </div>
+                  {/* SYSTEM CETAKAN KEMBAR OVERLAP: ERBD (4 Kolom) */}
+                  <div className="w-full">
+                    <div className="hidden lg:grid grid-cols-4 gap-6 w-full relative">
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -right-[1px] w-[calc(50%+2px)] h-px ${THEMES.ERBD.line}`}></div>
+                        <VLine height="h-8" color={THEMES.ERBD.line} />
                       </div>
-                    ))}
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -left-[2px] w-[calc(100%+4px)] h-px ${THEMES.ERBD.line}`}></div>
+                        <VLine height="h-8" color={THEMES.ERBD.line} />
+                      </div>
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -left-[2px] w-[calc(100%+4px)] h-px ${THEMES.ERBD.line}`}></div>
+                        <VLine height="h-8" color={THEMES.ERBD.line} />
+                      </div>
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -left-[1px] w-[calc(50%+2px)] h-px ${THEMES.ERBD.line}`}></div>
+                        <VLine height="h-8" color={THEMES.ERBD.line} />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-6 lg:mt-0">
+                      {erbdTeams.map(team => (
+                        <div key={team.name} className="flex flex-col items-center w-full">
+                          <MemberCard member={team.tl} deptCode="ERBD" />
+                          
+                          <div className="flex flex-col items-center w-full">
+                            {team.staff.map((member) => (
+                              <div key={member.id} className="flex flex-col items-center w-full">
+                                <VLine height="h-8" color={THEMES.ERBD.line} />
+                                <MemberCard member={member} deptCode="ERBD" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             </section>
 
             {/* ========================================== */}
-            {/* TIER 4: MD (FORMASI 4 KOLOM STAFF) */}
+            {/* TIER 4: MD */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl shadow-sm p-10">
-              <TSAUSUFrame />
-              <div className="relative z-10 flex flex-col items-center mb-10">
-                <div className={`p-3 ${THEMES.MD.iconBg} rounded-2xl mb-3 border ${THEMES.MD.border}`}>
-                  <Building2 size={28} className={THEMES.MD.text} />
-                </div>
-                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.MD.text}`}>MD Department</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Media Education</p>
-              </div>
-
-              <div className="relative z-10 flex flex-col items-center w-full">
-                <MemberCard member={mdStruct.kadep} deptCode="MD" />
-                <VLine height="h-8" color={THEMES.MD.line} />
-                
-                {/* SYSTEM CETAKAN KEMBAR: MD KADIV (2 Kolom) */}
-                <div className="w-full">
-                  <div className="hidden lg:grid grid-cols-2 gap-6 w-full relative">
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 right-0 w-1/2 h-px ${THEMES.MD.line}`}></div>
-                      <VLine height="h-8" color={THEMES.MD.line} />
-                    </div>
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 left-0 w-1/2 h-px ${THEMES.MD.line}`}></div>
-                      <VLine height="h-8" color={THEMES.MD.line} />
-                    </div>
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10">
+              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+                <div className="relative z-10 flex flex-col items-center mb-10">
+                  <div className={`p-3 ${THEMES.MD.iconBg} rounded-2xl mb-3 border ${THEMES.MD.border}`}>
+                    <Building2 size={28} className={THEMES.MD.text} />
                   </div>
+                  <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.MD.text}`}>MD Department</h2>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Media Education</p>
+                </div>
+
+                <div className="relative z-10 flex flex-col items-center w-full">
+                  <MemberCard member={mdStruct.kadep} deptCode="MD" />
+                  <VLine height="h-8" color={THEMES.MD.line} />
                   
-                  {/* GRID KADIV (2 Kolom) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-6 lg:mt-0 relative">
-                    {mdStruct.divs.map((div, divIndex) => {
-                      const [col1Staff, col2Staff] = splitStaffToTwoColumns(div.staff);
-                      
-                      return (
-                        <div key={div.name} className="flex flex-col items-center w-full">
-                          <MemberCard member={div.kadiv} deptCode="MD" />
-                          {div.staff.length > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
-                          
-                          {/* SYSTEM CETAKAN KEMBAR: MD STAFF (2 Kolom Per Divisi) */}
-                          {div.staff.length > 0 && (
-                            <div className="w-full">
-                              <div className="hidden md:grid grid-cols-2 gap-6 w-full relative">
-                                <div className="w-full relative">
-                                  <div className={`absolute top-0 right-0 w-1/2 h-px ${THEMES.MD.line}`}></div>
-                                  <VLine height="h-8" color={THEMES.MD.line} />
-                                </div>
-                                <div className="w-full relative">
-                                  <div className={`absolute top-0 left-0 w-1/2 h-px ${THEMES.MD.line}`}></div>
-                                  <VLine height="h-8" color={THEMES.MD.line} />
+                  {/* SYSTEM CETAKAN KEMBAR OVERLAP: MD KADIV (2 Kolom) */}
+                  <div className="w-full">
+                    <div className="hidden lg:grid grid-cols-2 gap-6 w-full relative">
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -right-[1px] w-[calc(50%+2px)] h-px ${THEMES.MD.line}`}></div>
+                        <VLine height="h-8" color={THEMES.MD.line} />
+                      </div>
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -left-[1px] w-[calc(50%+2px)] h-px ${THEMES.MD.line}`}></div>
+                        <VLine height="h-8" color={THEMES.MD.line} />
+                      </div>
+                    </div>
+                    
+                    {/* GRID KADIV */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-6 lg:mt-0 relative">
+                      {mdStruct.divs.map((div, divIndex) => {
+                        const [col1Staff, col2Staff] = splitStaffToTwoColumns(div.staff);
+                        
+                        return (
+                          <div key={div.name} className="flex flex-col items-center w-full">
+                            <MemberCard member={div.kadiv} deptCode="MD" />
+                            {div.staff.length > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
+                            
+                            {/* SYSTEM CETAKAN KEMBAR OVERLAP: MD STAFF */}
+                            {div.staff.length > 0 && (
+                              <div className="w-full">
+                                <div className="hidden md:grid grid-cols-2 gap-6 w-full relative">
+                                  <div className="w-full relative">
+                                    <div className={`absolute top-0 -right-[1px] w-[calc(50%+2px)] h-px ${THEMES.MD.line}`}></div>
+                                    <VLine height="h-8" color={THEMES.MD.line} />
+                                  </div>
+                                  <div className="w-full relative">
+                                    <div className={`absolute top-0 -left-[1px] w-[calc(50%+2px)] h-px ${THEMES.MD.line}`}></div>
+                                    <VLine height="h-8" color={THEMES.MD.line} />
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {/* GRID 2 KOLOM STAFF */}
-                          <div className="grid grid-cols-2 gap-6 w-full mt-6 md:mt-0">
-                            {/* Kolom Kiri Staff */}
-                            <div className="flex flex-col items-center w-full">
-                              {col1Staff.map((member, idx) => (
-                                <div key={member.id} className="flex flex-col items-center w-full">
-                                  {idx > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
-                                  <MemberCard member={member} deptCode="MD" />
-                                </div>
-                              ))}
+                            {/* GRID 2 KOLOM STAFF */}
+                            <div className="grid grid-cols-2 gap-6 w-full mt-6 md:mt-0">
+                              <div className="flex flex-col items-center w-full">
+                                {col1Staff.map((member, idx) => (
+                                  <div key={member.id} className="flex flex-col items-center w-full">
+                                    {idx > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
+                                    <MemberCard member={member} deptCode="MD" />
+                                  </div>
+                                ))}
+                              </div>
+                              
+                              <div className="flex flex-col items-center w-full">
+                                {col2Staff.map((member, idx) => (
+                                  <div key={member.id} className="flex flex-col items-center w-full">
+                                    {idx > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
+                                    <MemberCard member={member} deptCode="MD" />
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                            
-                            {/* Kolom Kanan Staff */}
-                            <div className="flex flex-col items-center w-full">
-                              {col2Staff.map((member, idx) => (
-                                <div key={member.id} className="flex flex-col items-center w-full">
-                                  {idx > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
-                                  <MemberCard member={member} deptCode="MD" />
-                                </div>
-                              ))}
-                            </div>
+
                           </div>
-
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
             </section>
 
             {/* ========================================== */}
-            {/* TIER 5: STD (FORMASI 4 KOLOM STAFF) */}
+            {/* TIER 5: STD */}
             {/* ========================================== */}
-            <section className="relative bg-white rounded-3xl shadow-sm p-10">
-              <TSAUSUFrame />
-              <div className="relative z-10 flex flex-col items-center mb-10">
-                <div className={`p-3 ${THEMES.STD.iconBg} rounded-2xl mb-3 border ${THEMES.STD.border}`}>
-                  <Building2 size={28} className={THEMES.STD.text} />
-                </div>
-                <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.STD.text}`}>STD Department</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Staff & Talent Development</p>
-              </div>
-
-              <div className="relative z-10 flex flex-col items-center w-full">
-                <MemberCard member={stdStruct.kadep} deptCode="STD" />
-                <VLine height="h-8" color={THEMES.STD.line} />
-                
-                {/* SYSTEM CETAKAN KEMBAR: STD KADIV (2 Kolom) */}
-                <div className="w-full">
-                  <div className="hidden lg:grid grid-cols-2 gap-6 w-full relative">
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 right-0 w-1/2 h-px ${THEMES.STD.line}`}></div>
-                      <VLine height="h-8" color={THEMES.STD.line} />
-                    </div>
-                    <div className="w-full relative">
-                      <div className={`absolute top-0 left-0 w-1/2 h-px ${THEMES.STD.line}`}></div>
-                      <VLine height="h-8" color={THEMES.STD.line} />
-                    </div>
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10">
+              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+                <div className="relative z-10 flex flex-col items-center mb-10">
+                  <div className={`p-3 ${THEMES.STD.iconBg} rounded-2xl mb-3 border ${THEMES.STD.border}`}>
+                    <Building2 size={28} className={THEMES.STD.text} />
                   </div>
+                  <h2 className={`text-xl font-black uppercase tracking-widest ${THEMES.STD.text}`}>STD Department</h2>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Staff & Talent Development</p>
+                </div>
+
+                <div className="relative z-10 flex flex-col items-center w-full">
+                  <MemberCard member={stdStruct.kadep} deptCode="STD" />
+                  <VLine height="h-8" color={THEMES.STD.line} />
                   
-                  {/* GRID KADIV (2 Kolom) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-6 lg:mt-0 relative">
-                    {stdStruct.divs.map((div, divIndex) => {
-                      const [col1Staff, col2Staff] = splitStaffToTwoColumns(div.staff);
-                      
-                      return (
-                        <div key={div.name} className="flex flex-col items-center w-full">
-                          <MemberCard member={div.kadiv} deptCode="STD" />
-                          {div.staff.length > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
-                          
-                          {/* SYSTEM CETAKAN KEMBAR: STD STAFF (2 Kolom Per Divisi) */}
-                          {div.staff.length > 0 && (
-                            <div className="w-full">
-                              <div className="hidden md:grid grid-cols-2 gap-6 w-full relative">
-                                <div className="w-full relative">
-                                  <div className={`absolute top-0 right-0 w-1/2 h-px ${THEMES.STD.line}`}></div>
-                                  <VLine height="h-8" color={THEMES.STD.line} />
-                                </div>
-                                <div className="w-full relative">
-                                  <div className={`absolute top-0 left-0 w-1/2 h-px ${THEMES.STD.line}`}></div>
-                                  <VLine height="h-8" color={THEMES.STD.line} />
+                  {/* SYSTEM CETAKAN KEMBAR OVERLAP: STD KADIV (2 Kolom) */}
+                  <div className="w-full">
+                    <div className="hidden lg:grid grid-cols-2 gap-6 w-full relative">
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -right-[1px] w-[calc(50%+2px)] h-px ${THEMES.STD.line}`}></div>
+                        <VLine height="h-8" color={THEMES.STD.line} />
+                      </div>
+                      <div className="w-full relative">
+                        <div className={`absolute top-0 -left-[1px] w-[calc(50%+2px)] h-px ${THEMES.STD.line}`}></div>
+                        <VLine height="h-8" color={THEMES.STD.line} />
+                      </div>
+                    </div>
+                    
+                    {/* GRID KADIV */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-6 lg:mt-0 relative">
+                      {stdStruct.divs.map((div, divIndex) => {
+                        const [col1Staff, col2Staff] = splitStaffToTwoColumns(div.staff);
+                        
+                        return (
+                          <div key={div.name} className="flex flex-col items-center w-full">
+                            <MemberCard member={div.kadiv} deptCode="STD" />
+                            {div.staff.length > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
+                            
+                            {/* SYSTEM CETAKAN KEMBAR OVERLAP: STD STAFF */}
+                            {div.staff.length > 0 && (
+                              <div className="w-full">
+                                <div className="hidden md:grid grid-cols-2 gap-6 w-full relative">
+                                  <div className="w-full relative">
+                                    <div className={`absolute top-0 -right-[1px] w-[calc(50%+2px)] h-px ${THEMES.STD.line}`}></div>
+                                    <VLine height="h-8" color={THEMES.STD.line} />
+                                  </div>
+                                  <div className="w-full relative">
+                                    <div className={`absolute top-0 -left-[1px] w-[calc(50%+2px)] h-px ${THEMES.STD.line}`}></div>
+                                    <VLine height="h-8" color={THEMES.STD.line} />
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {/* GRID 2 KOLOM STAFF */}
-                          <div className="grid grid-cols-2 gap-6 w-full mt-6 md:mt-0">
-                            {/* Kolom Kiri Staff */}
-                            <div className="flex flex-col items-center w-full">
-                              {col1Staff.map((member, idx) => (
-                                <div key={member.id} className="flex flex-col items-center w-full">
-                                  {idx > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
-                                  <MemberCard member={member} deptCode="STD" />
-                                </div>
-                              ))}
+                            {/* GRID 2 KOLOM STAFF */}
+                            <div className="grid grid-cols-2 gap-6 w-full mt-6 md:mt-0">
+                              <div className="flex flex-col items-center w-full">
+                                {col1Staff.map((member, idx) => (
+                                  <div key={member.id} className="flex flex-col items-center w-full">
+                                    {idx > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
+                                    <MemberCard member={member} deptCode="STD" />
+                                  </div>
+                                ))}
+                              </div>
+                              
+                              <div className="flex flex-col items-center w-full">
+                                {col2Staff.map((member, idx) => (
+                                  <div key={member.id} className="flex flex-col items-center w-full">
+                                    {idx > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
+                                    <MemberCard member={member} deptCode="STD" />
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                            
-                            {/* Kolom Kanan Staff */}
-                            <div className="flex flex-col items-center w-full">
-                              {col2Staff.map((member, idx) => (
-                                <div key={member.id} className="flex flex-col items-center w-full">
-                                  {idx > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
-                                  <MemberCard member={member} deptCode="STD" />
-                                </div>
-                              ))}
-                            </div>
+
                           </div>
-
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>

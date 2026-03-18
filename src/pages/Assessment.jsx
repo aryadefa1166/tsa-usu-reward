@@ -54,6 +54,9 @@ const InputAssessment = () => {
   });
 
   const tabs = ['Q1', 'Q2', 'Q3', 'Q4'];
+  
+  // SECURITY: Access Control. Hanya BPH, ADV, KADEP (3), KADIV (4) yang bisa menilai
+  const isEvaluator = user?.role >= 2 && user?.role <= 4;
 
   useEffect(() => {
     fetchAdminSettings();
@@ -61,7 +64,7 @@ const InputAssessment = () => {
 
   // Fetch ulang data staff dan nilainya JIKA user ada dan status periode sudah ditarik
   useEffect(() => {
-    if (user && periodStatus[activeTab]) {
+    if (isEvaluator && periodStatus[activeTab]) {
        // Hemat resource: Jika status LOCKED, tidak perlu query data lengkap
        if (periodStatus[activeTab] === 'LOCKED') {
           setLoading(false);
@@ -69,7 +72,7 @@ const InputAssessment = () => {
           fetchStaffAndAssessments();
        }
     }
-  }, [user, activeTab, periodStatus]);
+  }, [user, activeTab, periodStatus, isEvaluator]);
 
   const fetchAdminSettings = async () => {
     try {
@@ -189,13 +192,11 @@ const InputAssessment = () => {
             [staffId]: { ...prev[staffId], id: data.id, isExisting: true }
          }));
       }
-      // UI Feedback ringan (Toast/Alert sukses)
-      // alert('Score saved successfully!');
     } catch (error) {
       alert("Failed to save score: " + error.message);
     } finally {
       setSubmittingId(null);
-      // Re-fetch untuk sinkronisasi mutlak (opsional, tapi bagus untuk update data)
+      // Re-fetch untuk sinkronisasi mutlak
       fetchStaffAndAssessments();
     }
   };
@@ -220,6 +221,22 @@ const InputAssessment = () => {
 
   const currentStatus = periodStatus[activeTab];
   const isReadOnly = currentStatus !== 'ACTIVE';
+
+  // PROTEKSI UI: Jika user bukan Evaluator (BPH/ADV/KADEP/KADIV), cegah render UI Form
+  if (!isEvaluator && user) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-6 mt-20 flex justify-center">
+          <div className="bg-red-50 border border-red-100 rounded-3xl p-10 flex flex-col items-center justify-center text-center max-w-lg shadow-sm">
+            <ShieldAlert size={40} className="text-red-400 mb-4" />
+            <h2 className="text-xl font-black text-tsa-dark mb-2">Access Denied</h2>
+            <p className="text-sm text-gray-500 font-medium">This page is strictly restricted and can only be accessed by Executive Board members (BPH, ADV, Head/Vice of Dept, Head of Div).</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">

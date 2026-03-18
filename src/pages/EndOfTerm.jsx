@@ -28,7 +28,7 @@ const StarRating = ({ label, value, onChange, readOnly }) => {
   );
 };
 
-const Voting = () => {
+const EndOfTerm = () => {
   const { user } = useAuth();
   
   const [usersList, setUsersList] = useState([]);
@@ -477,4 +477,4 @@ const Voting = () => {
   );
 };
 
-export default Voting;
+export default EndOfTerm;

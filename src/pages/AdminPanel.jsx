@@ -14,7 +14,7 @@ const ShieldIcon = () => (
   </div>
 );
 
-const ManageUsers = () => {
+const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users'); 
   
   // State User Database
@@ -949,4 +949,4 @@ const ManageUsers = () => {
   );
 };
 
-export default ManageUsers;
+export default AdminPanel;

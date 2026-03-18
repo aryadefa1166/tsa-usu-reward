@@ -40,7 +40,7 @@ const DIV_ORDER = {
 };
 
 // --- KOMPONEN UTAMA ---
-const InputAssessment = () => {
+const Assessment = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('Q1');
   
@@ -399,4 +399,4 @@ const InputAssessment = () => {
   );
 };
 
-export default InputAssessment;
+export default Assessment;

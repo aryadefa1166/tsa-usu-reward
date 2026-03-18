@@ -14,7 +14,7 @@ const DIV_ORDER = {
   STD: ['Staff Management', 'Talent Management', 'General']
 };
 
-const InputAttendance = () => {
+const Attendance = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('Q1');
   
@@ -411,4 +411,4 @@ const InputAttendance = () => {
   );
 };
 
-export default InputAttendance;
+export default Attendance;

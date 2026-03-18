@@ -17,15 +17,15 @@ const UpdatePassword = () => {
     e.preventDefault();
     setErrorMsg('');
 
-    // PERBAIKAN: Validasi terhadap password default yang baru
+    // PERBAIKAN: Validasi terhadap password default yang baru (Tanpa mengubah logika)
     if (newPassword === 'tsausu2026') {
-      return setErrorMsg('Password baru tidak boleh sama dengan password default (tsausu2026)!');
+      return setErrorMsg('New password cannot be the same as the default password!');
     }
     if (newPassword.length < 6) {
-      return setErrorMsg('Password minimal harus 6 karakter demi keamanan.');
+      return setErrorMsg('Password must be at least 6 characters long for security purposes.');
     }
     if (newPassword !== confirmPassword) {
-      return setErrorMsg('Konfirmasi password tidak cocok!');
+      return setErrorMsg('Password confirmation does not match!');
     }
 
     setLoading(true);
@@ -38,7 +38,7 @@ const UpdatePassword = () => {
 
       if (error) throw error;
 
-      alert('Security Update Successful! Password berhasil diubah.');
+      alert('Security Update Successful! Your password has been changed.');
       
       // 2. Update session di LocalStorage agar tidak terjebak loop 'needsPasswordUpdate'
       const currentSession = JSON.parse(localStorage.getItem('tsa_session'));
@@ -69,7 +69,7 @@ const UpdatePassword = () => {
           </div>
           <h1 className="text-2xl font-black text-tsa-dark tracking-tight">Security Alert</h1>
           <p className="text-sm text-gray-500 mt-2 font-medium">
-            Akun Anda (<strong className="text-tsa-dark">{user?.username}</strong>) masih menggunakan password default. Anda <strong>wajib</strong> menggantinya sekarang untuk melanjutkan.
+            Your account (<strong className="text-tsa-dark">{user?.username}</strong>) is currently using the default password. You are <strong>required</strong> to update it immediately to proceed.
           </p>
         </div>
 
@@ -89,7 +89,7 @@ const UpdatePassword = () => {
                 <input 
                   type="password" 
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-tsa-green focus:ring-1 focus:ring-tsa-green transition-all font-mono"
-                  placeholder="Minimal 6 karakter..."
+                  placeholder="Minimum 6 characters..."
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
@@ -104,7 +104,7 @@ const UpdatePassword = () => {
                 <input 
                   type="password" 
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-tsa-green focus:ring-1 focus:ring-tsa-green transition-all font-mono"
-                  placeholder="Ketik ulang password baru..."
+                  placeholder="Re-type your new password..."
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required

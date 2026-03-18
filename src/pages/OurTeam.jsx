@@ -197,7 +197,7 @@ const OurTeam = () => {
                   {/* SVG CONNECT: BPH (2 Kolom) */}
                   <div className="w-full flex flex-col items-center">
                      <BranchSVG count={2} strokeColor={THEMES.BPH.stroke} />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-6 md:mt-0 justify-items-center">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-0 md:mt-0 justify-items-center">
                       <div className="w-full flex justify-center"><MemberCard member={secretary} deptCode="BPH" /></div>
                       <div className="w-full flex justify-center"><MemberCard member={treasurer} deptCode="BPH" /></div>
                     </div>
@@ -225,7 +225,7 @@ const OurTeam = () => {
                   {advSC.length === 3 ? (
                     <div className="w-full mt-2">
                       <BranchSVG count={3} strokeColor={THEMES.ADV.stroke} />
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-6 md:mt-0">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-0 md:mt-0">
                         {advSC.map(member => (
                           <div key={member.id} className="flex justify-center w-full">
                             <MemberCard member={member} deptCode="ADV" />
@@ -249,7 +249,7 @@ const OurTeam = () => {
                     {advMonevStaff.length === 3 ? (
                       <div className="w-full">
                         <BranchSVG count={3} strokeColor={THEMES.ADV.stroke} />
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-6 md:mt-0">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-0 md:mt-0">
                           {advMonevStaff.map(member => (
                             <div key={member.id} className="flex justify-center w-full">
                               <MemberCard member={member} deptCode="ADV" />
@@ -290,7 +290,7 @@ const OurTeam = () => {
                   <div className="w-full">
                     <BranchSVG count={4} strokeColor={THEMES.ERBD.stroke} />
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-6 lg:mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-0 lg:mt-0">
                       {erbdTeams.map(team => (
                         <div key={team.name} className="flex flex-col items-center w-full">
                           <MemberCard member={team.tl} deptCode="ERBD" />
@@ -333,7 +333,7 @@ const OurTeam = () => {
                      <BranchSVG count={2} strokeColor={THEMES.MD.stroke} />
                     
                     {/* GRID KADIV */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-6 lg:mt-0 relative">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-0 lg:mt-0 relative">
                       {mdStruct.divs.map((div, divIndex) => {
                         const [col1Staff, col2Staff] = splitStaffToTwoColumns(div.staff);
                         
@@ -350,7 +350,7 @@ const OurTeam = () => {
                             )}
 
                             {/* GRID 2 KOLOM STAFF */}
-                            <div className="grid grid-cols-2 gap-6 w-full mt-6 md:mt-0">
+                            <div className="grid grid-cols-2 gap-6 w-full mt-0 md:mt-0">
                               <div className="flex flex-col items-center w-full">
                                 {col1Staff.map((member, idx) => (
                                   <div key={member.id} className="flex flex-col items-center w-full">
@@ -401,7 +401,7 @@ const OurTeam = () => {
                     <BranchSVG count={2} strokeColor={THEMES.STD.stroke} />
                     
                     {/* GRID KADIV */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-6 lg:mt-0 relative">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-0 lg:mt-0 relative">
                       {stdStruct.divs.map((div, divIndex) => {
                         const [col1Staff, col2Staff] = splitStaffToTwoColumns(div.staff);
                         
@@ -418,7 +418,7 @@ const OurTeam = () => {
                             )}
 
                             {/* GRID 2 KOLOM STAFF */}
-                            <div className="grid grid-cols-2 gap-6 w-full mt-6 md:mt-0">
+                            <div className="grid grid-cols-2 gap-6 w-full mt-0 md:mt-0">
                               <div className="flex flex-col items-center w-full">
                                 {col1Staff.map((member, idx) => (
                                   <div key={member.id} className="flex flex-col items-center w-full">

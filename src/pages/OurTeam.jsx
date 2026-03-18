@@ -77,7 +77,6 @@ const BranchSVG = ({ count, strokeColor, hideTopLine = false }) => {
   // Garis atas akan digambar sampai titik tengah (50) jika tidak disembunyikan
   const topLine = hideTopLine ? '' : 'M 50 0 L 50 50';
 
-  // Tinggi diubah menjadi h-16 (64px) agar jarak garis vertikal sama dengan VLine biasa
   return (
     <div className="hidden md:block w-full h-16 relative z-0">
       <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute top-0 left-0">
@@ -182,7 +181,8 @@ const OurTeam = () => {
             {/* TIER 1: BOARD OF DIRECTORS (BPH) */}
             {/* ========================================== */}
             <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5">
-              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+              {/* Padding bawah diubah jadi pb-16 */}
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] px-10 pt-10 pb-16 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.BPH.iconBg} rounded-2xl mb-3 border ${THEMES.BPH.border}`}>
                     <Crown size={28} className={THEMES.BPH.text} />
@@ -211,7 +211,8 @@ const OurTeam = () => {
             {/* TIER 2: ADVISORY BOARD (ADV) */}
             {/* ========================================== */}
             <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5 mt-10">
-              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+              {/* Padding bawah diubah jadi pb-16 */}
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] px-10 pt-10 pb-16 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.ADV.iconBg} rounded-2xl mb-3 border ${THEMES.ADV.border}`}>
                     <ShieldCheck size={28} className={THEMES.ADV.text} />
@@ -222,9 +223,9 @@ const OurTeam = () => {
                 <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto">
                   <h3 className={`text-sm font-black uppercase tracking-widest mb-1 ${THEMES.ADV.text}`}>Steering Committee</h3>
                   
-                  {/* SVG CONNECT SC (hideTopLine menyembunyikan antena atas) */}
+                  {/* SVG CONNECT SC: hideTopLine aktif dan Negative Margin (-mt-6) agar naik proporsional */}
                   {advSC.length === 3 ? (
-                    <div className="w-full mt-2">
+                    <div className="w-full -mt-6">
                       <BranchSVG count={3} strokeColor={THEMES.ADV.stroke} hideTopLine={true} />
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-0 md:mt-0">
                         {advSC.map(member => (
@@ -271,7 +272,8 @@ const OurTeam = () => {
             {/* TIER 3: ERBD */}
             {/* ========================================== */}
             <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5">
-              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+              {/* Padding bawah diubah jadi pb-16 */}
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] px-10 pt-10 pb-16 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.ERBD.iconBg} rounded-2xl mb-3 border ${THEMES.ERBD.border}`}>
                     <Building2 size={28} className={THEMES.ERBD.text} />
@@ -314,7 +316,8 @@ const OurTeam = () => {
             {/* TIER 4: MD */}
             {/* ========================================== */}
             <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5">
-              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+              {/* Padding bawah diubah jadi pb-16 */}
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] px-10 pt-10 pb-16 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.MD.iconBg} rounded-2xl mb-3 border ${THEMES.MD.border}`}>
                     <Building2 size={28} className={THEMES.MD.text} />
@@ -377,7 +380,8 @@ const OurTeam = () => {
             {/* TIER 5: STD */}
             {/* ========================================== */}
             <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5">
-              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+              {/* Padding bawah diubah jadi pb-16 */}
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] px-10 pt-10 pb-16 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.STD.iconBg} rounded-2xl mb-3 border ${THEMES.STD.border}`}>
                     <Building2 size={28} className={THEMES.STD.text} />

@@ -20,7 +20,6 @@ const THEMES = {
 const MemberCard = ({ member, deptCode }) => {
   if (!member) return null;
   const theme = THEMES[deptCode] || THEMES.BPH;
-  // Perbaikan isEB untuk "Vice Head of Department"
   const isEB = ['President', 'Vice President', 'Secretary', 'Treasurer', 'Head of Department', 'Vice Head of Department', 'Head of Division', 'Steering Committee'].includes(member.position);
 
   return (
@@ -61,8 +60,8 @@ const MemberCard = ({ member, deptCode }) => {
 // Garis Lurus Tunggal
 const VLine = ({ height = 'h-8', color = 'bg-gray-200' }) => <div className={`w-px ${height} ${color} mx-auto relative z-0`}></div>;
 
-// Garis Bercabang (SVG) - Disempurnakan
-const BranchSVG = ({ count, strokeColor }) => {
+// Garis Bercabang (SVG) - Versi Sempurna
+const BranchSVG = ({ count, strokeColor, hideTopLine = false }) => {
   const lines = [];
   if (count === 2) {
     lines.push(25, 75);
@@ -75,15 +74,17 @@ const BranchSVG = ({ count, strokeColor }) => {
   const minX = lines[0];
   const maxX = lines[lines.length - 1];
 
-  // Mengubah rasio tinggi. Turun sampai 35%, lalu belok. Sisa 65% untuk turun ke card.
+  // Jika hideTopLine true (seperti untuk SC), maka garis tengah atas ditiadakan
+  const topLine = hideTopLine ? '' : 'M 50 0 L 50 50';
+
   return (
-    <div className="hidden md:block w-full h-12 relative z-0">
+    <div className="hidden md:block w-full h-8 relative z-0">
       <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute top-0 left-0">
         <path
           d={`
-            M 50 0 L 50 35 
-            M ${minX} 35 L ${maxX} 35
-            ${lines.map(x => `M ${x} 35 L ${x} 100`).join(' ')}
+            ${topLine}
+            M ${minX} 50 L ${maxX} 50
+            ${lines.map(x => `M ${x} 50 L ${x} 100`).join(' ')}
           `}
           stroke={strokeColor}
           strokeWidth="1"
@@ -128,7 +129,7 @@ const OurTeam = () => {
 
   // 3. ERBD
   const erbdKadep = users.find(u => u.dept === 'ERBD' && u.position === 'Head of Department');
-  const erbdWakadep = users.find(u => u.dept === 'ERBD' && u.position === 'Vice Head of Department'); // Perbaikan Typo
+  const erbdWakadep = users.find(u => u.dept === 'ERBD' && u.position === 'Vice Head of Department');
   const erbdTeams = ['Product Partnership', 'University Network', 'Government Relations', 'Alumni & Ext. Outreach'].map(div => ({
     name: div,
     tl: users.find(u => u.dept === 'ERBD' && u.division === div && u.position === 'Team Leader'),
@@ -192,9 +193,8 @@ const OurTeam = () => {
                   <MemberCard member={president} deptCode="BPH" />
                   <VLine height="h-8" color={THEMES.BPH.line} />
                   <MemberCard member={vp} deptCode="BPH" />
-                  <VLine height="h-8" color={THEMES.BPH.line} />
                   
-                  {/* SVG CONNECT: BPH (2 Kolom) */}
+                  {/* SVG CONNECT (Tanpa VLine Tambahan di Atas) */}
                   <div className="w-full flex flex-col items-center">
                      <BranchSVG count={2} strokeColor={THEMES.BPH.stroke} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mt-0 md:mt-0 justify-items-center">
@@ -221,10 +221,10 @@ const OurTeam = () => {
                 <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto">
                   <h3 className={`text-sm font-black uppercase tracking-widest mb-1 ${THEMES.ADV.text}`}>Steering Committee</h3>
                   
-                  {/* SVG CONNECT: ADV SC (3 Kolom) - VLine Dihapus agar SVG sentuh card */}
+                  {/* SVG CONNECT SC (hideTopLine menyembunyikan antena atas) */}
                   {advSC.length === 3 ? (
                     <div className="w-full mt-2">
-                      <BranchSVG count={3} strokeColor={THEMES.ADV.stroke} />
+                      <BranchSVG count={3} strokeColor={THEMES.ADV.stroke} hideTopLine={true} />
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-0 md:mt-0">
                         {advSC.map(member => (
                           <div key={member.id} className="flex justify-center w-full">
@@ -243,9 +243,8 @@ const OurTeam = () => {
                   <div className="flex flex-col items-center mt-16 w-full">
                     <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Monitoring & Evaluation</h3>
                     <MemberCard member={advMonevHead} deptCode="ADV" />
-                    {advMonevStaff.length > 0 && <VLine height="h-8" color={THEMES.ADV.line} />}
                     
-                    {/* SVG CONNECT: ADV MONEV (3 Kolom) */}
+                    {/* SVG CONNECT MONEV (Tanpa VLine Tambahan) */}
                     {advMonevStaff.length === 3 ? (
                       <div className="w-full">
                         <BranchSVG count={3} strokeColor={THEMES.ADV.stroke} />
@@ -284,9 +283,8 @@ const OurTeam = () => {
                   <MemberCard member={erbdKadep} deptCode="ERBD" />
                   <VLine height="h-8" color={THEMES.ERBD.line} />
                   <MemberCard member={erbdWakadep} deptCode="ERBD" />
-                  <VLine height="h-8" color={THEMES.ERBD.line} />
                   
-                  {/* SVG CONNECT: ERBD (4 Kolom) */}
+                  {/* SVG CONNECT ERBD (Tanpa VLine Tambahan) */}
                   <div className="w-full">
                     <BranchSVG count={4} strokeColor={THEMES.ERBD.stroke} />
                     
@@ -326,13 +324,11 @@ const OurTeam = () => {
 
                 <div className="relative z-10 flex flex-col items-center w-full">
                   <MemberCard member={mdStruct.kadep} deptCode="MD" />
-                  <VLine height="h-8" color={THEMES.MD.line} />
                   
-                  {/* SVG CONNECT: MD KADIV (2 Kolom) */}
+                  {/* SVG CONNECT MD KADIV (Tanpa VLine Tambahan) */}
                   <div className="w-full">
                      <BranchSVG count={2} strokeColor={THEMES.MD.stroke} />
                     
-                    {/* GRID KADIV */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-0 lg:mt-0 relative">
                       {mdStruct.divs.map((div, divIndex) => {
                         const [col1Staff, col2Staff] = splitStaffToTwoColumns(div.staff);
@@ -340,16 +336,14 @@ const OurTeam = () => {
                         return (
                           <div key={div.name} className="flex flex-col items-center w-full">
                             <MemberCard member={div.kadiv} deptCode="MD" />
-                            {div.staff.length > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
                             
-                            {/* SVG CONNECT: MD STAFF */}
+                            {/* SVG CONNECT MD STAFF (Tanpa VLine Tambahan) */}
                             {div.staff.length > 0 && (
                               <div className="w-full">
                                 <BranchSVG count={2} strokeColor={THEMES.MD.stroke} />
                               </div>
                             )}
 
-                            {/* GRID 2 KOLOM STAFF */}
                             <div className="grid grid-cols-2 gap-6 w-full mt-0 md:mt-0">
                               <div className="flex flex-col items-center w-full">
                                 {col1Staff.map((member, idx) => (
@@ -369,7 +363,6 @@ const OurTeam = () => {
                                 ))}
                               </div>
                             </div>
-
                           </div>
                         );
                       })}
@@ -394,13 +387,11 @@ const OurTeam = () => {
 
                 <div className="relative z-10 flex flex-col items-center w-full">
                   <MemberCard member={stdStruct.kadep} deptCode="STD" />
-                  <VLine height="h-8" color={THEMES.STD.line} />
                   
-                  {/* SVG CONNECT: STD KADIV (2 Kolom) */}
+                  {/* SVG CONNECT STD KADIV (Tanpa VLine Tambahan) */}
                   <div className="w-full">
                     <BranchSVG count={2} strokeColor={THEMES.STD.stroke} />
                     
-                    {/* GRID KADIV */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mt-0 lg:mt-0 relative">
                       {stdStruct.divs.map((div, divIndex) => {
                         const [col1Staff, col2Staff] = splitStaffToTwoColumns(div.staff);
@@ -408,16 +399,14 @@ const OurTeam = () => {
                         return (
                           <div key={div.name} className="flex flex-col items-center w-full">
                             <MemberCard member={div.kadiv} deptCode="STD" />
-                            {div.staff.length > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
                             
-                            {/* SVG CONNECT: STD STAFF */}
+                            {/* SVG CONNECT STD STAFF (Tanpa VLine Tambahan) */}
                             {div.staff.length > 0 && (
                               <div className="w-full">
                                 <BranchSVG count={2} strokeColor={THEMES.STD.stroke} />
                               </div>
                             )}
 
-                            {/* GRID 2 KOLOM STAFF */}
                             <div className="grid grid-cols-2 gap-6 w-full mt-0 md:mt-0">
                               <div className="flex flex-col items-center w-full">
                                 {col1Staff.map((member, idx) => (
@@ -437,7 +426,6 @@ const OurTeam = () => {
                                 ))}
                               </div>
                             </div>
-
                           </div>
                         );
                       })}

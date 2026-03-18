@@ -15,7 +15,7 @@ const THEMES = {
 };
 
 // ==========================================
-// KOMPONEN CARD MEMBER (ASLI DARI KAMU)
+// KOMPONEN CARD MEMBER (ASLI)
 // ==========================================
 const MemberCard = ({ member, deptCode }) => {
   if (!member) return null;
@@ -142,8 +142,8 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 1: BOARD OF DIRECTORS (BPH) */}
             {/* ========================================== */}
-            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10">
-              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5">
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.BPH.iconBg} rounded-2xl mb-3 border ${THEMES.BPH.border}`}>
                     <Crown size={28} className={THEMES.BPH.text} />
@@ -182,8 +182,8 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 2: ADVISORY BOARD (ADV) */}
             {/* ========================================== */}
-            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10 mt-10">
-              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5 mt-10">
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.ADV.iconBg} rounded-2xl mb-3 border ${THEMES.ADV.border}`}>
                     <ShieldCheck size={28} className={THEMES.ADV.text} />
@@ -271,8 +271,8 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 3: ERBD */}
             {/* ========================================== */}
-            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10">
-              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5">
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.ERBD.iconBg} rounded-2xl mb-3 border ${THEMES.ERBD.border}`}>
                     <Building2 size={28} className={THEMES.ERBD.text} />
@@ -332,8 +332,8 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 4: MD */}
             {/* ========================================== */}
-            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10">
-              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5">
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.MD.iconBg} rounded-2xl mb-3 border ${THEMES.MD.border}`}>
                     <Building2 size={28} className={THEMES.MD.text} />
@@ -418,8 +418,8 @@ const OurTeam = () => {
             {/* ========================================== */}
             {/* TIER 5: STD */}
             {/* ========================================== */}
-            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green/80 to-tsa-gold/80 rounded-[2rem] shadow-2xl shadow-green-900/10">
-              <div className="bg-gradient-to-br from-white via-white to-green-50/40 w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
+            <section className="relative p-[3px] bg-gradient-to-r from-tsa-green to-tsa-gold rounded-[2rem] shadow-xl shadow-green-900/5">
+              <div className="bg-white/95 backdrop-blur-sm w-full h-full rounded-[calc(2rem-3px)] p-10 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col items-center mb-10">
                   <div className={`p-3 ${THEMES.STD.iconBg} rounded-2xl mb-3 border ${THEMES.STD.border}`}>
                     <Building2 size={28} className={THEMES.STD.text} />

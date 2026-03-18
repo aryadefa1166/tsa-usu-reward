@@ -17,7 +17,7 @@ const THEMES = {
 // ==========================================
 // KOMPONEN CARD MEMBER
 // ==========================================
-// PERBAIKAN: Mengunci w-[200px] min-w-[200px] shrink-0 agar tidak pernah berubah ukuran
+// KUNCI ABSOLUT: w-[200px] min-w-[200px] shrink-0
 const MemberCard = ({ member, deptCode }) => {
   if (!member) return null;
   const theme = THEMES[deptCode] || THEMES.BPH;
@@ -325,11 +325,10 @@ const OurTeam = () => {
                             </div>
                           </>
                         )}
-                        <div className={`grid ${div.staff.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-6 w-full mt-6 md:mt-0 justify-items-center`}>
+                        <div className={`grid ${div.staff.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-10 w-full mt-6 md:mt-0 justify-items-center`}>
                            {div.staff.map(member => (
                              <div key={member.id} className="flex flex-col items-center w-full">
                                <MemberCard member={member} deptCode="MD" />
-                               {/* Jika ganjil dan ini elemen terakhir, tambahkan VLine untuk drop ke bawah (Opsional) */}
                              </div>
                            ))}
                         </div>
@@ -383,7 +382,7 @@ const OurTeam = () => {
                             </div>
                           </>
                         )}
-                        <div className={`grid ${div.staff.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-6 w-full mt-6 md:mt-0 justify-items-center`}>
+                        <div className={`grid ${div.staff.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-10 w-full mt-6 md:mt-0 justify-items-center`}>
                            {div.staff.map(member => (
                              <div key={member.id} className="flex flex-col items-center w-full">
                                <MemberCard member={member} deptCode="STD" />

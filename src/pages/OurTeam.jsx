@@ -110,6 +110,8 @@ const OurTeam = () => {
     };
   };
   const mdStruct = getDivisionalStructure('MD', ['Education', 'Media']);
+  
+  // PERBAIKAN: Mengganti 'Staff Management' dengan 'Staff Performance' di array parameter
   const stdStruct = getDivisionalStructure('STD', ['Staff Performance', 'Talent Management']);
 
   const TSAUSUFrame = () => (
@@ -182,11 +184,11 @@ const OurTeam = () => {
               
               <div className="relative z-10 flex flex-col items-center w-full max-w-4xl mx-auto">
                 {/* Lapis 1: Steering Committee */}
-                <h3 className={`text-sm font-black uppercase tracking-widest mb-6 ${THEMES.ADV.text}`}>Steering Committee</h3>
+                <h3 className={`text-sm font-black uppercase tracking-widest mb-2 ${THEMES.ADV.text}`}>Steering Committee</h3>
                 
-                {/* PERBAIKAN SC: Hapus VLine di atas garis horizontal */}
+                {/* PERBAIKAN SC: Garis mendatar langsung di bawah teks */}
                 {advSC.length === 3 ? (
-                  <div className="w-full max-w-[750px] flex flex-col items-center mt-4">
+                  <div className="w-full max-w-[750px] flex flex-col items-center">
                     <div className={`w-[66%] h-px ${THEMES.ADV.line} hidden md:block`}></div>
                     <div className="hidden md:grid grid-cols-3 w-full justify-items-center">
                       <VLine height="h-8" color={THEMES.ADV.line} />
@@ -252,16 +254,17 @@ const OurTeam = () => {
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">External Relations & Business Development</p>
               </div>
 
-              <div className="relative z-10 flex flex-col items-center">
+              <div className="relative z-10 flex flex-col items-center w-full">
                 <MemberCard member={erbdKadep} deptCode="ERBD" />
                 <VLine height="h-8" color={THEMES.ERBD.line} />
                 <MemberCard member={erbdWakadep} deptCode="ERBD" />
                 <VLine height="h-8" color={THEMES.ERBD.line} />
                 
-                {/* PERBAIKAN ERBD: Garis Cabang dari Wakadep ke Team Leader agar pas tengah */}
-                <div className="w-full max-w-5xl flex flex-col items-center">
+                {/* PERBAIKAN ERBD: Garis Cabang Wakadep ke 4 TL (Presisi 75%) */}
+                <div className="w-full flex flex-col items-center">
                   <div className={`w-[75%] h-px ${THEMES.ERBD.line} hidden lg:block`}></div>
-                  <div className="hidden lg:grid grid-cols-4 w-[75%] justify-items-center">
+                  {/* justify-around akan membagi garis vertikal pas di tengah-tengah ke 4 grid item */}
+                  <div className="hidden lg:flex justify-around w-[75%]">
                     <VLine height="h-8" color={THEMES.ERBD.line} />
                     <VLine height="h-8" color={THEMES.ERBD.line} />
                     <VLine height="h-8" color={THEMES.ERBD.line} />
@@ -269,14 +272,14 @@ const OurTeam = () => {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-6 lg:mt-0 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full mt-6 lg:mt-0">
                   {erbdTeams.map(team => (
                     <div key={team.name} className="flex flex-col items-center w-full">
                       <MemberCard member={team.tl} deptCode="ERBD" />
                       
-                      {/* PERBAIKAN ERBD STAFF: Kembali vertikal ke bawah */}
-                      <div className="flex flex-col gap-0 w-full items-center">
-                        {team.staff.map((member, idx) => (
+                      {/* PERBAIKAN ERBD STAFF: Tumpuk vertikal ke bawah dari TL */}
+                      <div className="flex flex-col items-center w-full">
+                        {team.staff.map((member) => (
                           <div key={member.id} className="flex flex-col items-center w-full">
                             <VLine height="h-8" color={THEMES.ERBD.line} />
                             <MemberCard member={member} deptCode="ERBD" />
@@ -302,30 +305,37 @@ const OurTeam = () => {
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Media Education</p>
               </div>
 
-              <div className="relative z-10 flex flex-col items-center">
+              <div className="relative z-10 flex flex-col items-center w-full">
                 <MemberCard member={mdStruct.kadep} deptCode="MD" />
                 <VLine height="h-8" color={THEMES.MD.line} />
                 
-                {/* Garis Horizontal ke 2 Divisi */}
-                <div className={`w-[60%] h-px ${THEMES.MD.line} hidden md:block`}></div>
-                <div className="hidden md:flex justify-between w-[60%]">
+                {/* Garis Horizontal ke 2 Kadiv */}
+                <div className={`w-[50%] h-px ${THEMES.MD.line} hidden md:block`}></div>
+                <div className="hidden md:flex justify-between w-[50%]">
                   <VLine height="h-8" color={THEMES.MD.line} />
                   <VLine height="h-8" color={THEMES.MD.line} />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-4xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-5xl">
                   {mdStruct.divs.map(div => (
-                    <div key={div.name} className="flex flex-col items-center">
+                    <div key={div.name} className="flex flex-col items-center w-full">
                       <MemberCard member={div.kadiv} deptCode="MD" />
+                      {div.staff.length > 0 && <VLine height="h-8" color={THEMES.MD.line} />}
                       
-                      {/* PERBAIKAN MD STAFF: Kembali vertikal ke bawah */}
-                      <div className="flex flex-col gap-0 w-full items-center">
-                        {div.staff.map((member, idx) => (
-                          <div key={member.id} className="flex flex-col items-center w-full">
-                            <VLine height="h-8" color={THEMES.MD.line} />
-                            <MemberCard member={member} deptCode="MD" />
-                          </div>
-                        ))}
+                      {/* PERBAIKAN MD STAFF: Berjejer (grid-cols-2) lengkap dengan garis vertikal ganda di atasnya */}
+                      <div className="w-full flex flex-col items-center">
+                        <div className={`w-[50%] h-px ${THEMES.MD.line} hidden md:block`}></div>
+                        <div className="hidden md:flex justify-between w-[50%]">
+                           <VLine height="h-8" color={THEMES.MD.line} />
+                           <VLine height="h-8" color={THEMES.MD.line} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 w-full mt-6 md:mt-0">
+                           {div.staff.map(member => (
+                             <div key={member.id} className="flex justify-center w-full">
+                               <MemberCard member={member} deptCode="MD" />
+                             </div>
+                           ))}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -346,29 +356,37 @@ const OurTeam = () => {
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center mt-1">Staff & Talent Development</p>
               </div>
 
-              <div className="relative z-10 flex flex-col items-center">
+              <div className="relative z-10 flex flex-col items-center w-full">
                 <MemberCard member={stdStruct.kadep} deptCode="STD" />
                 <VLine height="h-8" color={THEMES.STD.line} />
                 
-                <div className={`w-[60%] h-px ${THEMES.STD.line} hidden md:block`}></div>
-                <div className="hidden md:flex justify-between w-[60%]">
+                {/* Garis Horizontal ke 2 Kadiv */}
+                <div className={`w-[50%] h-px ${THEMES.STD.line} hidden md:block`}></div>
+                <div className="hidden md:flex justify-between w-[50%]">
                   <VLine height="h-8" color={THEMES.STD.line} />
                   <VLine height="h-8" color={THEMES.STD.line} />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-4xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 w-full mt-6 md:mt-0 max-w-5xl">
                   {stdStruct.divs.map(div => (
-                    <div key={div.name} className="flex flex-col items-center">
+                    <div key={div.name} className="flex flex-col items-center w-full">
                       <MemberCard member={div.kadiv} deptCode="STD" />
+                      {div.staff.length > 0 && <VLine height="h-8" color={THEMES.STD.line} />}
                       
-                      {/* PERBAIKAN STD STAFF: Kembali vertikal ke bawah */}
-                      <div className="flex flex-col gap-0 w-full items-center">
-                        {div.staff.map((member, idx) => (
-                          <div key={member.id} className="flex flex-col items-center w-full">
-                            <VLine height="h-8" color={THEMES.STD.line} />
-                            <MemberCard member={member} deptCode="STD" />
-                          </div>
-                        ))}
+                      {/* PERBAIKAN STD STAFF: Berjejer (grid-cols-2) lengkap dengan garis vertikal ganda di atasnya */}
+                      <div className="w-full flex flex-col items-center">
+                        <div className={`w-[50%] h-px ${THEMES.STD.line} hidden md:block`}></div>
+                        <div className="hidden md:flex justify-between w-[50%]">
+                           <VLine height="h-8" color={THEMES.STD.line} />
+                           <VLine height="h-8" color={THEMES.STD.line} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 w-full mt-6 md:mt-0">
+                           {div.staff.map(member => (
+                             <div key={member.id} className="flex justify-center w-full">
+                               <MemberCard member={member} deptCode="STD" />
+                             </div>
+                           ))}
+                        </div>
                       </div>
                     </div>
                   ))}

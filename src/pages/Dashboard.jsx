@@ -10,7 +10,7 @@ import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Users, Loader2, Star, Sp
 // ==========================================
 const AwardCard = ({ 
   title, description, icon: Icon, isPublished, winner, isGroup, groupPhotoUrl, 
-  scoreValue, baseScore 
+  scoreValue, baseScore, isTopRow = false // <- PROPS BARU UNTUK UKURAN DINAMIS
 }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
@@ -33,17 +33,19 @@ const AwardCard = ({
   };
 
   return (
-    // CARD CONTAINER: Latar belakang abu-abu sangat muda (hampir transparan) sebagai alas utama
+    // CARD CONTAINER
     <div className="bg-[#fafafa] rounded-3xl border border-gray-200/60 shadow-sm hover:shadow-lg hover:border-tsa-green/40 transition-all duration-300 flex flex-col h-full overflow-hidden group">
       
-      {/* AREA ATAS: HEADER HIJAU TSA (Dikunci Tinggi h-48 = 192px) */}
-      <div className="bg-tsa-green h-48 p-6 flex flex-col items-center text-center relative z-10 shrink-0">
+      {/* AREA ATAS: HEADER HIJAU TSA 
+          Tinggi dikunci mati berdasarkan baris. Isi teks dipaku ke atas (justify-start) agar tidak ketabrak foto.
+      */}
+      <div className={`bg-tsa-green flex flex-col items-center text-center relative z-10 shrink-0 ${isTopRow ? 'h-[220px] pt-6' : 'h-[190px] pt-5'}`}>
          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none"><Icon size={80} className="text-white"/></div>
          
          <div className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-sm border border-white/30 shadow-sm">
-           <Icon size={20} className="text-tsa-gold" />
+           <Icon size={isTopRow ? 24 : 18} className="text-tsa-gold" />
          </div>
-         <h3 className="font-black text-white text-lg uppercase tracking-widest drop-shadow-sm leading-tight mb-2">
+         <h3 className={`font-black text-white uppercase tracking-widest drop-shadow-sm leading-tight mb-2 ${isTopRow ? 'text-xl' : 'text-lg'}`}>
            {title}
          </h3>
          <p className="text-[10px] text-white/80 font-medium max-w-[90%] leading-relaxed line-clamp-3">
@@ -51,25 +53,25 @@ const AwardCard = ({
          </p>
       </div>
 
-      {/* BODY KARTU: Background Glassmorphism (Mengisi area bawah) */}
+      {/* BODY KARTU: Glassmorphism */}
       <div className="flex flex-col flex-grow relative z-20 bg-gradient-to-br from-green-50/90 via-white/80 to-tsa-gold/10">
          
-         {/* AREA TENGAH: FOTO BINGKAI EMAS MELAYANG (-mt-16 menariknya ke atas menabrak warna hijau) */}
-         <div className="relative z-30 flex flex-col items-center justify-start -mt-16 mb-4 px-6">
+         {/* AREA TENGAH: FOTO BINGKAI EMAS MELAYANG (Ukuran Dinamis) */}
+         <div className={`relative z-30 flex flex-col items-center justify-start px-6 mb-4 ${isTopRow ? '-mt-20' : '-mt-14'}`}>
             
-            {/* Bingkai Foto Proporsional (w-32 h-32 = 128px) */}
-            <div className="w-32 h-32 rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[3px] shadow-[0_10px_20px_rgba(210,179,85,0.4)] group-hover:scale-105 transition-transform duration-500 relative z-30">
+            {/* Bingkai Foto Proporsional (Baris atas w-40, baris bawah w-32) */}
+            <div className={`${isTopRow ? 'w-36 h-36 sm:w-40 sm:h-40' : 'w-28 h-28 sm:w-32 sm:h-32'} rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[3px] shadow-[0_10px_20px_rgba(210,179,85,0.4)] group-hover:scale-105 transition-transform duration-500 relative z-30`}>
                <div className="w-full h-full rounded-[13px] bg-white overflow-hidden flex items-center justify-center">
                   {!isPublished ? (
-                     <Lock size={36} className="text-gray-300" />
+                     <Lock size={isTopRow ? 44 : 32} className="text-gray-300" />
                   ) : !winner ? (
-                     <Icon size={36} className="text-gray-300" />
+                     <Icon size={isTopRow ? 44 : 32} className="text-gray-300" />
                   ) : isGroup ? (
                      groupPhotoUrl || winner.photo_url ? (
                        <img src={groupPhotoUrl || winner.photo_url} alt="Winner" className="w-full h-full object-cover aspect-square" />
                      ) : (
                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                         <Users size={48} className="text-gray-400" />
+                         <Users size={isTopRow ? 54 : 40} className="text-gray-400" />
                        </div>
                      )
                   ) : (
@@ -77,7 +79,7 @@ const AwardCard = ({
                        <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover aspect-square" />
                      ) : (
                        <div className="w-full h-full bg-tsa-green flex items-center justify-center">
-                           <span className="text-5xl font-serif font-bold text-white">
+                           <span className={`${isTopRow ? 'text-6xl' : 'text-5xl'} font-serif font-bold text-white`}>
                              {getInitials(winner.full_name)}
                            </span>
                        </div>
@@ -86,8 +88,8 @@ const AwardCard = ({
                </div>
             </div>
             
-            {/* Efek Gradasi Bayangan Realistis (Menempel langsung di bawah bingkai foto) */}
-            <div className="w-28 h-5 bg-gradient-to-b from-black/20 to-transparent blur-md rounded-b-full -mt-2 z-20"></div>
+            {/* Efek Gradasi Bayangan Realistis */}
+            <div className={`${isTopRow ? 'w-36' : 'w-28'} h-5 bg-gradient-to-b from-black/20 to-transparent blur-md rounded-b-full -mt-2 z-20`}></div>
          </div>
 
          {/* AREA INFORMASI & SKOR */}
@@ -104,12 +106,10 @@ const AwardCard = ({
                <div className="flex flex-col flex-grow items-center justify-between">
                  
                  <div className="flex flex-col items-center w-full mb-5">
-                   {/* Nama Pemenang / Departemen (Seragam dan Proporsional) */}
-                   <h2 className="font-black text-tsa-dark text-lg sm:text-xl leading-snug mb-3 px-2 w-full text-center">
+                   <h2 className={`font-black text-tsa-dark leading-snug mb-3 px-2 w-full text-center ${isTopRow ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'}`}>
                      {isGroup ? renderDeptName(winner.dept || winner.name) : winner.full_name}
                    </h2>
                    
-                   {/* Label Posisi & Cohort (Kompak & Rapi) */}
                    {!isGroup && (
                      <div className="flex flex-col items-center justify-center gap-1.5">
                        <span className="px-3 py-1 bg-white/70 text-tsa-green border border-tsa-green/20 shadow-sm rounded-md text-[9px] font-bold uppercase tracking-widest">
@@ -124,7 +124,6 @@ const AwardCard = ({
                    )}
                  </div>
 
-                 {/* Skor Akhir (Menempel, Rapi, Transparent Glass) */}
                  <div className={`pt-3 border-t border-tsa-green/10 flex items-center ${baseScore ? 'justify-between' : 'justify-center'} w-full bg-white/40 rounded-xl p-3 shadow-[0_2px_10px_rgba(0,103,73,0.03)]`}>
                     <div className={baseScore ? 'text-left' : 'text-center'}>
                        <p className="text-[8px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Final Score</p>
@@ -289,11 +288,13 @@ const Dashboard = () => {
                   description="The absolute highest honor for the most consistent, agile, and impactful officer."
                   icon={Crown} isPublished={showWinners} winner={activeData?.mvpOfYear}
                   scoreValue={activeData?.mvpOfYear?.mvpFinal}
+                  isTopRow={true} // <-- DIBUAT RAKSASA
                 />
                 <AwardCard 
                   title="Best Department of the Year" description="Outstanding bureaucratic execution and solid teamwork."
                   icon={Building2} isPublished={showWinners} winner={activeData?.bestDeptOfYear} isGroup={true} groupPhotoUrl={activeData?.bestDeptOfYear ? deptPhotos[activeData.bestDeptOfYear.dept] : null}
                   scoreValue={activeData?.bestDeptOfYear?.finalScore}
+                  isTopRow={true} // <-- DIBUAT RAKSASA
                 />
               </div>
 
@@ -303,16 +304,19 @@ const Dashboard = () => {
                   title="Best Project of the Year" description="The most impactful work program chosen by the masses."
                   icon={Briefcase} isPublished={showWinners} winner={activeData?.bestProjectOfYear} isGroup={true}
                   scoreValue={activeData?.bestProjectOfYear?.finalScore}
+                  isTopRow={false}
                 />
                 <AwardCard 
                   title="Rookie of the Year" description="The most progressive and adaptive talent from the youngest generation."
                   icon={Sparkles} isPublished={showWinners} winner={activeData?.rookieOfYear}
                   scoreValue={activeData?.rookieOfYear?.rookieFinal} baseScore={activeData?.rookieOfYear?.sysAvg}
+                  isTopRow={false}
                 />
                 <AwardCard 
                   title="Most Favorite EB" description="The most inspiring and supportive leader chosen 100% by the Staffs."
                   icon={Star} isPublished={showWinners} winner={activeData?.favEb}
                   scoreValue={activeData?.favEb?.favEbFinal}
+                  isTopRow={false}
                 />
               </div>
             </div>
@@ -347,11 +351,13 @@ const Dashboard = () => {
                   title="The Ultimate MVP" description="The most balanced performance across 5 qualitative aspects and real-field attendance."
                   icon={Crown} isPublished={showWinners} winner={activeData?.mvp}
                   scoreValue={activeData?.mvp?.theUltimateMVP}
+                  isTopRow={true} // <-- DIBUAT RAKSASA
                 />
                 <AwardCard 
                   title="Best Department" description="The department with the highest average MVP score per capita."
                   icon={Building2} isPublished={showWinners} winner={activeData?.bestDept} isGroup={true} groupPhotoUrl={activeData?.bestDept ? deptPhotos[activeData.bestDept.dept] : null}
                   scoreValue={activeData?.bestDept?.score}
+                  isTopRow={true} // <-- DIBUAT RAKSASA
                 />
               </div>
 
@@ -361,16 +367,19 @@ const Dashboard = () => {
                   title="The Reliable One" description="The highest SOP compliance (Discipline) and attendance consistency."
                   icon={ShieldCheck} isPublished={showWinners} winner={activeData?.reliable}
                   scoreValue={activeData?.reliable?.theReliableOne} baseScore={activeData?.reliable?.theUltimateMVP}
+                  isTopRow={false}
                 />
                 <AwardCard 
                   title="The High Achiever" description="Superior execution quality (Agility) and rapid-response initiative (Active)."
                   icon={Target} isPublished={showWinners} winner={activeData?.achiever}
                   scoreValue={activeData?.achiever?.theHighAchiever} baseScore={activeData?.achiever?.theUltimateMVP}
+                  isTopRow={false}
                 />
                 <AwardCard 
                   title="The Spark" description="Highly communicative and friendly (Cheerful) with outstanding manners (Attitude)."
                   icon={Zap} isPublished={showWinners} winner={activeData?.spark}
                   scoreValue={activeData?.spark?.theSpark} baseScore={activeData?.spark?.theUltimateMVP}
+                  isTopRow={false}
                 />
               </div>
             </div>

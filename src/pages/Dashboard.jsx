@@ -6,119 +6,116 @@ import { calculateQuarterlyResults, calculateEndOfTermResults } from '../utils/c
 import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Users, Loader2, Star, Sparkles, Building2, Briefcase } from 'lucide-react';
 
 // ==========================================
-// KOMPONEN CARD AWARD: "TSA SYSTEM DESIGN" (Clean & Formal)
+// KOMPONEN CARD AWARD: "TSA SPLIT-CARD LUXURY"
 // ==========================================
 const AwardCard = ({ 
   title, description, icon: Icon, isPublished, winner, isGroup, groupPhotoUrl, 
-  layout = 'landscape', // 'landscape' (horizontal compact) atau 'portrait' (MVP vertikal)
   scoreValue, baseScore 
 }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-  const isPortrait = layout === 'portrait';
-
   return (
-    <div className={`bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-md hover:border-tsa-green/30 transition-all duration-300 flex overflow-hidden ${isPortrait ? 'flex-col h-full' : 'flex-col sm:flex-row h-full'}`}>
+    <div className="bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-tsa-green/30 transition-all duration-300 flex flex-col h-full overflow-hidden group">
       
-      {!isPublished ? (
-        // STATE: LOCKED (BELUM PENGUMUMAN)
-        <div className="flex flex-col items-center justify-center w-full p-8 text-center bg-gray-50/50 min-h-[200px]">
-           <Lock size={32} className="text-gray-300 mb-3" />
-           <h3 className="font-black text-sm text-gray-400 uppercase tracking-widest">{title}</h3>
-           <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest border border-dashed border-gray-300 px-3 py-1.5 rounded-md bg-white">To be announced</p>
-        </div>
-      ) : !winner ? (
-        // STATE: NO DATA
-        <div className="flex flex-col items-center justify-center w-full p-8 text-center bg-gray-50/50 min-h-[200px]">
-           <Icon size={32} className="text-gray-200 mb-3" />
-           <h3 className="font-black text-sm text-gray-400 uppercase tracking-widest">{title}</h3>
-           <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest bg-gray-100 px-3 py-1.5 rounded-md border border-gray-200">Data Not Available</p>
-        </div>
-      ) : (
-        // STATE: PEMENANG (FORMAL & CLEAN)
-        <>
-          {/* AREA FOTO / MONOGRAM SERIF */}
-          <div className={`p-4 shrink-0 flex flex-col justify-center ${isPortrait ? 'w-full h-64 pb-0' : 'w-full sm:w-48 h-56 sm:h-full pr-0'}`}>
-            <div className="w-full h-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm relative bg-gray-50 flex items-center justify-center">
-               {isGroup ? (
+      {/* AREA ATAS: HEADER HIJAU TSA */}
+      <div className="bg-tsa-green p-6 pb-12 flex flex-col items-center text-center relative z-0">
+         {/* Background Ornamen Transparan */}
+         <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none"><Icon size={80} className="text-white"/></div>
+         
+         <div className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-sm border border-white/30 shadow-sm">
+           <Icon size={20} className="text-tsa-gold" />
+         </div>
+         <h3 className="font-black text-white text-lg uppercase tracking-widest drop-shadow-sm leading-tight mb-2">
+           {title}
+         </h3>
+         <p className="text-[10px] text-white/80 font-medium max-w-[90%] leading-relaxed">
+           {description}
+         </p>
+      </div>
+
+      {/* AREA TENGAH: FOTO 1:1 BINGKAI EMAS (MELAYANG) */}
+      <div className="relative z-10 flex justify-center -mt-10 mb-4 px-6">
+         <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[3px] shadow-[0_10px_20px_rgba(210,179,85,0.3)] group-hover:scale-105 transition-transform duration-500">
+            <div className="w-full h-full rounded-xl bg-white overflow-hidden flex items-center justify-center relative">
+               {!isPublished ? (
+                  <Lock size={30} className="text-gray-300" />
+               ) : !winner ? (
+                  <Icon size={30} className="text-gray-300" />
+               ) : isGroup ? (
                   groupPhotoUrl || winner.photo_url ? (
-                    <img src={groupPhotoUrl || winner.photo_url} alt="Winner" className="w-full h-full object-cover" />
+                    <img src={groupPhotoUrl || winner.photo_url} alt="Winner" className="w-full h-full object-cover aspect-square" />
                   ) : (
-                    <div className="w-full h-full bg-tsa-green flex items-center justify-center">
-                      <Users size={40} className="text-white/80" />
+                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                      <Users size={40} className="text-gray-400" />
                     </div>
                   )
                ) : (
                   winner.photo_url ? (
-                    <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover" />
+                    <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover aspect-square" />
                   ) : (
-                    // FORMAL SERIF MONOGRAM (Fallback Elegan)
+                    // FALLBACK MONOGRAM SERIF
                     <div className="w-full h-full bg-tsa-green flex items-center justify-center">
-                        <span className="text-6xl font-serif font-bold text-white tracking-tighter">
+                        <span className="text-4xl font-serif font-bold text-white">
                           {getInitials(winner.full_name)}
                         </span>
                     </div>
                   )
                )}
             </div>
-          </div>
+         </div>
+      </div>
 
-          {/* AREA INFORMASI (Putih, Rapi, Terstruktur) */}
-          <div className={`flex flex-col flex-grow p-5 ${isPortrait ? 'items-center text-center' : 'justify-center'}`}>
-             
-             {/* Judul Award */}
-             <div className={`flex items-center gap-2 mb-2 ${isPortrait ? 'justify-center' : ''}`}>
-                <Icon size={14} className="text-tsa-gold" />
-                <span className="text-[9px] font-black uppercase tracking-widest text-tsa-green">
-                  {title}
-                </span>
-             </div>
-             
-             {/* Nama Pemenang */}
-             <h2 className={`font-black text-tsa-dark leading-tight mb-2 ${isPortrait ? 'text-2xl' : 'text-lg line-clamp-2'}`}>
-               {isGroup ? (winner.name || `${winner.dept} DEPT`) : winner.full_name}
-             </h2>
-             
-             {/* Label Identitas */}
-             {!isGroup && (
-               <div className={`flex flex-wrap gap-1 mb-3 ${isPortrait ? 'justify-center' : ''}`}>
-                 <span className="px-2 py-1 bg-green-50 text-tsa-green border border-green-100 rounded-md text-[9px] font-bold uppercase tracking-widest">
-                   {winner.position} • {winner.dept}
-                 </span>
-                 {winner.cohort && (
-                    <span className="px-2 py-1 bg-gray-50 text-gray-500 border border-gray-200 rounded-md text-[9px] font-bold uppercase tracking-widest">
-                      {winner.cohort}
-                    </span>
-                 )}
-               </div>
-             )}
-
-             {/* Deskripsi (Hanya di Portrait agar Landscape lebih hemat tempat) */}
-             {isPortrait && (
-               <p className="text-[10px] font-medium text-gray-500 leading-relaxed mb-4">
-                 {description}
-               </p>
-             )}
-
-             {/* Area Skor Akhir */}
-             <div className="mt-auto pt-3 border-t border-gray-100 flex justify-between items-end w-full">
-                <div>
-                   <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Final Score</p>
-                   <p className="text-lg font-black text-tsa-green leading-none">
-                     {scoreValue ? scoreValue.toFixed(1) : '0.0'} <span className="text-[10px] text-gray-400">/ 100</span>
-                   </p>
+      {/* AREA BAWAH: INFORMASI & SKOR (PUTIH BERSIH) */}
+      <div className="flex flex-col flex-grow px-6 pb-6 text-center">
+         
+         {!isPublished ? (
+            <div className="mt-4">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border border-dashed border-gray-300 px-3 py-1.5 rounded-md inline-block">To be announced</p>
+            </div>
+         ) : !winner ? (
+            <div className="mt-4">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-3 py-1.5 rounded-md border border-gray-200 inline-block">Data Not Available</p>
+            </div>
+         ) : (
+            <>
+              {/* Nama Pemenang */}
+              <h2 className="font-black text-tsa-dark text-xl leading-tight mb-2 truncate px-2">
+                {isGroup ? (winner.name || `${winner.dept} DEPT`) : winner.full_name}
+              </h2>
+              
+              {/* Label Posisi */}
+              {!isGroup && (
+                <div className="flex flex-wrap justify-center gap-1.5 mb-4">
+                  <span className="px-2.5 py-1 bg-green-50 text-tsa-green border border-green-100 rounded-md text-[9px] font-bold uppercase tracking-widest">
+                    {winner.position} • {winner.dept}
+                  </span>
+                  {winner.cohort && (
+                     <span className="px-2.5 py-1 bg-gray-50 text-gray-500 border border-gray-200 rounded-md text-[9px] font-bold uppercase tracking-widest">
+                       {winner.cohort}
+                     </span>
+                  )}
                 </div>
-                
-                {baseScore && (
-                  <div className="text-right">
-                     <p className="text-[8px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Base MVP</p>
-                     <p className="text-xs font-bold text-gray-500 leading-none">{baseScore.toFixed(1)}</p>
-                  </div>
-                )}
-             </div>
-          </div>
-        </>
-      )}
+              )}
+
+              {/* Skor Akhir */}
+              <div className={`mt-auto pt-4 border-t border-gray-100 flex items-end ${baseScore ? 'justify-between' : 'justify-center'} w-full`}>
+                 <div className={baseScore ? 'text-left' : 'text-center'}>
+                    <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Final Score</p>
+                    <p className="text-xl font-black text-tsa-green leading-none">
+                      {scoreValue ? scoreValue.toFixed(1) : '0.0'} <span className="text-xs text-gray-400">/ 100</span>
+                    </p>
+                 </div>
+                 
+                 {baseScore && (
+                   <div className="text-right">
+                      <p className="text-[8px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Base MVP</p>
+                      <p className="text-sm font-bold text-gray-500 leading-none">{baseScore.toFixed(1)}</p>
+                   </div>
+                 )}
+              </div>
+            </>
+         )}
+      </div>
     </div>
   );
 };
@@ -238,7 +235,7 @@ const Dashboard = () => {
             /* ========================================== */
             /* UI END OF TERM (HALL OF FAME) */
             /* ========================================== */
-            <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-8 animate-fade-in-up">
               
               {/* Header Card Formal */}
               <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 md:p-8 rounded-3xl border border-gray-200 shadow-sm relative overflow-hidden">
@@ -257,39 +254,37 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* MVP TERPISAH DI ATAS (PORTRAIT) */}
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-                <div className="md:col-span-2 md:col-start-3 md:col-end-5">
-                  <AwardCard 
-                    title="The Ultimate MVP of the Year" 
-                    description="The absolute highest honor for the most consistent, agile, and impactful officer."
-                    icon={Crown} isPublished={showWinners} winner={activeData?.mvpOfYear}
-                    layout="portrait" scoreValue={activeData?.mvpOfYear?.mvpFinal}
-                  />
-                </div>
-              </div>
-
-              {/* AWARD LAINNYA (COMPACT/LANDSCAPE) */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* FORMASI 2: MVP & BEST DEPT DI ATAS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <AwardCard 
+                  title="The Ultimate MVP of the Year" 
+                  description="The absolute highest honor for the most consistent, agile, and impactful officer."
+                  icon={Crown} isPublished={showWinners} winner={activeData?.mvpOfYear}
+                  scoreValue={activeData?.mvpOfYear?.mvpFinal}
+                />
                 <AwardCard 
                   title="Best Department of the Year" description="Outstanding bureaucratic execution and solid teamwork."
                   icon={Building2} isPublished={showWinners} winner={activeData?.bestDeptOfYear} isGroup={true} groupPhotoUrl={activeData?.bestDeptOfYear ? deptPhotos[activeData.bestDeptOfYear.dept] : null}
-                  layout="landscape" scoreValue={activeData?.bestDeptOfYear?.finalScore}
+                  scoreValue={activeData?.bestDeptOfYear?.finalScore}
                 />
+              </div>
+
+              {/* FORMASI 3: AWARD SISANYA DI BAWAH */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <AwardCard 
                   title="Best Project of the Year" description="The most impactful work program chosen by the masses."
                   icon={Briefcase} isPublished={showWinners} winner={activeData?.bestProjectOfYear} isGroup={true}
-                  layout="landscape" scoreValue={activeData?.bestProjectOfYear?.finalScore}
+                  scoreValue={activeData?.bestProjectOfYear?.finalScore}
                 />
                 <AwardCard 
                   title="Rookie of the Year" description="The most progressive and adaptive talent from the youngest generation."
                   icon={Sparkles} isPublished={showWinners} winner={activeData?.rookieOfYear}
-                  layout="landscape" scoreValue={activeData?.rookieOfYear?.rookieFinal} baseScore={activeData?.rookieOfYear?.sysAvg}
+                  scoreValue={activeData?.rookieOfYear?.rookieFinal} baseScore={activeData?.rookieOfYear?.sysAvg}
                 />
                 <AwardCard 
                   title="Most Favorite EB" description="The most inspiring and supportive leader chosen 100% by the Staffs."
                   icon={Star} isPublished={showWinners} winner={activeData?.favEb}
-                  layout="landscape" scoreValue={activeData?.favEb?.favEbFinal}
+                  scoreValue={activeData?.favEb?.favEbFinal}
                 />
               </div>
             </div>
@@ -299,7 +294,7 @@ const Dashboard = () => {
             /* ========================================== */
             /* UI QUARTERLY AWARDS (Q1-Q4) */
             /* ========================================== */
-            <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-8 animate-fade-in-up">
               
               {/* Header Card Formal */}
               <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 md:p-8 rounded-3xl border border-gray-200 shadow-sm relative overflow-hidden">
@@ -318,38 +313,36 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* MVP KUARTAL TERPISAH (PORTRAIT) */}
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-                <div className="md:col-span-2 md:col-start-3 md:col-end-5">
-                  <AwardCard 
-                    title="The Ultimate MVP" description="The most balanced performance across 5 qualitative aspects and real-field attendance."
-                    icon={Crown} isPublished={showWinners} winner={activeData?.mvp}
-                    layout="portrait" scoreValue={activeData?.mvp?.theUltimateMVP}
-                  />
-                </div>
-              </div>
-
-              {/* AWARD KUARTAL LAINNYA (COMPACT/LANDSCAPE) */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* FORMASI 2: MVP & BEST DEPT DI ATAS */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <AwardCard 
+                  title="The Ultimate MVP" description="The most balanced performance across 5 qualitative aspects and real-field attendance."
+                  icon={Crown} isPublished={showWinners} winner={activeData?.mvp}
+                  scoreValue={activeData?.mvp?.theUltimateMVP}
+                />
                 <AwardCard 
                   title="Best Department" description="The department with the highest average MVP score per capita."
                   icon={Building2} isPublished={showWinners} winner={activeData?.bestDept} isGroup={true} groupPhotoUrl={activeData?.bestDept ? deptPhotos[activeData.bestDept.dept] : null}
-                  layout="landscape" scoreValue={activeData?.bestDept?.score}
+                  scoreValue={activeData?.bestDept?.score}
                 />
+              </div>
+
+              {/* FORMASI 3: AWARD SISANYA DI BAWAH */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <AwardCard 
                   title="The Reliable One" description="The highest SOP compliance (Discipline) and attendance consistency."
                   icon={ShieldCheck} isPublished={showWinners} winner={activeData?.reliable}
-                  layout="landscape" scoreValue={activeData?.reliable?.theReliableOne} baseScore={activeData?.reliable?.theUltimateMVP}
+                  scoreValue={activeData?.reliable?.theReliableOne} baseScore={activeData?.reliable?.theUltimateMVP}
                 />
                 <AwardCard 
                   title="The High Achiever" description="Superior execution quality (Agility) and rapid-response initiative (Active)."
                   icon={Target} isPublished={showWinners} winner={activeData?.achiever}
-                  layout="landscape" scoreValue={activeData?.achiever?.theHighAchiever} baseScore={activeData?.achiever?.theUltimateMVP}
+                  scoreValue={activeData?.achiever?.theHighAchiever} baseScore={activeData?.achiever?.theUltimateMVP}
                 />
                 <AwardCard 
                   title="The Spark" description="Highly communicative and friendly (Cheerful) with outstanding manners (Attitude)."
                   icon={Zap} isPublished={showWinners} winner={activeData?.spark}
-                  layout="landscape" scoreValue={activeData?.spark?.theSpark} baseScore={activeData?.spark?.theUltimateMVP}
+                  scoreValue={activeData?.spark?.theSpark} baseScore={activeData?.spark?.theUltimateMVP}
                 />
               </div>
             </div>

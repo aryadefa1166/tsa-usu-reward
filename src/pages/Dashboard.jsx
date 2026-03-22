@@ -14,7 +14,7 @@ const AwardCard = ({
 }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-  // 1. Logika Render Posisi (Hirarki Divisi)
+  // 1. Logika Render Posisi (Hirarki Divisi Format English)
   const renderPosition = (user) => {
     if (!user) return '';
     if (user.division && user.division !== '-' && user.division !== 'General') {
@@ -23,59 +23,61 @@ const AwardCard = ({
     return user.position;
   };
 
-  // 2. Ekspansi Nama Departemen
+  // 2. Ekspansi Nama Departemen (Sesuai Konfirmasi)
   const expandDeptName = (dept) => {
     if (!dept) return '';
-    if (dept === 'MD') return 'MD (Media and Design) Department';
+    if (dept === 'MD') return 'MD (Media Education) Department';
     if (dept === 'ERBD') return 'ERBD (External Relations and Business Development) Department';
-    if (dept === 'STD') return 'STD (Science and Technology Development) Department';
+    if (dept === 'STD') return 'STD (Staff & Talent Development) Department';
     return `${dept} Department`;
   };
 
   return (
     <div className="bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-tsa-green/30 transition-all duration-300 flex flex-col h-full overflow-hidden group">
       
-      {/* AREA ATAS: HEADER HIJAU TSA */}
-      <div className="bg-tsa-green p-6 pb-16 flex flex-col items-center text-center relative z-0">
-         {/* Background Ornamen Transparan */}
+      {/* AREA ATAS: HEADER HIJAU TSA (Tinggi Dikunci agar Selalu Sejajar) */}
+      <div className="bg-tsa-green h-[200px] p-6 flex flex-col items-center text-center relative z-0">
          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none"><Icon size={80} className="text-white"/></div>
          
-         <div className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-sm border border-white/30 shadow-sm">
+         <div className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-sm border border-white/30 shadow-sm shrink-0">
            <Icon size={20} className="text-tsa-gold" />
          </div>
          <h3 className="font-black text-white text-lg uppercase tracking-widest drop-shadow-sm leading-tight mb-2 z-10">
            {title}
          </h3>
-         <p className="text-[10px] text-white/80 font-medium max-w-[90%] leading-relaxed z-10">
+         {/* Line-clamp memastikan tinggi teks deskripsi konstan maksimal 3 baris */}
+         <p className="text-[10px] text-white/80 font-medium max-w-[90%] leading-relaxed z-10 line-clamp-3">
            {description}
          </p>
       </div>
 
-      {/* AREA TENGAH: FOTO 1:1 BINGKAI EMAS (MELAYANG) & DIPERBESAR */}
+      {/* AREA TENGAH: FOTO DIPERBESAR & GRADASI ESTETIK */}
       <div className="relative z-20 flex flex-col items-center justify-center -mt-16 mb-2 px-6">
          
-         {/* Bingkai Foto Melayang (Diperbesar jadi w-36 h-36 / ~144px) */}
-         <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[4px] shadow-tsa-gold-glow group-hover:scale-105 transition-transform duration-500 relative z-20">
-            <div className="w-full h-full rounded-xl bg-white overflow-hidden flex items-center justify-center relative">
+         {/* Efek Pendar Cahaya (Glow) di belakang bingkai */}
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-tsa-gold/30 blur-3xl rounded-full z-0 pointer-events-none"></div>
+
+         {/* Bingkai Foto Melayang (Diperbesar Mutlak: w-40 h-40) */}
+         <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[4px] shadow-xl group-hover:scale-105 transition-transform duration-500 relative z-20">
+            <div className="w-full h-full rounded-[11px] bg-white overflow-hidden flex items-center justify-center relative">
                {!isPublished ? (
-                  <Lock size={36} className="text-gray-300" />
+                  <Lock size={40} className="text-gray-300" />
                ) : !winner ? (
-                  <Icon size={36} className="text-gray-300" />
+                  <Icon size={40} className="text-gray-300" />
                ) : isGroup ? (
                   groupPhotoUrl || winner.photo_url ? (
                     <img src={groupPhotoUrl || winner.photo_url} alt="Winner" className="w-full h-full object-cover aspect-square" />
                   ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <Users size={48} className="text-gray-400" />
+                      <Users size={50} className="text-gray-400" />
                     </div>
                   )
                ) : (
                   winner.photo_url ? (
                     <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover aspect-square" />
                   ) : (
-                    // FALLBACK MONOGRAM SERIF
                     <div className="w-full h-full bg-tsa-green flex items-center justify-center">
-                        <span className="text-5xl font-serif font-bold text-white">
+                        <span className="text-6xl font-serif font-bold text-white">
                           {getInitials(winner.full_name)}
                         </span>
                     </div>
@@ -83,49 +85,47 @@ const AwardCard = ({
                )}
             </div>
          </div>
-         
-         {/* Efek Gradasi Bayangan Realistis & Memudar ke Bawah */}
-         <div className="absolute top-[85%] w-32 h-16 bg-gradient-to-b from-tsa-gold/30 to-transparent blur-xl pointer-events-none -z-10"></div>
       </div>
 
-      {/* AREA BAWAH: INFORMASI & SKOR DGN GLASSMORPHISM ESTETIK */}
-      <div className="flex flex-col flex-grow px-6 pb-6 text-center relative z-10 bg-gradient-to-br from-green-50/80 via-white to-tsa-gold/5">
+      {/* AREA BAWAH: INFORMASI & SKOR DGN GLASSMORPHISM TSA */}
+      <div className="flex flex-col flex-grow px-6 pb-6 text-center relative z-10 bg-gradient-to-br from-[#e8f3ef] via-white to-[#fdf9ea]">
          
          {!isPublished ? (
-            <div className="mt-4">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border border-dashed border-gray-300 px-3 py-1.5 rounded-md inline-block bg-white/50 backdrop-blur-sm">To be announced</p>
+            <div className="mt-4 flex-grow flex items-center justify-center">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border border-dashed border-gray-300 px-4 py-2 rounded-md bg-white/50 backdrop-blur-sm">To be announced</p>
             </div>
          ) : !winner ? (
-            <div className="mt-4">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100/50 px-3 py-1.5 rounded-md border border-gray-200 inline-block backdrop-blur-sm">Data Not Available</p>
+            <div className="mt-4 flex-grow flex items-center justify-center">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100/50 px-4 py-2 rounded-md border border-gray-200 backdrop-blur-sm">Data Not Available</p>
             </div>
          ) : (
-            <>
-              {/* Nama Pemenang / Departemen (Ekspansi) */}
-              <h2 className="font-black text-tsa-dark text-xl leading-tight mb-2 px-2 mt-2">
-                {isGroup ? expandDeptName(winner.dept || winner.name) : winner.full_name}
-              </h2>
+            <div className="flex flex-col flex-grow items-center justify-between">
               
-              {/* Label Posisi & Cohort (Hierarki Vertikal) */}
-              {!isGroup && (
-                <div className="flex flex-col items-center justify-center gap-1.5 mb-5">
-                  {/* Posisi & Divisi & Dept */}
-                  <span className="px-2.5 py-1 bg-white text-tsa-green border border-green-100/50 shadow-sm rounded-md text-[9px] font-bold uppercase tracking-widest">
-                    {renderPosition(winner)} • {winner.dept}
-                  </span>
-                  {/* Cohort diletakkan di bawah posisi */}
-                  {winner.cohort && (
-                     <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-                       {winner.cohort}
-                     </span>
-                  )}
-                </div>
-              )}
+              <div className="flex flex-col items-center w-full">
+                {/* Nama Pemenang */}
+                <h2 className="font-black text-tsa-dark text-xl sm:text-2xl leading-tight mb-2 px-2 mt-2">
+                  {isGroup ? expandDeptName(winner.dept || winner.name) : winner.full_name}
+                </h2>
+                
+                {/* Label Posisi & Cohort (Proporsional Berdekatan) */}
+                {!isGroup && (
+                  <div className="flex flex-col items-center justify-center gap-1.5 mb-4">
+                    <span className="px-3 py-1 bg-white/80 text-tsa-green border border-tsa-green/20 shadow-sm rounded-md text-[9px] font-bold uppercase tracking-widest backdrop-blur-sm">
+                      {renderPosition(winner)} • {winner.dept}
+                    </span>
+                    {winner.cohort && (
+                       <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest bg-white/50 px-2 py-0.5 rounded-sm">
+                         {winner.cohort}
+                       </span>
+                    )}
+                  </div>
+                )}
+              </div>
 
-              {/* Skor Akhir (Glassmorphism effect) */}
-              <div className={`mt-auto pt-4 border-t border-gray-200/60 flex items-end ${baseScore ? 'justify-between' : 'justify-center'} w-full bg-white/30 rounded-xl p-3 backdrop-blur-sm shadow-sm mt-4`}>
+              {/* Skor Akhir (Dibuat Kompak dan Menempel) */}
+              <div className={`pt-3 border-t border-tsa-green/10 flex items-center ${baseScore ? 'justify-between' : 'justify-center'} w-full bg-white/40 rounded-xl p-3 backdrop-blur-md shadow-[0_2px_10px_rgba(0,103,73,0.05)]`}>
                  <div className={baseScore ? 'text-left' : 'text-center'}>
-                    <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Final Score</p>
+                    <p className="text-[8px] font-black uppercase tracking-widest text-gray-500 mb-0.5">Final Score</p>
                     <p className="text-xl font-black text-tsa-green leading-none">
                       {scoreValue ? scoreValue.toFixed(1) : '0.0'} <span className="text-xs text-gray-400/70">/ 100</span>
                     </p>
@@ -138,7 +138,7 @@ const AwardCard = ({
                    </div>
                  )}
               </div>
-            </>
+            </div>
          )}
       </div>
     </div>

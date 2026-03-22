@@ -14,20 +14,29 @@ const AwardCard = ({
 }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-  // Logika Render Posisi (Mirip Navbar)
+  // 1. Logika Render Posisi (Hirarki Divisi)
   const renderPosition = (user) => {
     if (!user) return '';
     if (user.division && user.division !== '-' && user.division !== 'General') {
-      return `${user.position} ${user.division}`;
+      return `${user.position} • ${user.division}`;
     }
     return user.position;
+  };
+
+  // 2. Ekspansi Nama Departemen
+  const expandDeptName = (dept) => {
+    if (!dept) return '';
+    if (dept === 'MD') return 'MD (Media and Design) Department';
+    if (dept === 'ERBD') return 'ERBD (External Relations and Business Development) Department';
+    if (dept === 'STD') return 'STD (Science and Technology Development) Department';
+    return `${dept} Department`;
   };
 
   return (
     <div className="bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-tsa-green/30 transition-all duration-300 flex flex-col h-full overflow-hidden group">
       
       {/* AREA ATAS: HEADER HIJAU TSA */}
-      <div className="bg-tsa-green p-6 pb-14 flex flex-col items-center text-center relative z-0">
+      <div className="bg-tsa-green p-6 pb-16 flex flex-col items-center text-center relative z-0">
          {/* Background Ornamen Transparan */}
          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none"><Icon size={80} className="text-white"/></div>
          
@@ -42,22 +51,22 @@ const AwardCard = ({
          </p>
       </div>
 
-      {/* AREA TENGAH: FOTO 1:1 BINGKAI EMAS (MELAYANG) */}
-      <div className="relative z-20 flex flex-col items-center justify-center -mt-12 mb-3 px-6">
+      {/* AREA TENGAH: FOTO 1:1 BINGKAI EMAS (MELAYANG) & DIPERBESAR */}
+      <div className="relative z-20 flex flex-col items-center justify-center -mt-16 mb-2 px-6">
          
-         {/* Bingkai Foto Melayang */}
-         <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[3px] shadow-tsa-gold-glow group-hover:scale-105 transition-transform duration-500 relative z-20">
+         {/* Bingkai Foto Melayang (Diperbesar jadi w-36 h-36 / ~144px) */}
+         <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[4px] shadow-tsa-gold-glow group-hover:scale-105 transition-transform duration-500 relative z-20">
             <div className="w-full h-full rounded-xl bg-white overflow-hidden flex items-center justify-center relative">
                {!isPublished ? (
-                  <Lock size={30} className="text-gray-300" />
+                  <Lock size={36} className="text-gray-300" />
                ) : !winner ? (
-                  <Icon size={30} className="text-gray-300" />
+                  <Icon size={36} className="text-gray-300" />
                ) : isGroup ? (
                   groupPhotoUrl || winner.photo_url ? (
                     <img src={groupPhotoUrl || winner.photo_url} alt="Winner" className="w-full h-full object-cover aspect-square" />
                   ) : (
                     <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                      <Users size={40} className="text-gray-400" />
+                      <Users size={48} className="text-gray-400" />
                     </div>
                   )
                ) : (
@@ -66,7 +75,7 @@ const AwardCard = ({
                   ) : (
                     // FALLBACK MONOGRAM SERIF
                     <div className="w-full h-full bg-tsa-green flex items-center justify-center">
-                        <span className="text-4xl font-serif font-bold text-white">
+                        <span className="text-5xl font-serif font-bold text-white">
                           {getInitials(winner.full_name)}
                         </span>
                     </div>
@@ -75,48 +84,50 @@ const AwardCard = ({
             </div>
          </div>
          
-         {/* Efek Gradasi Bayangan Realistis (Estetik) */}
-         <div className="w-20 h-4 bg-black/15 blur-md rounded-full mt-1 z-10"></div>
+         {/* Efek Gradasi Bayangan Realistis & Memudar ke Bawah */}
+         <div className="absolute top-[85%] w-32 h-16 bg-gradient-to-b from-tsa-gold/30 to-transparent blur-xl pointer-events-none -z-10"></div>
       </div>
 
-      {/* AREA BAWAH: INFORMASI & SKOR (PUTIH BERSIH) */}
-      <div className="flex flex-col flex-grow px-6 pb-6 text-center relative z-10">
+      {/* AREA BAWAH: INFORMASI & SKOR DGN GLASSMORPHISM ESTETIK */}
+      <div className="flex flex-col flex-grow px-6 pb-6 text-center relative z-10 bg-gradient-to-br from-green-50/80 via-white to-tsa-gold/5">
          
          {!isPublished ? (
-            <div className="mt-2">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border border-dashed border-gray-300 px-3 py-1.5 rounded-md inline-block">To be announced</p>
+            <div className="mt-4">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border border-dashed border-gray-300 px-3 py-1.5 rounded-md inline-block bg-white/50 backdrop-blur-sm">To be announced</p>
             </div>
          ) : !winner ? (
-            <div className="mt-2">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-3 py-1.5 rounded-md border border-gray-200 inline-block">Data Not Available</p>
+            <div className="mt-4">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100/50 px-3 py-1.5 rounded-md border border-gray-200 inline-block backdrop-blur-sm">Data Not Available</p>
             </div>
          ) : (
             <>
-              {/* Nama Pemenang */}
-              <h2 className="font-black text-tsa-dark text-xl leading-tight mb-2 truncate px-2">
-                {isGroup ? (winner.name || `${winner.dept} DEPT`) : winner.full_name}
+              {/* Nama Pemenang / Departemen (Ekspansi) */}
+              <h2 className="font-black text-tsa-dark text-xl leading-tight mb-2 px-2 mt-2">
+                {isGroup ? expandDeptName(winner.dept || winner.name) : winner.full_name}
               </h2>
               
-              {/* Label Posisi */}
+              {/* Label Posisi & Cohort (Hierarki Vertikal) */}
               {!isGroup && (
-                <div className="flex flex-wrap justify-center gap-1.5 mb-4">
-                  <span className="px-2.5 py-1 bg-green-50 text-tsa-green border border-green-100 rounded-md text-[9px] font-bold uppercase tracking-widest">
+                <div className="flex flex-col items-center justify-center gap-1.5 mb-5">
+                  {/* Posisi & Divisi & Dept */}
+                  <span className="px-2.5 py-1 bg-white text-tsa-green border border-green-100/50 shadow-sm rounded-md text-[9px] font-bold uppercase tracking-widest">
                     {renderPosition(winner)} • {winner.dept}
                   </span>
+                  {/* Cohort diletakkan di bawah posisi */}
                   {winner.cohort && (
-                     <span className="px-2.5 py-1 bg-gray-50 text-gray-500 border border-gray-200 rounded-md text-[9px] font-bold uppercase tracking-widest">
+                     <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
                        {winner.cohort}
                      </span>
                   )}
                 </div>
               )}
 
-              {/* Skor Akhir */}
-              <div className={`mt-auto pt-4 border-t border-gray-100 flex items-end ${baseScore ? 'justify-between' : 'justify-center'} w-full`}>
+              {/* Skor Akhir (Glassmorphism effect) */}
+              <div className={`mt-auto pt-4 border-t border-gray-200/60 flex items-end ${baseScore ? 'justify-between' : 'justify-center'} w-full bg-white/30 rounded-xl p-3 backdrop-blur-sm shadow-sm mt-4`}>
                  <div className={baseScore ? 'text-left' : 'text-center'}>
                     <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Final Score</p>
                     <p className="text-xl font-black text-tsa-green leading-none">
-                      {scoreValue ? scoreValue.toFixed(1) : '0.0'} <span className="text-xs text-gray-400">/ 100</span>
+                      {scoreValue ? scoreValue.toFixed(1) : '0.0'} <span className="text-xs text-gray-400/70">/ 100</span>
                     </p>
                  </div>
                  

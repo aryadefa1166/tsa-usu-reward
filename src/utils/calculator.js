@@ -26,7 +26,7 @@ const computeQuarterData = (users, assessments, attendance) => {
     assessMap[a.target_id].count += 1;
   });
 
-  // O(N) Kalkulasi Blueprint
+  // O(N) Kalkulasi Blueprint & Ekspos Data untuk Tie-Breaker
   const results = users.map(user => {
     const uAttend = attendMap[user.id] || 0;
     const uAssess = assessMap[user.id];
@@ -46,7 +46,20 @@ const computeQuarterData = (users, assessments, attendance) => {
     const avgQualitative = (avg.attitude + avg.discipline + avg.active + avg.agility + avg.cheerful) / 5;
     const theUltimateMVP = (0.75 * avgQualitative) + (0.25 * uAttend);
 
-    return { ...user, attendanceScore: uAttend, qualitativeScore: avgQualitative, theReliableOne, theHighAchiever, theSpark, theUltimateMVP };
+    return { 
+      ...user, 
+      attendanceScore: uAttend, 
+      qualitativeScore: avgQualitative, 
+      avgAttitude: avg.attitude,
+      avgDiscipline: avg.discipline,
+      avgActive: avg.active,
+      avgAgility: avg.agility,
+      avgCheerful: avg.cheerful,
+      theReliableOne, 
+      theHighAchiever, 
+      theSpark, 
+      theUltimateMVP 
+    };
   });
 
   // Kalkulasi Best Dept
@@ -63,17 +76,56 @@ const computeQuarterData = (users, assessments, attendance) => {
     dept, score: deptMap[dept].count > 0 ? deptMap[dept].totalMVP / deptMap[dept].count : 0
   }));
 
-  const getWinner = (arr, scoreKey) => {
-    const sorted = [...arr].sort((a, b) => b[scoreKey] - a[scoreKey]);
+  // =======================================================
+  // ENGINE TIE-BREAKER KUARTALAN (DEEP WATERFALL)
+  // =======================================================
+  const getQuarterlyWinner = (arr, scoreKey, awardType) => {
+    const sorted = [...arr].sort((a, b) => {
+      // 0. Filter Utama: Bandingkan Skor Blueprint (Kalo beda, langsung tentukan)
+      if (b[scoreKey] !== a[scoreKey]) return b[scoreKey] - a[scoreKey];
+
+      // 1-4. Filter Tie-Breaker Berlapis
+      if (awardType === 'RELIABLE') {
+        if (b.attendanceScore !== a.attendanceScore) return b.attendanceScore - a.attendanceScore;
+        if (b.avgDiscipline !== a.avgDiscipline) return b.avgDiscipline - a.avgDiscipline;
+        if (b.qualitativeScore !== a.qualitativeScore) return b.qualitativeScore - a.qualitativeScore;
+        if (b.avgActive !== a.avgActive) return b.avgActive - a.avgActive;
+      } 
+      else if (awardType === 'ACHIEVER') {
+        if (b.avgAgility !== a.avgAgility) return b.avgAgility - a.avgAgility;
+        if (b.avgActive !== a.avgActive) return b.avgActive - a.avgActive;
+        if (b.attendanceScore !== a.attendanceScore) return b.attendanceScore - a.attendanceScore;
+        if (b.qualitativeScore !== a.qualitativeScore) return b.qualitativeScore - a.qualitativeScore;
+      } 
+      else if (awardType === 'SPARK') {
+        if (b.avgCheerful !== a.avgCheerful) return b.avgCheerful - a.avgCheerful;
+        if (b.avgAttitude !== a.avgAttitude) return b.avgAttitude - a.avgAttitude;
+        if (b.attendanceScore !== a.attendanceScore) return b.attendanceScore - a.attendanceScore;
+        if (b.qualitativeScore !== a.qualitativeScore) return b.qualitativeScore - a.qualitativeScore;
+      } 
+      else if (awardType === 'MVP') {
+        if (b.attendanceScore !== a.attendanceScore) return b.attendanceScore - a.attendanceScore;
+        if (b.avgAgility !== a.avgAgility) return b.avgAgility - a.avgAgility;
+        if (b.avgActive !== a.avgActive) return b.avgActive - a.avgActive; // <-- TIE-BREAKER 3: ACTIVE (Sesuai Permintaan)
+        if (b.avgAttitude !== a.avgAttitude) return b.avgAttitude - a.avgAttitude;
+        if (b.avgDiscipline !== a.avgDiscipline) return b.avgDiscipline - a.avgDiscipline;
+      }
+
+      // 5. FAILSAFE MUTLAK: Abjad Nama
+      const nameA = a.full_name || a.dept || '';
+      const nameB = b.full_name || b.dept || '';
+      return nameA.localeCompare(nameB);
+    });
+
     return sorted.length > 0 && sorted[0][scoreKey] > 0 ? sorted[0] : null;
   };
 
   return {
-    reliable: getWinner(results, 'theReliableOne'),
-    achiever: getWinner(results, 'theHighAchiever'),
-    spark: getWinner(results, 'theSpark'),
-    mvp: getWinner(results, 'theUltimateMVP'),
-    bestDept: getWinner(deptResults, 'score'),
+    reliable: getQuarterlyWinner(results, 'theReliableOne', 'RELIABLE'),
+    achiever: getQuarterlyWinner(results, 'theHighAchiever', 'ACHIEVER'),
+    spark: getQuarterlyWinner(results, 'theSpark', 'SPARK'),
+    mvp: getQuarterlyWinner(results, 'theUltimateMVP', 'MVP'),
+    bestDept: getQuarterlyWinner(deptResults, 'score', 'DEPT'),
     allScores: results,
     allDeptScores: deptResults 
   };
@@ -94,7 +146,6 @@ export const calculateQuarterlyResults = async (quarter) => {
     if (assessRes.error) throw assessRes.error;
     if (attendRes.error) throw attendRes.error;
 
-    // Memanfaatkan core engine yang sudah dioptimasi
     return computeQuarterData(usersRes.data || [], assessRes.data || [], attendRes.data || []);
   } catch (error) {
     console.error("Quarterly Engine Error:", error);
@@ -108,7 +159,6 @@ export const calculateQuarterlyResults = async (quarter) => {
 // ============================================================================
 export const calculateEndOfTermResults = async () => {
   try {
-    // 1. Eksekusi Tarikan Data Mutlak (HANYA 5 API CALLS TOTAL UTK SELURUH PROSES)
     const [usersRes, assessRes, attendRes, votesRes, projectsRes] = await Promise.all([
       supabase.from('users').select('*').neq('role', 1).eq('is_active', true),
       supabase.from('assessments').select('*'),
@@ -123,10 +173,8 @@ export const calculateEndOfTermResults = async () => {
     const votes = votesRes.data || [];
     const projects = projectsRes.data || [];
 
-    // Pisahkan user staff untuk kalkulasi kuartalan
     const staffUsers = allUsers.filter(u => u.role === 5);
 
-    // Proses Q1 - Q4 di dalam RAM (Sangat Cepat, 0 API Call Tambahan)
     const quarters = ['Q1', 'Q2', 'Q3', 'Q4'].map(q => {
       const qAssess = assessments.filter(a => a.quarter === q);
       const qAttend = attendance.filter(a => a.quarter === q);
@@ -139,22 +187,22 @@ export const calculateEndOfTermResults = async () => {
     const userSystemAvg = {};
     const deptSystemAvg = {};
 
-    allUsers.forEach(u => userSystemAvg[u.id] = { total: 0, count: 0 });
+    // Modifikasi: Tambah pelacakan total absen 1 tahun
+    allUsers.forEach(u => userSystemAvg[u.id] = { total: 0, count: 0, totalAttend: 0 });
     const ALL_DEPTS = ['ERBD', 'MD', 'STD'];
     ALL_DEPTS.forEach(d => deptSystemAvg[d] = { total: 0, count: 0 });
 
     quarters.forEach(q => {
       if (q) {
-        // Ambil riwayat MVP Staff
         if (q.allScores) {
           q.allScores.forEach(u => {
             if (userSystemAvg[u.id] && u.theUltimateMVP > 0) {
               userSystemAvg[u.id].total += u.theUltimateMVP;
               userSystemAvg[u.id].count += 1;
+              userSystemAvg[u.id].totalAttend += u.attendanceScore; // Pelacakan untuk Tie-Breaker
             }
           });
         }
-        // Ambil riwayat Best Dept
         if (q.allDeptScores) {
           q.allDeptScores.forEach(d => {
             if (deptSystemAvg[d.dept] && d.score > 0) {
@@ -169,12 +217,16 @@ export const calculateEndOfTermResults = async () => {
     // ==========================================
     // B. PENGHITUNGAN & NORMALISASI VOTING RCV
     // ==========================================
-    const votePoints = { MVP: {}, ROOKIE: {}, PROJECT: {}, FAV_EB: {} };
+    // Modifikasi: Rekam detail Point, Rank 1, dan Total Voters per Target
+    const voteStats = { MVP: {}, ROOKIE: {}, PROJECT: {}, FAV_EB: {} };
     const evalStars = { DEPT: {}, PROJECT: {} };
     const voterCounts = { MVP: new Set(), ROOKIE: new Set(), PROJECT: new Set(), FAV_EB: new Set() };
 
+    const initVoteStat = (cat, id) => {
+      if (id && !voteStats[cat][id]) voteStats[cat][id] = { points: 0, rank1: 0, voters: 0 };
+    };
+
     votes.forEach(v => {
-      // 1. Rekap Evaluasi BPH (1-5 Bintang yg sudah dikonversi ke 0-100 di DB)
       if (v.category === 'EVAL_DEPT') {
         if (!evalStars.DEPT[v.target_id]) evalStars.DEPT[v.target_id] = { total: 0, count: 0 };
         evalStars.DEPT[v.target_id].total += v.evaluation_score;
@@ -185,31 +237,30 @@ export const calculateEndOfTermResults = async () => {
         evalStars.PROJECT[v.target_id].total += v.evaluation_score;
         evalStars.PROJECT[v.target_id].count += 1;
       }
-      // 2. Rekap Ranked Choice Voting
       else {
         voterCounts[v.category].add(v.voter_id);
-        const mapPoints = (targetId, points) => {
+        const mapVote = (targetId, points, isRank1) => {
           if (targetId) {
-            if (!votePoints[v.category][targetId]) votePoints[v.category][targetId] = 0;
-            votePoints[v.category][targetId] += points;
+            initVoteStat(v.category, targetId);
+            voteStats[v.category][targetId].points += points;
+            voteStats[v.category][targetId].voters += 1;
+            if (isRank1) voteStats[v.category][targetId].rank1 += 1;
           }
         };
 
         if (v.category === 'MVP' || v.category === 'FAV_EB') {
-          mapPoints(v.rank_1, 5); mapPoints(v.rank_2, 4); mapPoints(v.rank_3, 3); mapPoints(v.rank_4, 2); mapPoints(v.rank_5, 1);
+          mapVote(v.rank_1, 5, true); mapVote(v.rank_2, 4, false); mapVote(v.rank_3, 3, false); mapVote(v.rank_4, 2, false); mapVote(v.rank_5, 1, false);
         } else if (v.category === 'ROOKIE' || v.category === 'PROJECT') {
-          mapPoints(v.rank_1, 3); mapPoints(v.rank_2, 2); mapPoints(v.rank_3, 1);
+          mapVote(v.rank_1, 3, true); mapVote(v.rank_2, 2, false); mapVote(v.rank_3, 1, false);
         }
       }
     });
 
-    // Helper Normalisasi RCV (Mencari % dari Max Theoretical Points)
     const normalizeVoting = (rawPoints, totalVoters, maxPointPerVote) => {
       const maxTheoretical = totalVoters * maxPointPerVote;
       return maxTheoretical > 0 ? (rawPoints / maxTheoretical) * 100 : 0;
     };
 
-    // Helper Normalisasi Bintang 
     const normalizeEval = (totalScoreFromDB, count) => {
       return count > 0 ? (totalScoreFromDB / count) : 0;
     };
@@ -218,64 +269,108 @@ export const calculateEndOfTermResults = async () => {
     // C. KALKULASI FINAL BLUEPRINT (80:20 / 50:50)
     // ==========================================
     
-    // 1 & 2 & 5. Kalkulasi User (MVP, Rookie, Fav EB)
     const userFinalScores = allUsers.map(user => {
-      // System Rata-rata
       const sysAvg = userSystemAvg[user.id] && userSystemAvg[user.id].count > 0 ? (userSystemAvg[user.id].total / userSystemAvg[user.id].count) : 0;
+      const avgAttendYear = userSystemAvg[user.id] && userSystemAvg[user.id].count > 0 ? (userSystemAvg[user.id].totalAttend / userSystemAvg[user.id].count) : 0;
       
-      // Normalisasi Vote
-      const mvpVoteScore = normalizeVoting(votePoints.MVP[user.id] || 0, voterCounts.MVP.size, 5);
-      const rookieVoteScore = normalizeVoting(votePoints.ROOKIE[user.id] || 0, voterCounts.ROOKIE.size, 3);
-      const favEbVoteScore = normalizeVoting(votePoints.FAV_EB[user.id] || 0, voterCounts.FAV_EB.size, 5);
+      const mvpStats = voteStats.MVP[user.id] || { points: 0, rank1: 0, voters: 0 };
+      const mvpVoteScore = normalizeVoting(mvpStats.points, voterCounts.MVP.size, 5);
 
-      // Rumus Final
+      const rookieStats = voteStats.ROOKIE[user.id] || { points: 0, rank1: 0, voters: 0 };
+      const rookieVoteScore = normalizeVoting(rookieStats.points, voterCounts.ROOKIE.size, 3);
+
+      const favEbStats = voteStats.FAV_EB[user.id] || { points: 0, rank1: 0, voters: 0 };
+      const favEbVoteScore = normalizeVoting(favEbStats.points, voterCounts.FAV_EB.size, 5);
+
       const mvpFinal = (0.80 * sysAvg) + (0.20 * mvpVoteScore);
       const rookieFinal = (0.80 * sysAvg) + (0.20 * rookieVoteScore);
 
-      return { ...user, mvpFinal, rookieFinal, favEbFinal: favEbVoteScore };
+      return { 
+        ...user, 
+        sysAvg, 
+        avgAttendYear,
+        mvpFinal, mvpVotePoints: mvpStats.points, mvpRank1: mvpStats.rank1, mvpVoters: mvpStats.voters,
+        rookieFinal, rookieVotePoints: rookieStats.points, rookieRank1: rookieStats.rank1, rookieVoters: rookieStats.voters,
+        favEbFinal: favEbVoteScore, favEbVotePoints: favEbStats.points, favEbRank1: favEbStats.rank1, favEbVoters: favEbStats.voters
+      };
     });
 
-    // 3. Kalkulasi Best Dept
     const deptFinalScores = ALL_DEPTS.map(dept => {
       const sysAvg = deptSystemAvg[dept].count > 0 ? (deptSystemAvg[dept].total / deptSystemAvg[dept].count) : 0;
       const evalScore = evalStars.DEPT[dept] ? normalizeEval(evalStars.DEPT[dept].total, evalStars.DEPT[dept].count) : 0;
       
       const finalScore = (0.80 * sysAvg) + (0.20 * evalScore);
-      return { dept, finalScore };
+      return { dept, sysAvg, evalScore, finalScore };
     });
 
-    // 4. Kalkulasi Best Project
     const projectFinalScores = projects.map(proj => {
-      const rcvScore = normalizeVoting(votePoints.PROJECT[proj.id] || 0, voterCounts.PROJECT.size, 3);
+      const projStats = voteStats.PROJECT[proj.id] || { points: 0, rank1: 0, voters: 0 };
+      const rcvScore = normalizeVoting(projStats.points, voterCounts.PROJECT.size, 3);
       const evalScore = evalStars.PROJECT[proj.id] ? normalizeEval(evalStars.PROJECT[proj.id].total, evalStars.PROJECT[proj.id].count) : 0;
       
       const finalScore = (0.50 * rcvScore) + (0.50 * evalScore);
-      return { ...proj, finalScore };
+      return { 
+        ...proj, 
+        evalScore,
+        votePoints: projStats.points, 
+        rank1: projStats.rank1, 
+        voters: projStats.voters,
+        finalScore 
+      };
     });
 
     // ==========================================
-    // D. SORTING & OUTPUT MENCARI JUARA
+    // D. SORTING (DEEP WATERFALL TIE-BREAKER)
     // ==========================================
     
-    // Filter Rookie (Hanya TLD 26) & EB (Hanya BPH/ADV/Kadep/Kadiv)
     const rookieList = userFinalScores.filter(u => u.cohort && u.cohort.includes('26') && u.role === 5);
     const ebList = userFinalScores.filter(u => u.role >= 2 && u.role <= 4);
-    
-    // Filter MVP (Hanya Staff)
     const mvpList = userFinalScores.filter(u => u.role === 5);
 
-    const getFirst = (arr, key) => {
-      const sorted = [...arr].sort((a,b) => b[key] - a[key]);
-      return sorted.length > 0 && sorted[0][key] > 0 ? sorted[0] : null;
+    const getEoTWinner = (arr, scoreKey, awardType) => {
+      const sorted = [...arr].sort((a, b) => {
+        // 0. Filter Utama
+        if (b[scoreKey] !== a[scoreKey]) return b[scoreKey] - a[scoreKey];
+
+        // 1-5. Tie-Breaker Akhir Tahun
+        if (awardType === 'MVP' || awardType === 'ROOKIE') {
+            const pfx = awardType === 'MVP' ? 'mvp' : 'rookie';
+            if (b.sysAvg !== a.sysAvg) return b.sysAvg - a.sysAvg;
+            if (b[`${pfx}VotePoints`] !== a[`${pfx}VotePoints`]) return b[`${pfx}VotePoints`] - a[`${pfx}VotePoints`];
+            if (b[`${pfx}Rank1`] !== a[`${pfx}Rank1`]) return b[`${pfx}Rank1`] - a[`${pfx}Rank1`];
+            if (b[`${pfx}Voters`] !== a[`${pfx}Voters`]) return b[`${pfx}Voters`] - a[`${pfx}Voters`];
+            if (b.avgAttendYear !== a.avgAttendYear) return b.avgAttendYear - a.avgAttendYear;
+        } 
+        else if (awardType === 'FAV_EB') {
+            if (b.favEbRank1 !== a.favEbRank1) return b.favEbRank1 - a.favEbRank1;
+            if (b.favEbVoters !== a.favEbVoters) return b.favEbVoters - a.favEbVoters;
+        } 
+        else if (awardType === 'PROJECT') {
+            if (b.evalScore !== a.evalScore) return b.evalScore - a.evalScore;
+            if (b.votePoints !== a.votePoints) return b.votePoints - a.votePoints;
+            if (b.rank1 !== a.rank1) return b.rank1 - a.rank1;
+            if (b.voters !== a.voters) return b.voters - a.voters;
+        } 
+        else if (awardType === 'DEPT') {
+            if (b.sysAvg !== a.sysAvg) return b.sysAvg - a.sysAvg;
+            if (b.evalScore !== a.evalScore) return b.evalScore - a.evalScore;
+        }
+
+        // Failsafe Mutlak: Abjad
+        const nameA = a.full_name || a.title || a.dept || '';
+        const nameB = b.full_name || b.title || b.dept || '';
+        return nameA.localeCompare(nameB);
+      });
+      return sorted.length > 0 && sorted[0][scoreKey] > 0 ? sorted[0] : null;
     };
 
     return {
-      mvpOfYear: getFirst(mvpList, 'mvpFinal'),
-      rookieOfYear: getFirst(rookieList, 'rookieFinal'),
-      favEb: getFirst(ebList, 'favEbFinal'),
-      bestDeptOfYear: getFirst(deptFinalScores, 'finalScore'),
-      bestProjectOfYear: getFirst(projectFinalScores, 'finalScore'),
-      _meta: { totalVotersMVP: voterCounts.MVP.size, totalVotersRookie: voterCounts.ROOKIE.size } // Opsional utk debug
+      mvpOfYear: getEoTWinner(mvpList, 'mvpFinal', 'MVP'),
+      rookieOfYear: getEoTWinner(rookieList, 'rookieFinal', 'ROOKIE'),
+      favEb: getEoTWinner(ebList, 'favEbFinal', 'FAV_EB'),
+      bestDeptOfYear: getEoTWinner(deptFinalScores, 'finalScore', 'DEPT'),
+      bestProjectOfYear: getEoTWinner(projectFinalScores, 'finalScore', 'PROJECT'),
+      _meta: { totalVotersMVP: voterCounts.MVP.size, totalVotersRookie: voterCounts.ROOKIE.size }
     };
 
   } catch (error) {

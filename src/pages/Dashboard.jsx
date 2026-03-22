@@ -6,110 +6,113 @@ import { calculateQuarterlyResults, calculateEndOfTermResults } from '../utils/c
 import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Users, Loader2, Star, Sparkles, Building2, Briefcase } from 'lucide-react';
 
 // ==========================================
-// KOMPONEN CARD AWARD: "TSA GALA NIGHT LUXURY"
+// KOMPONEN CARD AWARD: "TSA SYSTEM DESIGN" (Clean & Formal)
 // ==========================================
 const AwardCard = ({ 
   title, description, icon: Icon, isPublished, winner, isGroup, groupPhotoUrl, 
-  layout = 'landscape', // 'landscape' (compact) atau 'portrait' (MVP)
-  scoreValue, baseScore // scoreValue untuk skor spesifik kategori, baseScore untuk perbandingan MVP
+  layout = 'landscape', // 'landscape' (horizontal compact) atau 'portrait' (MVP vertikal)
+  scoreValue, baseScore 
 }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-  // State Card
   const isPortrait = layout === 'portrait';
 
   return (
-    <div className={`rounded-3xl border border-tsa-gold/20 shadow-lg relative overflow-hidden bg-gradient-to-br from-tsa-dark to-[#0a1410] hover:-translate-y-1 hover:shadow-tsa-gold-glow transition-all duration-500 group flex ${isPortrait ? 'flex-col h-full min-h-[400px]' : 'flex-col sm:flex-row h-full min-h-[180px]'}`}>
+    <div className={`bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-md hover:border-tsa-green/30 transition-all duration-300 flex overflow-hidden ${isPortrait ? 'flex-col h-full' : 'flex-col sm:flex-row h-full'}`}>
       
-      {/* 1. BACKLIGHT GLOW (Pendaran Emas di Belakang) */}
-      <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-tsa-gold/10 rounded-full blur-3xl group-hover:bg-tsa-gold/20 transition-all duration-500 pointer-events-none"></div>
-
       {!isPublished ? (
         // STATE: LOCKED (BELUM PENGUMUMAN)
-        <div className="flex flex-col items-center justify-center w-full p-8 text-center z-10 bg-black/20">
-           <Lock size={40} className="text-tsa-gold/30 mb-4" />
-           <h3 className="font-black text-lg text-gray-400 uppercase tracking-widest">{title}</h3>
-           <p className="text-[10px] font-bold text-tsa-gold/50 mt-2 uppercase tracking-widest border border-dashed border-tsa-gold/30 px-3 py-1.5 rounded-lg bg-black/30">To be announced</p>
+        <div className="flex flex-col items-center justify-center w-full p-8 text-center bg-gray-50/50 min-h-[200px]">
+           <Lock size={32} className="text-gray-300 mb-3" />
+           <h3 className="font-black text-sm text-gray-400 uppercase tracking-widest">{title}</h3>
+           <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest border border-dashed border-gray-300 px-3 py-1.5 rounded-md bg-white">To be announced</p>
         </div>
       ) : !winner ? (
         // STATE: NO DATA
-        <div className="flex flex-col items-center justify-center w-full p-8 text-center z-10">
-           <Icon size={40} className="text-white/10 mb-4" />
-           <h3 className="font-black text-lg text-gray-500 uppercase tracking-widest">{title}</h3>
-           <p className="text-[10px] font-bold text-gray-500 mt-2 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">Data Not Available</p>
+        <div className="flex flex-col items-center justify-center w-full p-8 text-center bg-gray-50/50 min-h-[200px]">
+           <Icon size={32} className="text-gray-200 mb-3" />
+           <h3 className="font-black text-sm text-gray-400 uppercase tracking-widest">{title}</h3>
+           <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest bg-gray-100 px-3 py-1.5 rounded-md border border-gray-200">Data Not Available</p>
         </div>
       ) : (
-        // STATE: PEMENANG (GALA NIGHT)
+        // STATE: PEMENANG (FORMAL & CLEAN)
         <>
-          {/* FOTO / MONOGRAM AREA */}
-          <div className={`relative flex items-center justify-center overflow-hidden z-0 ${isPortrait ? 'w-full h-56 border-b border-tsa-gold/20' : 'w-full sm:w-2/5 h-48 sm:h-auto border-b sm:border-b-0 sm:border-r border-tsa-gold/20'}`}>
-             
-             {isGroup ? (
-                groupPhotoUrl || winner.photo_url ? (
-                  <img src={groupPhotoUrl || winner.photo_url} alt="Winner" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90" />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-tsa-green to-[#003324] flex items-center justify-center">
-                    <Users size={50} className="text-tsa-gold/50" />
-                  </div>
-                )
-             ) : (
-                winner.photo_url ? (
-                  <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90" />
-                ) : (
-                  // GOLDEN MONOGRAM (Fallback Super Mewah)
-                  <div className="w-full h-full bg-gradient-to-br from-tsa-green to-[#002419] flex items-center justify-center relative">
-                    <div className="w-20 h-20 rounded-full border border-tsa-gold/40 flex items-center justify-center bg-black/20 backdrop-blur-sm shadow-[0_0_20px_rgba(210,179,85,0.2)]">
-                      <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-tsa-gold to-tsa-yellow drop-shadow-md">
-                        {getInitials(winner.full_name)}
-                      </span>
+          {/* AREA FOTO / MONOGRAM SERIF */}
+          <div className={`p-4 shrink-0 flex flex-col justify-center ${isPortrait ? 'w-full h-64 pb-0' : 'w-full sm:w-48 h-56 sm:h-full pr-0'}`}>
+            <div className="w-full h-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm relative bg-gray-50 flex items-center justify-center">
+               {isGroup ? (
+                  groupPhotoUrl || winner.photo_url ? (
+                    <img src={groupPhotoUrl || winner.photo_url} alt="Winner" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-tsa-green flex items-center justify-center">
+                      <Users size={40} className="text-white/80" />
                     </div>
-                  </div>
-                )
-             )}
-             
-             {/* Lencana Mengambang di atas Foto */}
-             <div className="absolute top-3 left-3 z-20">
-               <div className="p-1.5 rounded-lg backdrop-blur-md bg-black/40 border border-tsa-gold/30 flex items-center justify-center shadow-lg">
-                  <Icon size={16} className="text-tsa-gold" />
-               </div>
-             </div>
+                  )
+               ) : (
+                  winner.photo_url ? (
+                    <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover" />
+                  ) : (
+                    // FORMAL SERIF MONOGRAM (Fallback Elegan)
+                    <div className="w-full h-full bg-tsa-green flex items-center justify-center">
+                        <span className="text-6xl font-serif font-bold text-white tracking-tighter">
+                          {getInitials(winner.full_name)}
+                        </span>
+                    </div>
+                  )
+               )}
+            </div>
           </div>
 
-          {/* AREA TEKS (Gelap & Emas) */}
-          <div className={`flex flex-col z-10 bg-transparent ${isPortrait ? 'p-6 items-center text-center' : 'w-full sm:w-3/5 p-5 justify-center'}`}>
+          {/* AREA INFORMASI (Putih, Rapi, Terstruktur) */}
+          <div className={`flex flex-col flex-grow p-5 ${isPortrait ? 'items-center text-center' : 'justify-center'}`}>
              
-             <span className="text-[9px] font-black uppercase tracking-widest text-tsa-gold mb-1 drop-shadow-sm">
-               {title}
-             </span>
+             {/* Judul Award */}
+             <div className={`flex items-center gap-2 mb-2 ${isPortrait ? 'justify-center' : ''}`}>
+                <Icon size={14} className="text-tsa-gold" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-tsa-green">
+                  {title}
+                </span>
+             </div>
              
-             <h2 className={`font-black tracking-tight leading-tight mb-1 text-white ${isPortrait ? 'text-2xl' : 'text-lg truncate w-full'}`}>
+             {/* Nama Pemenang */}
+             <h2 className={`font-black text-tsa-dark leading-tight mb-2 ${isPortrait ? 'text-2xl' : 'text-lg line-clamp-2'}`}>
                {isGroup ? (winner.name || `${winner.dept} DEPT`) : winner.full_name}
              </h2>
              
+             {/* Label Identitas */}
              {!isGroup && (
-               <p className={`text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ${isPortrait ? '' : 'truncate w-full'}`}>
-                 {winner.position} <span className="text-tsa-gold mx-1">•</span> {winner.dept}
-               </p>
+               <div className={`flex flex-wrap gap-1 mb-3 ${isPortrait ? 'justify-center' : ''}`}>
+                 <span className="px-2 py-1 bg-green-50 text-tsa-green border border-green-100 rounded-md text-[9px] font-bold uppercase tracking-widest">
+                   {winner.position} • {winner.dept}
+                 </span>
+                 {winner.cohort && (
+                    <span className="px-2 py-1 bg-gray-50 text-gray-500 border border-gray-200 rounded-md text-[9px] font-bold uppercase tracking-widest">
+                      {winner.cohort}
+                    </span>
+                 )}
+               </div>
              )}
 
+             {/* Deskripsi (Hanya di Portrait agar Landscape lebih hemat tempat) */}
              {isPortrait && (
-               <p className="text-[10px] font-medium text-gray-400 leading-relaxed mb-4 max-w-[80%]">
+               <p className="text-[10px] font-medium text-gray-500 leading-relaxed mb-4">
                  {description}
                </p>
              )}
 
-             <div className="mt-auto pt-3 border-t border-white/10 flex justify-between items-end w-full">
+             {/* Area Skor Akhir */}
+             <div className="mt-auto pt-3 border-t border-gray-100 flex justify-between items-end w-full">
                 <div>
-                   <p className="text-[8px] font-black uppercase tracking-widest text-tsa-gold/70 mb-0.5">Final Score</p>
-                   <p className="text-lg font-black text-tsa-gold drop-shadow-sm leading-none">
-                     {scoreValue ? scoreValue.toFixed(1) : '0.0'} <span className="text-[10px] text-gray-500">/ 100</span>
+                   <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Final Score</p>
+                   <p className="text-lg font-black text-tsa-green leading-none">
+                     {scoreValue ? scoreValue.toFixed(1) : '0.0'} <span className="text-[10px] text-gray-400">/ 100</span>
                    </p>
                 </div>
                 
                 {baseScore && (
                   <div className="text-right">
-                     <p className="text-[8px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">Base MVP</p>
-                     <p className="text-xs font-bold text-gray-400 leading-none">{baseScore.toFixed(1)}</p>
+                     <p className="text-[8px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">Base MVP</p>
+                     <p className="text-xs font-bold text-gray-500 leading-none">{baseScore.toFixed(1)}</p>
                   </div>
                 )}
              </div>
@@ -194,8 +197,8 @@ const Dashboard = () => {
       
       <main className="max-w-6xl mx-auto px-6 mt-8">
         
-        <div className="mb-10">
-          <h1 className="text-3xl md:text-5xl font-black text-tsa-dark tracking-tight">Dashboard Awards</h1>
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight">Dashboard Awards</h1>
         </div>
 
         {/* TAB NAVIGATION */}
@@ -206,9 +209,9 @@ const Dashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-shrink-0 px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
+                className={`flex-shrink-0 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
                   isActive
-                    ? 'bg-tsa-dark text-tsa-gold shadow-lg shadow-tsa-dark/20 transform scale-105 border border-tsa-gold/30'
+                    ? 'bg-tsa-green text-white shadow-md'
                     : 'bg-white text-gray-400 border border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -237,20 +240,20 @@ const Dashboard = () => {
             /* ========================================== */
             <div className="space-y-6 animate-fade-in-up">
               
-              {/* Header Card Dark Mode */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between bg-tsa-dark text-white p-6 md:p-8 rounded-3xl border border-tsa-gold/30 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-tsa-gold/10 rounded-full blur-3xl"></div>
-                <div>
-                  <h2 className="text-2xl font-black text-tsa-gold flex items-center gap-3 tracking-widest uppercase mb-2">
-                    <Trophy size={28} /> Hall of Fame 2026
+              {/* Header Card Formal */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 md:p-8 rounded-3xl border border-gray-200 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+                <div className="ml-2">
+                  <h2 className="text-xl font-black text-tsa-dark flex items-center gap-3 tracking-widest uppercase mb-1">
+                    <Trophy size={24} className="text-tsa-green" /> Hall of Fame 2026
                   </h2>
-                  <p className="text-xs text-gray-400 font-medium max-w-2xl leading-relaxed">The most prestigious awards based on Q1-Q4 aggregation, Executive Evaluation, and Ranked Choice Voting.</p>
+                  <p className="text-xs text-gray-500 font-medium max-w-2xl leading-relaxed">The most prestigious awards based on Q1-Q4 aggregation, Executive Evaluation, and Ranked Choice Voting.</p>
                 </div>
-                <div className="flex flex-col items-start md:items-end mt-4 md:mt-0 z-10">
-                  <span className={`text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-sm border ${isPublished ? 'bg-tsa-gold/20 text-tsa-gold border-tsa-gold/30' : 'bg-emerald-900/50 text-emerald-400 border-emerald-500/30'}`}>
+                <div className="flex flex-col items-start md:items-end mt-4 md:mt-0">
+                  <span className={`text-[10px] font-black px-4 py-2 rounded-md uppercase tracking-widest border ${isPublished ? 'bg-green-50 text-tsa-green border-green-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
                     {isPublished ? '🏆 Results Published' : '🟢 Voting Active'}
                   </span>
-                  {isPrivilegedView && <span className="text-[9px] font-bold text-red-400 mt-2 uppercase tracking-widest animate-pulse">Privileged View</span>}
+                  {isPrivilegedView && <span className="text-[9px] font-bold text-red-500 mt-2 uppercase tracking-widest">Privileged View</span>}
                 </div>
               </div>
 
@@ -267,7 +270,7 @@ const Dashboard = () => {
               </div>
 
               {/* AWARD LAINNYA (COMPACT/LANDSCAPE) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <AwardCard 
                   title="Best Department of the Year" description="Outstanding bureaucratic execution and solid teamwork."
                   icon={Building2} isPublished={showWinners} winner={activeData?.bestDeptOfYear} isGroup={true} groupPhotoUrl={activeData?.bestDeptOfYear ? deptPhotos[activeData.bestDeptOfYear.dept] : null}
@@ -298,19 +301,20 @@ const Dashboard = () => {
             /* ========================================== */
             <div className="space-y-6 animate-fade-in-up">
               
-              <div className="flex flex-col md:flex-row md:items-center justify-between bg-tsa-dark text-white p-6 md:p-8 rounded-3xl border border-tsa-gold/30 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-tsa-gold/10 rounded-full blur-3xl"></div>
-                <div>
-                  <h2 className="text-2xl font-black text-tsa-gold flex items-center gap-3 tracking-widest uppercase mb-2">
-                    <Trophy size={28} /> {activeTab} Quarterly Awards
+              {/* Header Card Formal */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 md:p-8 rounded-3xl border border-gray-200 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
+                <div className="ml-2">
+                  <h2 className="text-xl font-black text-tsa-dark flex items-center gap-3 tracking-widest uppercase mb-1">
+                    <Trophy size={24} className="text-tsa-green" /> {activeTab} Quarterly Awards
                   </h2>
-                  <p className="text-xs text-gray-400 font-medium max-w-2xl leading-relaxed">Based on automated calculation of performance metrics and real-field attendance.</p>
+                  <p className="text-xs text-gray-500 font-medium max-w-2xl leading-relaxed">Based on automated calculation of performance metrics and real-field attendance.</p>
                 </div>
-                <div className="flex flex-col items-start md:items-end mt-4 md:mt-0 z-10">
-                  <span className={`text-[10px] font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-sm border ${isPublished ? 'bg-tsa-gold/20 text-tsa-gold border-tsa-gold/30' : 'bg-emerald-900/50 text-emerald-400 border-emerald-500/30'}`}>
+                <div className="flex flex-col items-start md:items-end mt-4 md:mt-0">
+                  <span className={`text-[10px] font-black px-4 py-2 rounded-md uppercase tracking-widest border ${isPublished ? 'bg-green-50 text-tsa-green border-green-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
                     {isPublished ? '🏆 Results Published' : '🟢 Live Evaluation'}
                   </span>
-                  {isPrivilegedView && <span className="text-[9px] font-bold text-red-400 mt-2 uppercase tracking-widest animate-pulse">Privileged View Active</span>}
+                  {isPrivilegedView && <span className="text-[9px] font-bold text-red-500 mt-2 uppercase tracking-widest">Privileged View Active</span>}
                 </div>
               </div>
 
@@ -326,7 +330,7 @@ const Dashboard = () => {
               </div>
 
               {/* AWARD KUARTAL LAINNYA (COMPACT/LANDSCAPE) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <AwardCard 
                   title="Best Department" description="The department with the highest average MVP score per capita."
                   icon={Building2} isPublished={showWinners} winner={activeData?.bestDept} isGroup={true} groupPhotoUrl={activeData?.bestDept ? deptPhotos[activeData.bestDept.dept] : null}

@@ -10,7 +10,7 @@ import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Users, Loader2, Star, Sp
 // ==========================================
 const AwardCard = ({ 
   title, description, icon: Icon, isPublished, winner, isGroup, groupPhotoUrl, 
-  scoreValue, baseScore, isTopRow = false // <- PROPS BARU UNTUK UKURAN DINAMIS
+  scoreValue, baseScore, isTopRow = false 
 }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
@@ -37,9 +37,9 @@ const AwardCard = ({
     <div className="bg-[#fafafa] rounded-3xl border border-gray-200/60 shadow-sm hover:shadow-lg hover:border-tsa-green/40 transition-all duration-300 flex flex-col h-full overflow-hidden group">
       
       {/* AREA ATAS: HEADER HIJAU TSA 
-          Tinggi dikunci mati berdasarkan baris. Isi teks dipaku ke atas (justify-start) agar tidak ketabrak foto.
+          Tinggi diperbesar sedikit agar teks dan foto tidak berdempetan
       */}
-      <div className={`bg-tsa-green flex flex-col items-center text-center relative z-10 shrink-0 ${isTopRow ? 'h-[220px] pt-6' : 'h-[190px] pt-5'}`}>
+      <div className={`bg-tsa-green flex flex-col items-center text-center relative z-10 shrink-0 ${isTopRow ? 'h-[260px] pt-6' : 'h-[230px] pt-5'}`}>
          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none"><Icon size={80} className="text-white"/></div>
          
          <div className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-sm border border-white/30 shadow-sm">
@@ -56,22 +56,22 @@ const AwardCard = ({
       {/* BODY KARTU: Glassmorphism */}
       <div className="flex flex-col flex-grow relative z-20 bg-gradient-to-br from-green-50/90 via-white/80 to-tsa-gold/10">
          
-         {/* AREA TENGAH: FOTO BINGKAI EMAS MELAYANG (Ukuran Dinamis) */}
-         <div className={`relative z-30 flex flex-col items-center justify-start px-6 mb-4 ${isTopRow ? '-mt-20' : '-mt-14'}`}>
+         {/* AREA TENGAH: FOTO BINGKAI EMAS MELAYANG (Ukuran Diperbesar Signifikan) */}
+         <div className={`relative z-30 flex flex-col items-center justify-start px-6 mb-4 ${isTopRow ? '-mt-28' : '-mt-24'}`}>
             
-            {/* Bingkai Foto Proporsional (Baris atas w-40, baris bawah w-32) */}
-            <div className={`${isTopRow ? 'w-36 h-36 sm:w-40 sm:h-40' : 'w-28 h-28 sm:w-32 sm:h-32'} rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[3px] shadow-[0_10px_20px_rgba(210,179,85,0.4)] group-hover:scale-105 transition-transform duration-500 relative z-30`}>
-               <div className="w-full h-full rounded-[13px] bg-white overflow-hidden flex items-center justify-center">
+            {/* Bingkai Foto Proporsional Diperbesar (Baris atas w-56, baris bawah w-44) */}
+            <div className={`${isTopRow ? 'w-48 h-48 sm:w-56 sm:h-56' : 'w-40 h-40 sm:w-44 sm:h-44'} rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[4px] shadow-[0_10px_20px_rgba(210,179,85,0.4)] group-hover:scale-105 transition-transform duration-500 relative z-30`}>
+               <div className="w-full h-full rounded-[12px] bg-white overflow-hidden flex items-center justify-center">
                   {!isPublished ? (
-                     <Lock size={isTopRow ? 44 : 32} className="text-gray-300" />
+                     <Lock size={isTopRow ? 54 : 40} className="text-gray-300" />
                   ) : !winner ? (
-                     <Icon size={isTopRow ? 44 : 32} className="text-gray-300" />
+                     <Icon size={isTopRow ? 54 : 40} className="text-gray-300" />
                   ) : isGroup ? (
                      groupPhotoUrl || winner.photo_url ? (
                        <img src={groupPhotoUrl || winner.photo_url} alt="Winner" className="w-full h-full object-cover aspect-square" />
                      ) : (
                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                         <Users size={isTopRow ? 54 : 40} className="text-gray-400" />
+                         <Users size={isTopRow ? 64 : 48} className="text-gray-400" />
                        </div>
                      )
                   ) : (
@@ -79,7 +79,7 @@ const AwardCard = ({
                        <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover aspect-square" />
                      ) : (
                        <div className="w-full h-full bg-tsa-green flex items-center justify-center">
-                           <span className={`${isTopRow ? 'text-6xl' : 'text-5xl'} font-serif font-bold text-white`}>
+                           <span className={`${isTopRow ? 'text-7xl' : 'text-6xl'} font-serif font-bold text-white`}>
                              {getInitials(winner.full_name)}
                            </span>
                        </div>
@@ -88,8 +88,8 @@ const AwardCard = ({
                </div>
             </div>
             
-            {/* Efek Gradasi Bayangan Realistis */}
-            <div className={`${isTopRow ? 'w-36' : 'w-28'} h-5 bg-gradient-to-b from-black/20 to-transparent blur-md rounded-b-full -mt-2 z-20`}></div>
+            {/* Efek Gradasi Bayangan Realistis (Lebar menyesuaikan bingkai) */}
+            <div className={`${isTopRow ? 'w-48' : 'w-40'} h-6 bg-gradient-to-b from-black/20 to-transparent blur-md rounded-b-full -mt-3 z-20`}></div>
          </div>
 
          {/* AREA INFORMASI & SKOR */}

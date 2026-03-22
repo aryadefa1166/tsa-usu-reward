@@ -6,84 +6,103 @@ import { calculateQuarterlyResults, calculateEndOfTermResults } from '../utils/c
 import { Trophy, Lock, Zap, Target, ShieldCheck, Crown, Users, Loader2, Star, Sparkles, Building2, Briefcase } from 'lucide-react';
 
 // ==========================================
-// KOMPONEN CARD AWARD (KUARTALAN & END OF TERM)
+// KOMPONEN CARD AWARD: "THE PREMIUM PORTRAIT"
 // ==========================================
-const AwardCard = ({ title, description, icon: Icon, isPublished, winner, bgClass, iconColor, isGroup, groupPhotoUrl, isEndOfTerm = false }) => {
+const AwardCard = ({ title, description, icon: Icon, isPublished, winner, isGroup, groupPhotoUrl, isEndOfTerm = false }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
-  const cardBackground = isEndOfTerm ? 'bg-gradient-to-br from-green-50/50 to-white' : 'bg-white';
+  // State Card untuk Q1-Q4 (Lebih Compact) vs End of Term (Super Mewah)
+  const isSuperPremium = isEndOfTerm && showWinners && winner;
 
   return (
-    <div className={`p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden ${cardBackground} hover:-translate-y-1 transition-all duration-300 flex flex-col h-full`}>
-      {isEndOfTerm && <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>}
-
-      <div className={`absolute top-0 right-0 p-6 opacity-10 ${isEndOfTerm ? 'text-tsa-green' : 'text-gray-300'}`}>
-        <Icon size={100} />
-      </div>
+    <div className={`rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden bg-white hover:-translate-y-1 hover:shadow-xl transition-all duration-500 group flex flex-col h-full ${isEndOfTerm ? 'min-h-[420px]' : 'min-h-[300px]'}`}>
       
-      <div className={`relative z-10 flex flex-col flex-grow ${isEndOfTerm ? 'ml-2' : ''}`}>
-        <div className="flex items-center gap-3 mb-2">
-          <div className={`p-2 rounded-xl shadow-sm ${isEndOfTerm ? 'bg-green-50 text-tsa-green' : `bg-white ${iconColor}`}`}>
-            <Icon size={20} />
+      {/* 1. BACKLIGHT SPOTLIGHT (Pendaran Cahaya di Belakang) */}
+      <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-tsa-gold/10 rounded-full blur-3xl group-hover:bg-tsa-gold/20 transition-all duration-500 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-tsa-green/5 rounded-full blur-3xl group-hover:bg-tsa-green/10 transition-all duration-500 pointer-events-none"></div>
+      
+      {/* Garis Aksen Kiri Khas End Of Term */}
+      {isEndOfTerm && <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-tsa-gold via-tsa-green to-transparent z-20"></div>}
+
+      {!isPublished ? (
+        // STATE: LOCKED (BELUM PENGUMUMAN)
+        <div className="flex flex-col items-center justify-center flex-grow p-8 text-center z-10 bg-gray-50/50">
+           <Lock size={40} className="text-gray-300 mb-4" />
+           <h3 className="font-black text-lg text-gray-400 uppercase tracking-widest">{title}</h3>
+           <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest border border-dashed border-gray-300 px-3 py-1.5 rounded-lg bg-white/50">To be announced</p>
+        </div>
+      ) : !winner ? (
+        // STATE: NO DATA
+        <div className="flex flex-col items-center justify-center flex-grow p-8 text-center z-10">
+           <Icon size={40} className="text-gray-200 mb-4" />
+           <h3 className="font-black text-lg text-gray-400 uppercase tracking-widest">{title}</h3>
+           <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">Data Not Available</p>
+        </div>
+      ) : (
+        // STATE: PEMENANG (THE HALL OF FAME)
+        <>
+          {/* FOTO PORTRAIT RAKSASA (Dominasi 60%-70% Area Atas) */}
+          <div className="w-full relative bg-gray-100 border-b border-gray-100 flex-grow max-h-[60%] flex items-center justify-center overflow-hidden z-0">
+             {isGroup ? (
+                groupPhotoUrl || winner.photo_url ? (
+                  <img src={groupPhotoUrl || winner.photo_url} alt="Winner" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                ) : (
+                  <Users size={60} className="text-gray-300" />
+                )
+             ) : (
+                winner.photo_url ? (
+                  <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                ) : (
+                  <span className="text-5xl font-black text-gray-300">{getInitials(winner.full_name)}</span>
+                )
+             )}
+             
+             {/* Efek Gradasi Pudar (Fade-to-Bottom) agar menyatu dengan area teks */}
+             <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
           </div>
-          <h3 className="font-black text-lg tracking-tight text-tsa-dark">{title}</h3>
-        </div>
-        <p className="text-xs font-medium leading-relaxed mb-6 max-w-[90%] text-gray-500">
-          {description}
-        </p>
-        
-        <div className="mt-auto pt-4 border-t border-gray-100/70">
-          {!isPublished ? (
-            <div className="flex items-center gap-2 px-4 py-3 rounded-xl border bg-white/50 border-dashed border-gray-300 w-full">
-              <Lock size={14} className="text-gray-400" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">To be announced</p>
-            </div>
-          ) : !winner ? (
-            <div className="flex items-center gap-2 px-4 py-3 rounded-xl border w-full bg-gray-50 border-gray-200">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Data Not Available</p>
-            </div>
-          ) : isGroup ? (
-            <div>
-              <div className="w-full h-32 rounded-xl border border-gray-200 shadow-sm overflow-hidden bg-gray-100 mb-3 relative flex items-center justify-center">
-                {groupPhotoUrl || winner.photo_url ? (
-                  <img src={groupPhotoUrl || winner.photo_url} alt="Group/Project" className="w-full h-full object-cover" />
-                ) : (
-                  <Users size={32} className="text-gray-300" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                <p className="absolute bottom-3 left-4 text-white font-black text-lg tracking-widest uppercase shadow-sm pr-4 truncate w-full">
-                  {winner.name || `${winner.dept} DEPT`}
+
+          {/* LENCANA/BADGE JUARA (MENGAMBANG) */}
+          <div className="absolute top-4 right-4 z-20">
+             <div className={`p-2 rounded-xl backdrop-blur-md border shadow-sm flex items-center justify-center ${isEndOfTerm ? 'bg-tsa-gold/90 text-white border-tsa-yellow shadow-tsa-gold-glow' : 'bg-white/90 text-tsa-green border-gray-100'}`}>
+                <Icon size={20} className={isEndOfTerm ? 'text-white' : 'text-tsa-green'} />
+             </div>
+          </div>
+
+          <div className="absolute bottom-[40%] left-0 w-full flex justify-center z-20 -mb-5">
+             <span className="px-4 py-1.5 bg-tsa-dark text-tsa-gold border border-tsa-dark/50 text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl">
+               {title}
+             </span>
+          </div>
+
+          {/* AREA TEKS (Premium Glassmorphism & Identity) */}
+          <div className="p-6 pt-8 flex flex-col items-center text-center z-10 bg-white relative">
+             {/* Nama Pemenang (Massive & Bold) */}
+             <h2 className={`font-black tracking-tight leading-none mb-2 ${isEndOfTerm ? 'text-2xl md:text-3xl text-transparent bg-clip-text bg-gradient-to-r from-tsa-green to-emerald-800' : 'text-xl text-tsa-dark'}`}>
+               {isGroup ? (winner.name || `${winner.dept} DEPT`) : winner.full_name}
+             </h2>
+             
+             {/* Subtitle Identity (Clean & Spaced) */}
+             {!isGroup && (
+               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">
+                 {winner.position} <span className="text-tsa-gold mx-1">•</span> {winner.dept}
+               </p>
+             )}
+
+             {/* Skor atau Deskripsi Pendek */}
+             <div className="mt-auto w-full pt-4 border-t border-gray-100/50 flex justify-between items-center">
+                <p className="text-[9px] font-medium text-gray-400 text-left max-w-[60%] leading-tight pr-2">
+                  {description}
                 </p>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-xl border shadow-sm bg-white border-gray-100">
-                <span className="px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest bg-green-50 text-tsa-green border border-green-100">Total Score</span>
-                <span className="text-sm font-black text-tsa-dark">{winner.score?.toFixed(1) || winner.finalScore?.toFixed(1)} / 100</span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full border shadow-sm overflow-hidden flex-shrink-0 flex items-center justify-center border-gray-200 bg-gray-100">
-                {winner.photo_url ? (
-                  <img src={winner.photo_url} alt={winner.full_name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className={`text-lg font-black text-tsa-green`}>{getInitials(winner.full_name)}</span>
-                )}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-black leading-tight truncate text-tsa-dark">{winner.full_name}</p>
-                <div className="flex flex-wrap gap-1.5 mt-1.5">
-                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-gray-100 text-gray-500 border border-gray-200">
-                    {winner.cohort}
-                  </span>
-                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border truncate max-w-[200px] bg-green-50 text-tsa-green border-green-100`}>
-                    {winner.position} • {winner.dept}
-                  </span>
+                <div className="flex flex-col items-end">
+                   <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Final Score</span>
+                   <span className="text-sm font-black text-tsa-dark bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                     {winner.score?.toFixed(1) || winner.finalScore?.toFixed(1) || winner.mvpFinal?.toFixed(1) || winner.rookieFinal?.toFixed(1) || winner.favEbFinal?.toFixed(1) || winner.theUltimateMVP?.toFixed(1) || winner.theReliableOne?.toFixed(1) || winner.theHighAchiever?.toFixed(1) || winner.theSpark?.toFixed(1)} <span className="text-[10px] text-gray-400">/ 100</span>
+                   </span>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+             </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -100,8 +119,6 @@ const Dashboard = () => {
     Q1: 'LOCKED', Q2: 'LOCKED', Q3: 'LOCKED', Q4: 'LOCKED', 'End of Term': 'LOCKED'
   });
   const [deptPhotos, setDeptPhotos] = useState({});
-  
-  // PERBAIKAN: Implementasi State Caching agar tidak spam fetch API
   const [dataCache, setDataCache] = useState({});
 
   const tabs = ['Q1', 'Q2', 'Q3', 'Q4', 'End of Term'];
@@ -112,7 +129,6 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    // Hanya fetch data jika belum ada di cache
     if (!dataCache[activeTab]) {
       fetchWinnersData(activeTab);
     }
@@ -142,13 +158,9 @@ const Dashboard = () => {
     setLoading(true);
     try {
       let result;
-      if (tabName === 'End of Term') {
-        result = await calculateEndOfTermResults();
-      } else {
-        result = await calculateQuarterlyResults(tabName);
-      }
+      if (tabName === 'End of Term') result = await calculateEndOfTermResults();
+      else result = await calculateQuarterlyResults(tabName);
       
-      // Simpan hasil tarikan ke dalam state Cache
       setDataCache(prev => ({ ...prev, [tabName]: result }));
     } catch (error) {
       console.error(`Error calculating results for ${tabName}:`, error);
@@ -157,13 +169,10 @@ const Dashboard = () => {
     }
   };
 
-  // Logika Filter Status dan Hak Akses UI
   const currentStatus = periodStatus[activeTab];
   const isPublished = currentStatus === 'PUBLISHED';
   const isPrivilegedView = (currentStatus === 'ACTIVE' || currentStatus === 'READ_ONLY') && (user?.role === 1 || user?.role === 2);
   const showWinners = isPublished || isPrivilegedView;
-  
-  // Ambil data aktif dari Cache
   const activeData = dataCache[activeTab];
 
   return (
@@ -198,9 +207,6 @@ const Dashboard = () => {
 
         {/* DYNAMIC CONTENT AREA */}
         <div className="transition-all duration-500">
-          {/* PERBAIKAN: Loading state harus dieksekusi PERTAMA agar 
-            tidak memunculkan "Period Locked" saat aplikasi masih mencari data dari database. 
-          */}
           {loading && !activeData ? (
              <div className="flex justify-center items-center py-20"><Loader2 className="animate-spin text-tsa-green" size={40} /></div>
           ) : currentStatus === 'LOCKED' ? (
@@ -216,8 +222,8 @@ const Dashboard = () => {
             /* ========================================== */
             /* UI CLEAN WHITE HALL OF FAME 2026 */
             /* ========================================== */
-            <div className="space-y-6 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-6 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+            <div className="space-y-8 animate-fade-in-up">
+              <div className="flex items-center justify-between mb-2 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-tsa-gold to-tsa-green"></div>
                 <div className="ml-2">
                   <h2 className="text-2xl font-black text-tsa-dark flex items-center gap-3 tracking-widest uppercase">
@@ -234,44 +240,41 @@ const Dashboard = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
+                <div className="md:col-span-2 md:col-start-3 md:col-end-5">
+                  <AwardCard 
+                    isEndOfTerm={true} title="The Ultimate MVP of the Year" 
+                    description="The absolute highest honor for the most consistent, agile, and impactful officer."
+                    icon={Crown} isPublished={showWinners} winner={activeData?.mvpOfYear}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
                 <div className="md:col-span-3">
                   <AwardCard 
                     isEndOfTerm={true} title="Best Department of the Year" 
-                    description="Outstanding bureaucratic execution and solid teamwork, validated by the Executive Board."
-                    icon={Building2} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={activeData?.bestDeptOfYear} isGroup={true} groupPhotoUrl={activeData?.bestDeptOfYear ? deptPhotos[activeData.bestDeptOfYear.dept] : null}
+                    description="Outstanding bureaucratic execution and solid teamwork."
+                    icon={Building2} isPublished={showWinners} winner={activeData?.bestDeptOfYear} isGroup={true} groupPhotoUrl={activeData?.bestDeptOfYear ? deptPhotos[activeData.bestDeptOfYear.dept] : null}
                   />
                 </div>
                 <div className="md:col-span-3">
                   <AwardCard 
                     isEndOfTerm={true} title="Best Project of the Year" 
-                    description="The most impactful work program chosen by the masses and validated by the Executive Board."
-                    icon={Briefcase} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={activeData?.bestProjectOfYear} isGroup={true}
+                    description="The most impactful work program chosen by the masses."
+                    icon={Briefcase} isPublished={showWinners} winner={activeData?.bestProjectOfYear} isGroup={true}
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <AwardCard 
-                    isEndOfTerm={true} title="The Ultimate MVP of the Year" 
-                    description="The absolute highest honor for the most consistent, agile, and impactful officer."
-                    icon={Crown} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={activeData?.mvpOfYear}
-                  />
-                </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-3">
                   <AwardCard 
                     isEndOfTerm={true} title="Rookie of the Year" 
                     description="The most progressive and adaptive talent from the youngest generation (TLD 26)."
-                    icon={Sparkles} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={activeData?.rookieOfYear}
+                    icon={Sparkles} isPublished={showWinners} winner={activeData?.rookieOfYear}
                   />
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-3">
                   <AwardCard 
                     isEndOfTerm={true} title="Most Favorite EB" 
                     description="The most inspiring and supportive leader chosen 100% by the Staffs."
-                    icon={Star} iconColor="text-tsa-gold"
-                    isPublished={showWinners} winner={activeData?.favEb}
+                    icon={Star} isPublished={showWinners} winner={activeData?.favEb}
                   />
                 </div>
               </div>
@@ -282,7 +285,7 @@ const Dashboard = () => {
             /* ========================================== */
             /* UI QUARTERLY AWARDS (Q1-Q4) */
             /* ========================================== */
-            <div className="space-y-6 animate-fade-in-up">
+            <div className="space-y-8 animate-fade-in-up">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-xl font-black text-tsa-dark flex items-center gap-2">
@@ -302,31 +305,31 @@ const Dashboard = () => {
                 <div className="md:col-span-3">
                   <AwardCard 
                     title="The Ultimate MVP" description="The most balanced performance across 5 qualitative aspects and real-field attendance."
-                    icon={Crown} iconColor="text-blue-500" isPublished={showWinners} winner={activeData?.mvp}
+                    icon={Crown} isPublished={showWinners} winner={activeData?.mvp}
                   />
                 </div>
                 <div className="md:col-span-3">
                   <AwardCard 
                     title="Best Department" description="The department with the highest average MVP score per capita."
-                    icon={Building2} iconColor="text-tsa-gold" isPublished={showWinners} winner={activeData?.bestDept} isGroup={true} groupPhotoUrl={activeData?.bestDept ? deptPhotos[activeData.bestDept.dept] : null}
+                    icon={Building2} isPublished={showWinners} winner={activeData?.bestDept} isGroup={true} groupPhotoUrl={activeData?.bestDept ? deptPhotos[activeData.bestDept.dept] : null}
                   />
                 </div>
                 <div className="md:col-span-2">
                   <AwardCard 
                     title="The Reliable One" description="The highest SOP compliance (Discipline) and attendance consistency."
-                    icon={ShieldCheck} iconColor="text-emerald-500" isPublished={showWinners} winner={activeData?.reliable}
+                    icon={ShieldCheck} isPublished={showWinners} winner={activeData?.reliable}
                   />
                 </div>
                 <div className="md:col-span-2">
                   <AwardCard 
                     title="The High Achiever" description="Superior execution quality (Agility) and rapid-response initiative (Active)."
-                    icon={Target} iconColor="text-red-500" isPublished={showWinners} winner={activeData?.achiever}
+                    icon={Target} isPublished={showWinners} winner={activeData?.achiever}
                   />
                 </div>
                 <div className="md:col-span-2">
                   <AwardCard 
                     title="The Spark" description="Highly communicative and friendly (Cheerful) with outstanding manners (Attitude)."
-                    icon={Zap} iconColor="text-amber-500" isPublished={showWinners} winner={activeData?.spark}
+                    icon={Zap} isPublished={showWinners} winner={activeData?.spark}
                   />
                 </div>
               </div>

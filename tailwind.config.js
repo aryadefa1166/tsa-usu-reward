@@ -15,14 +15,14 @@ export default {
         'tsa-light': '#FFFFFF',  // Putih Bersih
       },
       // MENDAFTARKAN FONT RESMI
-      // Kita gunakan POPPINS sebagai font utama web karena modern dan mudah dibaca.
       fontFamily: {
         sans: ['Poppins', 'sans-serif'], 
         serif: ['Noto Serif', 'serif'],
       },
-      // MENAMBAHKAN BAYANGAN GEOMETRIS HALUS
+      // MENAMBAHKAN BAYANGAN GEOMETRIS HALUS & GLOW PREMIUM
       boxShadow: {
         'tsa': '0 20px 40px -15px rgba(0, 103, 73, 0.15)', // Bayangan halus berwarna hijau
+        'tsa-gold-glow': '0 0 25px -5px rgba(210, 179, 85, 0.5)', // Efek Glow/Neon Emas untuk Lencana Juara
       }
     },
   },

@@ -14,28 +14,39 @@ const AwardCard = ({
 }) => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : '?';
 
+  // Logika Render Posisi (Mirip Navbar)
+  const renderPosition = (user) => {
+    if (!user) return '';
+    if (user.division && user.division !== '-' && user.division !== 'General') {
+      return `${user.position} ${user.division}`;
+    }
+    return user.position;
+  };
+
   return (
     <div className="bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl hover:border-tsa-green/30 transition-all duration-300 flex flex-col h-full overflow-hidden group">
       
       {/* AREA ATAS: HEADER HIJAU TSA */}
-      <div className="bg-tsa-green p-6 pb-12 flex flex-col items-center text-center relative z-0">
+      <div className="bg-tsa-green p-6 pb-14 flex flex-col items-center text-center relative z-0">
          {/* Background Ornamen Transparan */}
          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none"><Icon size={80} className="text-white"/></div>
          
          <div className="bg-white/20 p-2 rounded-full mb-3 backdrop-blur-sm border border-white/30 shadow-sm">
            <Icon size={20} className="text-tsa-gold" />
          </div>
-         <h3 className="font-black text-white text-lg uppercase tracking-widest drop-shadow-sm leading-tight mb-2">
+         <h3 className="font-black text-white text-lg uppercase tracking-widest drop-shadow-sm leading-tight mb-2 z-10">
            {title}
          </h3>
-         <p className="text-[10px] text-white/80 font-medium max-w-[90%] leading-relaxed">
+         <p className="text-[10px] text-white/80 font-medium max-w-[90%] leading-relaxed z-10">
            {description}
          </p>
       </div>
 
       {/* AREA TENGAH: FOTO 1:1 BINGKAI EMAS (MELAYANG) */}
-      <div className="relative z-10 flex justify-center -mt-10 mb-4 px-6">
-         <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[3px] shadow-[0_10px_20px_rgba(210,179,85,0.3)] group-hover:scale-105 transition-transform duration-500">
+      <div className="relative z-20 flex flex-col items-center justify-center -mt-12 mb-3 px-6">
+         
+         {/* Bingkai Foto Melayang */}
+         <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-tsa-green to-tsa-gold p-[3px] shadow-tsa-gold-glow group-hover:scale-105 transition-transform duration-500 relative z-20">
             <div className="w-full h-full rounded-xl bg-white overflow-hidden flex items-center justify-center relative">
                {!isPublished ? (
                   <Lock size={30} className="text-gray-300" />
@@ -63,17 +74,20 @@ const AwardCard = ({
                )}
             </div>
          </div>
+         
+         {/* Efek Gradasi Bayangan Realistis (Estetik) */}
+         <div className="w-20 h-4 bg-black/15 blur-md rounded-full mt-1 z-10"></div>
       </div>
 
       {/* AREA BAWAH: INFORMASI & SKOR (PUTIH BERSIH) */}
-      <div className="flex flex-col flex-grow px-6 pb-6 text-center">
+      <div className="flex flex-col flex-grow px-6 pb-6 text-center relative z-10">
          
          {!isPublished ? (
-            <div className="mt-4">
+            <div className="mt-2">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest border border-dashed border-gray-300 px-3 py-1.5 rounded-md inline-block">To be announced</p>
             </div>
          ) : !winner ? (
-            <div className="mt-4">
+            <div className="mt-2">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-3 py-1.5 rounded-md border border-gray-200 inline-block">Data Not Available</p>
             </div>
          ) : (
@@ -87,7 +101,7 @@ const AwardCard = ({
               {!isGroup && (
                 <div className="flex flex-wrap justify-center gap-1.5 mb-4">
                   <span className="px-2.5 py-1 bg-green-50 text-tsa-green border border-green-100 rounded-md text-[9px] font-bold uppercase tracking-widest">
-                    {winner.position} • {winner.dept}
+                    {renderPosition(winner)} • {winner.dept}
                   </span>
                   {winner.cohort && (
                      <span className="px-2.5 py-1 bg-gray-50 text-gray-500 border border-gray-200 rounded-md text-[9px] font-bold uppercase tracking-widest">

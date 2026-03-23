@@ -62,17 +62,16 @@ const computeQuarterData = (users, assessments, attendance) => {
     };
   });
 
-  // Kalkulasi Best Dept Kuartalan (Rumus Baru: 60% MVP + 40% Reliable)
+  // Kalkulasi Best Dept Kuartalan (KEMBALI KE ATURAN ASLI: Rata-Rata Per Kapita MVP)
   const deptMap = {};
   results.forEach(r => {
     if (r.dept && r.dept !== 'General' && r.dept !== '-') {
       if (!deptMap[r.dept]) {
         deptMap[r.dept] = { 
-          totalMVP: 0, totalReliable: 0, totalAttend: 0, totalDiscipline: 0, totalAgility: 0, totalActive: 0, count: 0 
+          totalMVP: 0, totalAttend: 0, totalDiscipline: 0, totalAgility: 0, totalActive: 0, count: 0 
         };
       }
       deptMap[r.dept].totalMVP += r.theUltimateMVP;
-      deptMap[r.dept].totalReliable += r.theReliableOne;
       deptMap[r.dept].totalAttend += r.attendanceScore;
       deptMap[r.dept].totalDiscipline += r.avgDiscipline;
       deptMap[r.dept].totalAgility += r.avgAgility;
@@ -83,15 +82,9 @@ const computeQuarterData = (users, assessments, attendance) => {
 
   const deptResults = Object.keys(deptMap).map(dept => {
     const count = deptMap[dept].count > 0 ? deptMap[dept].count : 1;
-    const avgMVP = deptMap[dept].totalMVP / count;
-    const avgReliable = deptMap[dept].totalReliable / count;
-    
-    // Perhitungan DPI (Department Performance Index)
-    const score = (0.60 * avgMVP) + (0.40 * avgReliable);
-    
     return {
       dept, 
-      score,
+      score: deptMap[dept].totalMVP / count, // Nilai Utama = Rata-rata The Ultimate MVP
       avgAttend: deptMap[dept].totalAttend / count,
       avgDiscipline: deptMap[dept].totalDiscipline / count,
       avgAgility: deptMap[dept].totalAgility / count,
@@ -129,7 +122,7 @@ const computeQuarterData = (users, assessments, attendance) => {
       else if (awardType === 'MVP') {
         if (b.attendanceScore !== a.attendanceScore) return b.attendanceScore - a.attendanceScore;
         if (b.avgAgility !== a.avgAgility) return b.avgAgility - a.avgAgility;
-        if (b.avgActive !== a.avgActive) return b.avgActive - a.avgActive; // DIKOREKSI: Active
+        if (b.avgActive !== a.avgActive) return b.avgActive - a.avgActive; 
         if (b.avgDiscipline !== a.avgDiscipline) return b.avgDiscipline - a.avgDiscipline;
       }
       else if (awardType === 'DEPT') {
@@ -232,7 +225,7 @@ export const calculateEndOfTermResults = async () => {
               userSystemAvg[u.id].count += 1;
               userSystemAvg[u.id].totalAttend += u.attendanceScore;
               userSystemAvg[u.id].totalAgility += u.avgAgility;
-              userSystemAvg[u.id].totalActive += u.avgActive; // DIKOREKSI: Menggunakan Active
+              userSystemAvg[u.id].totalActive += u.avgActive;
               userSystemAvg[u.id].totalDiscipline += u.avgDiscipline;
             }
           });
@@ -240,7 +233,7 @@ export const calculateEndOfTermResults = async () => {
         if (q.allDeptScores) {
           q.allDeptScores.forEach(d => {
             if (deptSystemAvg[d.dept] && d.score > 0) {
-              deptSystemAvg[d.dept].total += d.score;
+              deptSystemAvg[d.dept].total += d.score; // Score ini adalah rata-rata MVP per kapita departemen di kuartal tersebut
               deptSystemAvg[d.dept].totalAttend += d.avgAttend;
               deptSystemAvg[d.dept].count += 1;
             }
@@ -341,12 +334,13 @@ export const calculateEndOfTermResults = async () => {
 
     const deptFinalScores = ALL_DEPTS.map(dept => {
       const count = deptSystemAvg[dept].count > 0 ? deptSystemAvg[dept].count : 1;
-      const sysAvg = deptSystemAvg[dept].total / count; // Ini adalah Rata-rata Skor Best Dept (60 MVP + 40 Reliable)
+      const sysAvg = deptSystemAvg[dept].total / count; 
       const avgAttendYear = deptSystemAvg[dept].totalAttend / count;
       
       const hasEvals = evalStars.DEPT[dept] && evalStars.DEPT[dept].count > 0;
       const evalScore = hasEvals ? normalizeEval(evalStars.DEPT[dept].total, evalStars.DEPT[dept].count) : 0;
       
+      // Dynamic Weighting Dept
       const finalScore = hasEvals ? (0.80 * sysAvg) + (0.20 * evalScore) : sysAvg;
       return { dept, sysAvg, evalScore, finalScore, avgAttendYear };
     });
@@ -398,7 +392,7 @@ export const calculateEndOfTermResults = async () => {
             
             // Failsafe Rahasia jika Voting 0: Pakai aturan Tie-Breaker Q1 (Active)
             if (b.avgAgilityYear !== a.avgAgilityYear) return b.avgAgilityYear - a.avgAgilityYear;
-            if (b.avgActiveYear !== a.avgActiveYear) return b.avgActiveYear - a.avgActiveYear; // DIKOREKSI
+            if (b.avgActiveYear !== a.avgActiveYear) return b.avgActiveYear - a.avgActiveYear; 
             if (b.avgDisciplineYear !== a.avgDisciplineYear) return b.avgDisciplineYear - a.avgDisciplineYear;
         } 
         else if (awardType === 'FAV_EB') {

@@ -14,6 +14,13 @@ const DIV_ORDER = {
   STD: ['Staff Management', 'Talent Management', 'General']
 };
 
+// KOMPONEN IKON HEADER (STYLE ADMIN PANEL)
+const ClipboardIconWrapper = () => (
+  <div className="w-10 h-10 bg-tsa-green rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+    <ClipboardCheck size={20} className="text-white" />
+  </div>
+);
+
 const Attendance = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('Q1');
@@ -34,11 +41,10 @@ const Attendance = () => {
     fetchAdminSettings();
   }, []);
 
-  // Re-fetch data jika tab berubah atau setelah setting didapat
   useEffect(() => {
     if (isSecretary && periodStatus[activeTab]) {
       if (periodStatus[activeTab] === 'LOCKED') {
-        setLoading(false); // Tidak perlu fetch jika terkunci mutlak
+        setLoading(false);
       } else {
         fetchStaffAndAttendance();
       }
@@ -57,7 +63,6 @@ const Attendance = () => {
   const fetchStaffAndAttendance = async () => {
     setLoading(true);
     try {
-      // 1. Tarik HANYA target yang role-nya 5 (Staff & TL) yang AKTIF
       const { data: staffData, error: staffError } = await supabase
         .from('users')
         .select('*')
@@ -65,7 +70,6 @@ const Attendance = () => {
         .eq('is_active', true);
       if (staffError) throw staffError;
 
-      // 2. Tarik data absensi yang SUDAH ADA di kuartal aktif
       const { data: existingData, error: attendError } = await supabase
         .from('attendance')
         .select('*')
@@ -82,17 +86,14 @@ const Attendance = () => {
         };
       });
 
-      // 3. Gabungkan state form & Grouping
       const initialData = {};
       const grouped = staffData.reduce((acc, staff) => {
-        // Pemetaan Data Form
         if (existingMap[staff.id]) {
           initialData[staff.id] = existingMap[staff.id];
         } else {
           initialData[staff.id] = { present: '', total: '', isExisting: false, id: null };
         }
 
-        // Pemetaan Grouping
         const dept = staff.dept || 'Other';
         const div = staff.division && staff.division !== '-' ? staff.division : 'General';
         if (!acc[dept]) acc[dept] = {};
@@ -115,7 +116,6 @@ const Attendance = () => {
   const handleInputChange = (staffId, field, value) => {
     if (periodStatus[activeTab] !== 'ACTIVE') return;
     
-    // Hanya izinkan input angka atau kosong
     const numValue = value === '' ? '' : parseInt(value);
     if (value !== '' && isNaN(numValue)) return;
 
@@ -131,7 +131,6 @@ const Attendance = () => {
   const handleSubmitScore = async (staffId) => {
     const data = attendanceData[staffId];
     
-    // Validasi Mutlak
     if (data.present === '' || data.total === '') {
       return alert('Please fill in both columns (Present and Total Events)!');
     }
@@ -152,15 +151,12 @@ const Attendance = () => {
 
     try {
       if (data.isExisting && data.id) {
-        // UPDATE JIKA SUDAH ADA
         const { error } = await supabase.from('attendance').update(payload).eq('id', data.id);
         if (error) throw error;
       } else {
-        // INSERT JIKA BARU
         const { data: resData, error } = await supabase.from('attendance').insert(payload).select().single();
         if (error) throw error;
         
-        // Update Local State (Anti-Jumping UI)
         setAttendanceData(prev => ({
           ...prev,
           [staffId]: { ...prev[staffId], id: resData.id, isExisting: true }
@@ -173,7 +169,6 @@ const Attendance = () => {
     }
   };
 
-  // Helper Persentase
   const getPercentage = (present, total) => {
     if (!total || total === 0 || present === '') return 0;
     return Math.round((present / total) * 100);
@@ -185,7 +180,6 @@ const Attendance = () => {
     return 'bg-red-100 text-red-700 border-red-200';
   };
 
-  // Fungsi Pengurutan Ganda (Cohort -> Abjad)
   const sortStaff = (a, b) => {
     const getCohortNum = (cohortStr) => {
       const num = parseInt((cohortStr || '').replace(/\D/g, ''));
@@ -206,16 +200,25 @@ const Attendance = () => {
   const currentStatus = periodStatus[activeTab];
   const isReadOnly = currentStatus !== 'ACTIVE';
 
-  // Jika bukan sekretaris, blokir UI
+  // ==========================================
+  // BLOK KEAMANAN MUTLAK (STYLE ADMIN PANEL)
+  // ==========================================
   if (!isSecretary && user) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-6 mt-20 flex justify-center">
-          <div className="bg-red-50 border border-red-100 rounded-3xl p-10 flex flex-col items-center justify-center text-center max-w-lg shadow-sm">
-            <ShieldAlert size={40} className="text-red-400 mb-4" />
-            <h2 className="text-xl font-black text-tsa-dark mb-2">Access Denied</h2>
-            <p className="text-sm text-gray-500 font-medium">This page is strictly restricted and can only be accessed by the TSA USU Secretary.</p>
+        <main className="max-w-7xl mx-auto px-6 mt-20 flex flex-col items-center justify-center animate-fade-in-up">
+          <div className="bg-white border border-red-100 p-10 rounded-3xl shadow-sm text-center max-w-md w-full">
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
+              <ShieldAlert size={40} className="text-red-500" />
+            </div>
+            <h2 className="text-2xl font-black text-tsa-dark mb-3">Access Denied</h2>
+            <p className="text-sm text-gray-500 leading-relaxed mb-6">
+              This page is strictly restricted and can only be accessed by the <span className="font-bold text-red-500">Secretary</span>.
+            </p>
+            <a href="/dashboard" className="inline-block px-6 py-3 bg-gray-100 text-gray-600 font-bold text-sm rounded-xl hover:bg-gray-200 transition-all">
+              Return to Dashboard
+            </a>
           </div>
         </main>
       </div>
@@ -227,9 +230,10 @@ const Attendance = () => {
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-6 mt-8">
+        {/* HEADER STYLE ADMIN PANEL */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight flex items-center gap-3">
-            <ClipboardCheck className="text-tsa-green" size={36} />
+            <ClipboardIconWrapper /> 
             Attendance Record
           </h1>
           <p className="text-sm text-gray-500 mt-1 font-medium">
@@ -237,8 +241,8 @@ const Attendance = () => {
           </p>
         </div>
 
-        {/* TAB NAVIGATION KUARTAL (Konsisten Desain TSA Green) */}
-        <div className="flex overflow-x-auto hide-scrollbar gap-3 mb-8 pb-2">
+        {/* TAB NAVIGATION STYLE ADMIN PANEL */}
+        <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-8 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm inline-flex">
           {tabs.map((tab) => {
             const isActive = activeTab === tab;
             const status = periodStatus[tab];
@@ -247,14 +251,12 @@ const Attendance = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${
-                  isActive
-                    ? 'bg-tsa-green text-white shadow-md transform scale-105'
-                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50 hover:text-tsa-dark'
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  isActive ? 'bg-tsa-green text-white shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-tsa-dark'
                 }`}
               >
-                {status === 'LOCKED' && <Lock size={14} className={isActive ? 'text-white' : 'text-gray-300'} />}
-                {tab}
+                {status === 'LOCKED' && <Lock size={14} className={isActive ? 'text-white' : 'text-gray-400'} />}
+                <span>{tab}</span>
               </button>
             );
           })}
@@ -292,16 +294,17 @@ const Attendance = () => {
                   <h2 className="text-lg font-black text-tsa-dark uppercase tracking-widest">{dept} DEPARTMENT</h2>
                 </div>
                 
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                {/* TABLE CONTAINER STYLE ADMIN PANEL */}
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-8">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                      <thead className="border-b border-gray-50 bg-gray-50/50">
+                      <thead className="bg-gray-50 border-b border-gray-100">
                         <tr>
-                          <th className="p-4 pl-6 font-bold text-gray-400 text-[10px] uppercase tracking-widest">Staff Profile</th>
-                          <th className="p-4 font-bold text-gray-400 text-[10px] uppercase tracking-widest text-center w-32">Total Present</th>
-                          <th className="p-4 font-bold text-gray-400 text-[10px] uppercase tracking-widest text-center w-32">Total Events</th>
-                          <th className="p-4 font-bold text-gray-400 text-[10px] uppercase tracking-widest text-center w-24">Rate</th>
-                          <th className="p-4 pr-6 font-bold text-gray-400 text-[10px] uppercase tracking-widest text-right w-40">Action</th>
+                          <th className="p-5 font-bold text-tsa-green text-xs uppercase">Staff Profile</th>
+                          <th className="p-5 font-bold text-tsa-green text-xs uppercase text-center w-32">Total Present</th>
+                          <th className="p-5 font-bold text-tsa-green text-xs uppercase text-center w-32">Total Events</th>
+                          <th className="p-5 font-bold text-tsa-green text-xs uppercase text-center w-24">Rate</th>
+                          <th className="p-5 font-bold text-tsa-green text-xs uppercase text-right w-40">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
@@ -314,20 +317,20 @@ const Attendance = () => {
                                 const hasSubmitted = data.isExisting;
 
                                 return (
-                                  <tr key={staff.id} className="hover:bg-green-50/30 transition-colors group">
+                                  <tr key={staff.id} className="hover:bg-gray-50/50 transition-colors group">
                                     {/* 1. PROFILE */}
-                                    <td className="p-4 pl-6">
+                                    <td className="p-5">
                                       <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0 flex items-center justify-center">
                                           {staff.photo_url ? (
                                             <img src={staff.photo_url} alt={staff.full_name} className="w-full h-full object-cover" />
                                           ) : (
-                                            <span className="font-black text-tsa-green text-xs">{staff.full_name?.charAt(0) || '?'}</span>
+                                            <span className="font-black text-gray-400 text-xs">{staff.full_name?.charAt(0) || '?'}</span>
                                           )}
                                         </div>
                                         <div>
                                           <div className="font-bold text-tsa-dark text-xs">{staff.full_name}</div>
-                                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                                          <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
                                             {staff.position} {staff.division !== '-' ? `• ${staff.division}` : ''}
                                           </div>
                                         </div>
@@ -335,7 +338,7 @@ const Attendance = () => {
                                     </td>
 
                                     {/* 2. INPUT HADIR */}
-                                    <td className="p-4">
+                                    <td className="p-5">
                                       <input 
                                         type="number" 
                                         min="0"
@@ -348,7 +351,7 @@ const Attendance = () => {
                                     </td>
 
                                     {/* 3. INPUT TOTAL */}
-                                    <td className="p-4">
+                                    <td className="p-5">
                                       <input 
                                         type="number" 
                                         min="1"
@@ -361,14 +364,14 @@ const Attendance = () => {
                                     </td>
 
                                     {/* 4. PERCENTAGE BADGE */}
-                                    <td className="p-4 text-center">
-                                      <span className={`px-2 py-1 rounded-md text-[10px] font-black border inline-block min-w-[3rem] shadow-sm ${getBadgeColor(pct)}`}>
+                                    <td className="p-5 text-center">
+                                      <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black border inline-block min-w-[3.5rem] shadow-sm ${getBadgeColor(pct)}`}>
                                         {pct}%
                                       </span>
                                     </td>
 
                                     {/* 5. SMART ACTION BUTTON */}
-                                    <td className="p-4 pr-6 text-right">
+                                    <td className="p-5 text-right">
                                       {isReadOnly ? (
                                         <button disabled className="w-full bg-gray-100 text-gray-500 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1 cursor-not-allowed">
                                           <Lock size={14} /> View

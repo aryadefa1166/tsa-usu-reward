@@ -39,6 +39,13 @@ const DIV_ORDER = {
   STD: ['Staff Management', 'Talent Management', 'General']
 };
 
+// KOMPONEN IKON HEADER (STYLE ADMIN PANEL)
+const StarIconWrapper = () => (
+  <div className="w-10 h-10 bg-tsa-green rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+    <Star size={20} className="text-white fill-white" />
+  </div>
+);
+
 // --- KOMPONEN UTAMA ---
 const Assessment = () => {
   const { user } = useAuth();
@@ -222,16 +229,25 @@ const Assessment = () => {
   const currentStatus = periodStatus[activeTab];
   const isReadOnly = currentStatus !== 'ACTIVE';
 
-  // PROTEKSI UI: Jika user bukan Evaluator (BPH/ADV/KADEP/KADIV), cegah render UI Form
+  // ==========================================
+  // BLOK KEAMANAN MUTLAK (STYLE ADMIN PANEL)
+  // ==========================================
   if (!isEvaluator && user) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
         <Navbar />
-        <main className="max-w-7xl mx-auto px-6 mt-20 flex justify-center">
-          <div className="bg-red-50 border border-red-100 rounded-3xl p-10 flex flex-col items-center justify-center text-center max-w-lg shadow-sm">
-            <ShieldAlert size={40} className="text-red-400 mb-4" />
-            <h2 className="text-xl font-black text-tsa-dark mb-2">Access Denied</h2>
-            <p className="text-sm text-gray-500 font-medium">This page is strictly restricted and can only be accessed by Executive Board members (BPH, ADV, Head/Vice of Dept, Head of Div).</p>
+        <main className="max-w-7xl mx-auto px-6 mt-20 flex flex-col items-center justify-center animate-fade-in-up">
+          <div className="bg-white border border-red-100 p-10 rounded-3xl shadow-sm text-center max-w-md w-full">
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
+              <ShieldAlert size={40} className="text-red-500" />
+            </div>
+            <h2 className="text-2xl font-black text-tsa-dark mb-3">Access Denied</h2>
+            <p className="text-sm text-gray-500 leading-relaxed mb-6">
+              This page is strictly restricted and can only be accessed by <span className="font-bold text-red-500">Executive Board</span> members (BPH, ADV, Head/Vice of Dept, Head of Div).
+            </p>
+            <a href="/dashboard" className="inline-block px-6 py-3 bg-gray-100 text-gray-600 font-bold text-sm rounded-xl hover:bg-gray-200 transition-all">
+              Return to Dashboard
+            </a>
           </div>
         </main>
       </div>
@@ -243,16 +259,19 @@ const Assessment = () => {
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-6 mt-8">
-        {/* HEADER */}
+        {/* HEADER STYLE ADMIN PANEL */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight">Quarterly Assessment</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-tsa-dark tracking-tight flex items-center gap-3">
+            <StarIconWrapper /> 
+            Quarterly Assessment
+          </h1>
           <p className="text-sm text-gray-500 mt-1 font-medium">
             Evaluate your staff performance based on a 1-5 star scale.
           </p>
         </div>
 
-        {/* TAB NAVIGATION KUARTAL (Konsisten Desain TSA Green) */}
-        <div className="flex overflow-x-auto hide-scrollbar gap-3 mb-8 pb-2">
+        {/* TAB NAVIGATION STYLE ADMIN PANEL */}
+        <div className="flex overflow-x-auto hide-scrollbar gap-2 mb-8 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm inline-flex">
           {tabs.map((tab) => {
             const isActive = activeTab === tab;
             const status = periodStatus[tab];
@@ -261,14 +280,12 @@ const Assessment = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-shrink-0 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${
-                  isActive
-                    ? 'bg-tsa-green text-white shadow-md transform scale-105'
-                    : 'bg-white text-gray-400 border border-gray-100 hover:bg-gray-50 hover:text-tsa-dark'
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  isActive ? 'bg-tsa-green text-white shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-tsa-dark'
                 }`}
               >
-                {status === 'LOCKED' && <Lock size={14} className={isActive ? 'text-white' : 'text-gray-300'} />}
-                {tab}
+                {status === 'LOCKED' && <Lock size={14} className={isActive ? 'text-white' : 'text-gray-400'} />}
+                <span>{tab}</span>
               </button>
             );
           })}
@@ -335,7 +352,7 @@ const Assessment = () => {
                                   {staff.photo_url ? (
                                       <img src={staff.photo_url} alt={staff.full_name} className="w-full h-full object-cover" />
                                   ) : (
-                                      <span className="font-black text-sm text-tsa-green">{staff.full_name?.charAt(0) || '?'}</span>
+                                      <span className="font-black text-sm text-gray-400">{staff.full_name?.charAt(0) || '?'}</span>
                                   )}
                                 </div>
                                 <div className="overflow-hidden">

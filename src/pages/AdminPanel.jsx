@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
-import { useAuth } from '../context/AuthContext'; // <-- IMPORT AUTH CONTEXT
+import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
   Users, CalendarDays, Activity, ShieldCheck, Download, ImagePlus, UploadCloud, Briefcase,
-  AlertTriangle, CheckCircle2, Copy, Crown, Clock, ShieldAlert // <-- TAMBAHKAN ShieldAlert
+  AlertTriangle, CheckCircle2, Copy, Crown, Clock, ShieldAlert 
 } from 'lucide-react';
 
 const ShieldIcon = () => (
@@ -16,7 +16,7 @@ const ShieldIcon = () => (
 );
 
 const AdminPanel = () => {
-  const { user } = useAuth(); // <-- AMBIL DATA USER SAAT INI
+  const { user } = useAuth(); 
   const [activeTab, setActiveTab] = useState('users'); 
   
   // State User Database
@@ -131,7 +131,7 @@ const AdminPanel = () => {
   };
 
   // ==========================================
-  // TRACKER LOGIC
+  // TRACKER LOGIC (PERBAIKAN BUG evaluator_id)
   // ==========================================
   const fetchTrackerData = async () => {
     setTrackerLoading(true);
@@ -163,13 +163,15 @@ const AdminPanel = () => {
       } 
       else if (activeQuarter) {
         setActiveTrackerName(`${activeQuarter} Assessment`);
-        const { data: assessments } = await supabase.from('assessments').select('assessor_id').eq('quarter', activeQuarter);
+        // FIX BUG: Menggunakan evaluator_id, BUKAN assessor_id
+        const { data: assessments } = await supabase.from('assessments').select('evaluator_id').eq('quarter', activeQuarter);
         
         const assessorTarget = usersList.filter(u => u.role >= 2 && u.role <= 4 && u.is_active === true);
         
         const assessCount = {};
         assessments?.forEach(a => {
-          assessCount[a.assessor_id] = (assessCount[a.assessor_id] || 0) + 1;
+          // FIX BUG: Mapping ke evaluator_id
+          assessCount[a.evaluator_id] = (assessCount[a.evaluator_id] || 0) + 1;
         });
 
         const report = assessorTarget.map(user => {

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext'; // <-- IMPORT AUTH CONTEXT
 import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
   Users, CalendarDays, Activity, ShieldCheck, Download, ImagePlus, UploadCloud, Briefcase,
-  AlertTriangle, CheckCircle2, Copy, Crown, Clock
+  AlertTriangle, CheckCircle2, Copy, Crown, Clock, ShieldAlert // <-- TAMBAHKAN ShieldAlert
 } from 'lucide-react';
 
 const ShieldIcon = () => (
@@ -15,6 +16,7 @@ const ShieldIcon = () => (
 );
 
 const AdminPanel = () => {
+  const { user } = useAuth(); // <-- AMBIL DATA USER SAAT INI
   const [activeTab, setActiveTab] = useState('users'); 
   
   // State User Database
@@ -65,15 +67,43 @@ const AdminPanel = () => {
   ];
 
   useEffect(() => {
-    fetchUsers();
-    fetchSettings();
-    fetchAssets();
-    fetchProjects();
-  }, []);
+    // Hanya fetch data jika user adalah Admin (Role 1)
+    if (user && user.role === 1) {
+      fetchUsers();
+      fetchSettings();
+      fetchAssets();
+      fetchProjects();
+    }
+  }, [user]);
 
   useEffect(() => {
-    if (activeTab === 'tracker') fetchTrackerData();
-  }, [activeTab, appSettings]);
+    if (activeTab === 'tracker' && user && user.role === 1) fetchTrackerData();
+  }, [activeTab, appSettings, user]);
+
+  // ==========================================
+  // BLOK KEAMANAN MUTLAK (SATPAM HALAMAN)
+  // ==========================================
+  if (user && user.role !== 1) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-6 mt-20 flex flex-col items-center justify-center animate-fade-in-up">
+          <div className="bg-white border border-red-100 p-10 rounded-3xl shadow-sm text-center max-w-md w-full">
+            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
+              <ShieldAlert size={40} className="text-red-500" />
+            </div>
+            <h2 className="text-2xl font-black text-tsa-dark mb-3">Access Denied</h2>
+            <p className="text-sm text-gray-500 leading-relaxed mb-6">
+              This page is strictly restricted and can only be accessed by the <span className="font-bold text-red-500">System Administrator</span>.
+            </p>
+            <a href="/dashboard" className="inline-block px-6 py-3 bg-gray-100 text-gray-600 font-bold text-sm rounded-xl hover:bg-gray-200 transition-all">
+              Return to Dashboard
+            </a>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   // ==========================================
   // FETCHING LOGIC
@@ -101,7 +131,7 @@ const AdminPanel = () => {
   };
 
   // ==========================================
-  // TRACKER LOGIC (DIPERBAIKI JADI BINER & MENDUKUNG READ_ONLY)
+  // TRACKER LOGIC
   // ==========================================
   const fetchTrackerData = async () => {
     setTrackerLoading(true);
@@ -115,13 +145,8 @@ const AdminPanel = () => {
       if (['ACTIVE', 'READ_ONLY'].includes(appSettings.voting_status)) {
         setActiveTrackerName('End of Term Evaluation'); 
         
-        // Tarik HANYA kolom voter_id agar ringan
         const { data: votes } = await supabase.from('end_of_term_votes').select('voter_id');
-        
-        // Target: Semua Pengurus Aktif KECUALI Admin
         const votersTarget = usersList.filter(u => u.role !== 1 && u.is_active === true);
-        
-        // Buat Set (O(1) Lookup) berisi daftar unik ID pengurus yang sudah vote
         const votedSet = new Set(votes?.map(v => v.voter_id) || []);
 
         const report = votersTarget.map(user => {
@@ -262,7 +287,6 @@ const AdminPanel = () => {
     setShowProjectForm(false);
     setIsEditingProject(false);
   };
-
 
   // ==========================================
   // ASSET UPLOAD LOGIC
@@ -774,7 +798,6 @@ const AdminPanel = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* PERBAIKAN: Menambahkan opsi READ_ONLY */}
                     <select 
                       value={p.value}
                       onChange={(e) => handleUpdatePeriod(p.id, e.target.value)}
@@ -806,7 +829,6 @@ const AdminPanel = () => {
                       Status: <span className={`font-bold uppercase ${appSettings.voting_status === 'ACTIVE' ? 'text-tsa-green' : appSettings.voting_status === 'PUBLISHED' ? 'text-blue-500' : appSettings.voting_status === 'READ_ONLY' ? 'text-amber-500' : 'text-gray-500'}`}>{appSettings.voting_status}</span>
                     </p>
                   </div>
-                  {/* PERBAIKAN: Menambahkan opsi READ_ONLY */}
                   <select 
                       value={appSettings.voting_status}
                       onChange={(e) => handleUpdatePeriod('voting_status', e.target.value)}

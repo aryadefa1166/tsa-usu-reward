@@ -31,12 +31,16 @@ const computeQuarterData = (users, assessments, attendance) => {
     const uAttend = attendMap[user.id] || 0;
     const uAssess = assessMap[user.id];
 
+    // 🔥 KUNCI MUTLAK: SISTEM AKUMULASI POIN (RACE TO 100) 🔥
+    // Semua nilai kualitatif dibagi 13 (Total Evaluator Mutlak per Staff)
+    const TOTAL_EVALUATORS = 13;
+
     const avg = uAssess ? {
-      attitude: uAssess.attitude / uAssess.count,
-      discipline: uAssess.discipline / uAssess.count,
-      active: uAssess.active / uAssess.count,
-      agility: uAssess.agility / uAssess.count,
-      cheerful: uAssess.cheerful / uAssess.count,
+      attitude: uAssess.attitude / TOTAL_EVALUATORS,
+      discipline: uAssess.discipline / TOTAL_EVALUATORS,
+      active: uAssess.active / TOTAL_EVALUATORS,
+      agility: uAssess.agility / TOTAL_EVALUATORS,
+      cheerful: uAssess.cheerful / TOTAL_EVALUATORS,
     } : { attitude: 0, discipline: 0, active: 0, agility: 0, cheerful: 0 };
 
     const theReliableOne = (0.50 * uAttend) + (0.50 * avg.discipline);
@@ -62,7 +66,7 @@ const computeQuarterData = (users, assessments, attendance) => {
     };
   });
 
-  // Kalkulasi Best Dept Kuartalan (KEMBALI KE ATURAN ASLI: Rata-Rata Per Kapita MVP)
+  // Kalkulasi Best Dept Kuartalan (MURNI ATURAN DOKUMEN: Rata-Rata Per Kapita MVP)
   const deptMap = {};
   results.forEach(r => {
     if (r.dept && r.dept !== 'General' && r.dept !== '-') {
@@ -76,7 +80,7 @@ const computeQuarterData = (users, assessments, attendance) => {
       deptMap[r.dept].totalDiscipline += r.avgDiscipline;
       deptMap[r.dept].totalAgility += r.avgAgility;
       deptMap[r.dept].totalActive += r.avgActive;
-      deptMap[r.dept].count += 1;
+      deptMap[r.dept].count += 1; // Count ini tetap jumlah staff di dept tersebut
     }
   });
 

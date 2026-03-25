@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import { calculateQuarterlyResults } from '../utils/calculator';
+import * as XLSX from 'xlsx'; // <-- IMPORT LIBRARY EXCEL
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
   Users, CalendarDays, Activity, ShieldCheck, Download, ImagePlus, UploadCloud, Briefcase,
@@ -202,7 +203,7 @@ const AdminPanel = () => {
 
         const assessorTarget = usersList.filter(u => u.role >= 2 && u.role <= 4 && u.is_active === true);
         const allActiveStaff = usersList.filter(u => u.role === 5 && u.is_active === true);
-        const TOTAL_STAFF = allActiveStaff.length; // 31 Target Mutlak
+        const TOTAL_STAFF = allActiveStaff.length; // Target Mutlak
 
         const report = assessorTarget.map(user => {
           let targetAssess = 0;
@@ -254,7 +255,7 @@ const AdminPanel = () => {
     if (type === 'End of Term Evaluation') {
       text = `Hello ${name}, please kindly check the TSA USU R.E.W.A.R.D portal and complete your required End of Term evaluation forms. Thank you! 🙏`;
     } else {
-      text = `Hello ${name}, a gentle reminder to complete your quarterly assessments for your team members on the TSA USU R.E.W.A.R.D portal. Thank you! 🙏`;
+      text = `Hello ${name}, a gentle reminder to complete your assessments for your team members on the TSA USU R.E.W.A.R.D portal. Thank you! 🙏`;
     }
     navigator.clipboard.writeText(text);
     alert(`Reminder message for ${name} copied to clipboard!`);
@@ -372,7 +373,7 @@ const AdminPanel = () => {
   };
 
   // ==========================================
-  // PERIOD & CSV LOGIC
+  // PERIOD & EXCEL LOGIC (GLOBAL LEADERBOARD)
   // ==========================================
   const handleUpdatePeriod = async (column, value) => {
     setSavingPeriod(true);
@@ -387,38 +388,39 @@ const AdminPanel = () => {
     }
   };
 
-  const handleExportCSV = async (quarter) => {
+  const handleExportExcel = async (quarter) => {
     try {
       const result = await calculateQuarterlyResults(quarter);
       if (!result || !result.allScores || result.allScores.length === 0) {
         return alert("Data kalkulasi masih kosong atau gagal ditarik.");
       }
 
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "Nama Lengkap,Departemen,Posisi,Kehadiran (%),Skor Kualitatif (Rata-rata),The Reliable One,The High Achiever,The Spark,The Ultimate MVP\n";
-      
-      result.allScores.forEach(u => {
-        const row = [
-          `"${u.full_name || '-'}"`, `"${u.dept || '-'}"`, `"${u.position || '-'}"`,
-          u.attendanceScore?.toFixed(1) || 0,
-          u.qualitativeScore?.toFixed(1) || 0,
-          u.theReliableOne?.toFixed(1) || 0,
-          u.theHighAchiever?.toFixed(1) || 0,
-          u.theSpark?.toFixed(1) || 0,
-          u.theUltimateMVP?.toFixed(1) || 0
-        ].join(",");
-        csvContent += row + "\n";
-      });
+      // SORTING OPSI 1: KLASEMEN GLOBAL (Skor MVP Tertinggi -> Terendah)
+      const sortedScores = [...result.allScores].sort((a, b) => b.theUltimateMVP - a.theUltimateMVP);
 
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `TSA_REWARD_${quarter}_Report.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Mapping data sesuai standar yang rapi
+      const excelData = sortedScores.map((u, index) => ({
+        "Peringkat": index + 1,
+        "Nama Lengkap": u.full_name || '-',
+        "Departemen": u.dept || '-',
+        "Divisi": u.division || '-',
+        "Kehadiran (%)": u.attendanceScore ? parseFloat(u.attendanceScore.toFixed(1)) : 0,
+        "Skor Kualitatif (Rata-rata)": u.qualitativeScore ? parseFloat(u.qualitativeScore.toFixed(1)) : 0,
+        "The Reliable One": u.theReliableOne ? parseFloat(u.theReliableOne.toFixed(1)) : 0,
+        "The High Achiever": u.theHighAchiever ? parseFloat(u.theHighAchiever.toFixed(1)) : 0,
+        "The Spark": u.theSpark ? parseFloat(u.theSpark.toFixed(1)) : 0,
+        "The Ultimate MVP": u.theUltimateMVP ? parseFloat(u.theUltimateMVP.toFixed(1)) : 0
+      }));
+
+      // Proses konversi json ke sheet Excel
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Global_Leaderboard`);
+
+      // Generate file dan trigger download
+      XLSX.writeFile(workbook, `TSA_REWARD_${quarter}_Global_Leaderboard.xlsx`);
     } catch (error) {
-      alert("Gagal melakukan export: " + error.message);
+      alert("Gagal melakukan export Excel: " + error.message);
     }
   };
 
@@ -865,10 +867,10 @@ const AdminPanel = () => {
                     </select>
                     
                     <button 
-                      onClick={() => handleExportCSV(p.q)}
-                      className="bg-gray-100 text-tsa-dark px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-200 transition-all flex items-center gap-2 shadow-sm border border-gray-200"
+                      onClick={() => handleExportExcel(p.q)}
+                      className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-100 transition-all flex items-center gap-2 shadow-sm border border-emerald-200"
                     >
-                      <Download size={14} /> CSV
+                      <Download size={14} /> EXCEL
                     </button>
                   </div>
                 </div>

@@ -987,18 +987,18 @@ const AdminPanel = () => {
                            <div className="font-bold text-tsa-dark">{user.full_name}</div>
                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{user.position} • {user.dept}</div>
                          </td>
-                         <td className="p-4 w-36">
+                         <td className="p-4 whitespace-nowrap">
                            {user.status === 'PENDING' ? (
-                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider border border-red-100 w-full justify-center">
-                               <AlertTriangle size={12} /> Pending
+                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider border border-red-100">
+                               <AlertTriangle size={14} /> Pending
                              </span>
                            ) : user.status === 'IN_PROGRESS' ? (
-                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-wider border border-amber-100 w-full justify-center">
-                               <Loader size={12} className="animate-spin" /> In Progress
+                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-wider border border-amber-100">
+                               <Loader size={14} className="animate-spin" /> In Progress
                              </span>
                            ) : (
-                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider border border-emerald-100 w-full justify-center">
-                               <CheckCircle2 size={12} /> Completed
+                             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider border border-emerald-100">
+                               <CheckCircle2 size={14} /> Completed
                              </span>
                            )}
                          </td>

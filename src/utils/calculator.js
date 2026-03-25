@@ -253,8 +253,9 @@ export const calculateEndOfTermResults = async () => {
     const evalStars = { DEPT: {}, PROJECT: {} };
     const voterCounts = { MVP: new Set(), ROOKIE: new Set(), PROJECT: new Set(), FAV_EB: new Set() };
 
+    // 🔥 FIX: Penambahan Rank 2 Tracker untuk Tie-Breaker Fav EB
     const initVoteStat = (cat, id) => {
-      if (id && !voteStats[cat][id]) voteStats[cat][id] = { points: 0, rank1: 0, voters: 0 };
+      if (id && !voteStats[cat][id]) voteStats[cat][id] = { points: 0, rank1: 0, rank2: 0, voters: 0 };
     };
 
     votes.forEach(v => {
@@ -270,30 +271,28 @@ export const calculateEndOfTermResults = async () => {
       }
       else {
         voterCounts[v.category].add(v.voter_id);
-        const mapVote = (targetId, points, isRank1) => {
+        const mapVote = (targetId, points, rankLevel) => {
           if (targetId) {
             initVoteStat(v.category, targetId);
             voteStats[v.category][targetId].points += points;
             voteStats[v.category][targetId].voters += 1;
-            if (isRank1) voteStats[v.category][targetId].rank1 += 1;
+            if (rankLevel === 1) voteStats[v.category][targetId].rank1 += 1;
+            if (rankLevel === 2) voteStats[v.category][targetId].rank2 += 1; // Rekam Rank 2
           }
         };
 
         if (v.category === 'MVP' || v.category === 'FAV_EB') {
-          mapVote(v.rank_1, 5, true); mapVote(v.rank_2, 4, false); mapVote(v.rank_3, 3, false); mapVote(v.rank_4, 2, false); mapVote(v.rank_5, 1, false);
+          mapVote(v.rank_1, 5, 1); mapVote(v.rank_2, 4, 2); mapVote(v.rank_3, 3, 3); mapVote(v.rank_4, 2, 4); mapVote(v.rank_5, 1, 5);
         } else if (v.category === 'ROOKIE' || v.category === 'PROJECT') {
-          mapVote(v.rank_1, 3, true); mapVote(v.rank_2, 2, false); mapVote(v.rank_3, 1, false);
+          mapVote(v.rank_1, 3, 1); mapVote(v.rank_2, 2, 2); mapVote(v.rank_3, 1, 3);
         }
       }
     });
 
-    const normalizeVoting = (rawPoints, totalVoters, maxPointPerVote) => {
-      const maxTheoretical = totalVoters * maxPointPerVote;
+    // 🔥 FIX: PEMBAGI MUTLAK VOTING (RACE TO 100)
+    const calculateAbsoluteVoteScore = (rawPoints, totalAbsoluteVoters, maxPointPerVote) => {
+      const maxTheoretical = totalAbsoluteVoters * maxPointPerVote;
       return maxTheoretical > 0 ? (rawPoints / maxTheoretical) * 100 : 0;
-    };
-
-    const normalizeEval = (totalScoreFromDB, count) => {
-      return count > 0 ? (totalScoreFromDB / count) : 0;
     };
 
     // ==========================================
@@ -310,16 +309,15 @@ export const calculateEndOfTermResults = async () => {
       const avgActiveYear = uData.totalActive / count;
       const avgDisciplineYear = uData.totalDiscipline / count;
       
-      const mvpStats = voteStats.MVP[user.id] || { points: 0, rank1: 0, voters: 0 };
-      const mvpVoteScore = normalizeVoting(mvpStats.points, voterCounts.MVP.size, 5);
+      const mvpStats = voteStats.MVP[user.id] || { points: 0, rank1: 0, rank2: 0, voters: 0 };
+      const mvpVoteScore = calculateAbsoluteVoteScore(mvpStats.points, 50, 5); // Mutlak 50 Pengurus
 
-      const rookieStats = voteStats.ROOKIE[user.id] || { points: 0, rank1: 0, voters: 0 };
-      const rookieVoteScore = normalizeVoting(rookieStats.points, voterCounts.ROOKIE.size, 3);
+      const rookieStats = voteStats.ROOKIE[user.id] || { points: 0, rank1: 0, rank2: 0, voters: 0 };
+      const rookieVoteScore = calculateAbsoluteVoteScore(rookieStats.points, 31, 3); // Mutlak 31 Pengurus selain TLD26
 
-      const favEbStats = voteStats.FAV_EB[user.id] || { points: 0, rank1: 0, voters: 0 };
-      const favEbVoteScore = normalizeVoting(favEbStats.points, voterCounts.FAV_EB.size, 5);
+      const favEbStats = voteStats.FAV_EB[user.id] || { points: 0, rank1: 0, rank2: 0, voters: 0 };
+      const favEbVoteScore = calculateAbsoluteVoteScore(favEbStats.points, 31, 5); // Mutlak 31 Staff Role 5
 
-      // JIKA VOTING KOSONG, SKOR = 100% SYS AVG. JIKA ADA, 80% SYS AVG + 20% VOTING.
       const hasMvpVotes = voterCounts.MVP.size > 0;
       const mvpFinal = hasMvpVotes ? (0.80 * sysAvg) + (0.20 * mvpVoteScore) : sysAvg;
       
@@ -332,7 +330,7 @@ export const calculateEndOfTermResults = async () => {
         avgAttendYear, avgAgilityYear, avgActiveYear, avgDisciplineYear,
         mvpFinal, mvpVotePoints: mvpStats.points, mvpRank1: mvpStats.rank1, mvpVoters: mvpStats.voters,
         rookieFinal, rookieVotePoints: rookieStats.points, rookieRank1: rookieStats.rank1, rookieVoters: rookieStats.voters,
-        favEbFinal: favEbVoteScore, favEbVotePoints: favEbStats.points, favEbRank1: favEbStats.rank1, favEbVoters: favEbStats.voters
+        favEbFinal: favEbVoteScore, favEbVotePoints: favEbStats.points, favEbRank1: favEbStats.rank1, favEbRank2: favEbStats.rank2, favEbVoters: favEbStats.voters
       };
     });
 
@@ -342,20 +340,24 @@ export const calculateEndOfTermResults = async () => {
       const avgAttendYear = deptSystemAvg[dept].totalAttend / count;
       
       const hasEvals = evalStars.DEPT[dept] && evalStars.DEPT[dept].count > 0;
-      const evalScore = hasEvals ? normalizeEval(evalStars.DEPT[dept].total, evalStars.DEPT[dept].count) : 0;
       
-      // Dynamic Weighting Dept
+      // 🔥 FIX: BPH/ADV EVALUATION KE SKALA 100 DENGAN PEMBAGI MUTLAK (11 EB)
+      // Maksimal Bintang per evaluasi adalah 5. Dibagi 11 EB, lalu dikali 20 agar menjadi skala 100.
+      const evalScore = hasEvals ? (evalStars.DEPT[dept].total / 11) * 20 : 0;
+      
       const finalScore = hasEvals ? (0.80 * sysAvg) + (0.20 * evalScore) : sysAvg;
       return { dept, sysAvg, evalScore, finalScore, avgAttendYear };
     });
 
     const projectFinalScores = projects.map(proj => {
-      const projStats = voteStats.PROJECT[proj.id] || { points: 0, rank1: 0, voters: 0 };
+      const projStats = voteStats.PROJECT[proj.id] || { points: 0, rank1: 0, rank2: 0, voters: 0 };
       const hasVotes = voterCounts.PROJECT.size > 0;
-      const rcvScore = normalizeVoting(projStats.points, voterCounts.PROJECT.size, 3);
+      const rcvScore = calculateAbsoluteVoteScore(projStats.points, 50, 3); // Mutlak 50 Pengurus
       
       const hasEvals = evalStars.PROJECT[proj.id] && evalStars.PROJECT[proj.id].count > 0;
-      const evalScore = hasEvals ? normalizeEval(evalStars.PROJECT[proj.id].total, evalStars.PROJECT[proj.id].count) : 0;
+      
+      // 🔥 FIX: BPH/ADV EVALUATION KE SKALA 100 DENGAN PEMBAGI MUTLAK (11 EB)
+      const evalScore = hasEvals ? (evalStars.PROJECT[proj.id].total / 11) * 20 : 0;
       
       let finalScore = 0;
       if (hasVotes && hasEvals) finalScore = (0.50 * rcvScore) + (0.50 * evalScore);
@@ -401,6 +403,7 @@ export const calculateEndOfTermResults = async () => {
         } 
         else if (awardType === 'FAV_EB') {
             if (b.favEbRank1 !== a.favEbRank1) return b.favEbRank1 - a.favEbRank1;
+            if (b.favEbRank2 !== a.favEbRank2) return b.favEbRank2 - a.favEbRank2; // 🔥 FIX: Rank 2 Detection
             if (b.favEbVoters !== a.favEbVoters) return b.favEbVoters - a.favEbVoters;
         } 
         else if (awardType === 'PROJECT') {

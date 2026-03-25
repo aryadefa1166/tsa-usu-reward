@@ -6,7 +6,7 @@ import { calculateQuarterlyResults } from '../utils/calculator';
 import { 
   Trash2, Plus, Search, UserPlus, Pencil, X, Save, Loader2, 
   Users, CalendarDays, Activity, ShieldCheck, Download, ImagePlus, UploadCloud, Briefcase,
-  AlertTriangle, CheckCircle2, Copy, Crown, Clock, ShieldAlert 
+  AlertTriangle, CheckCircle2, Copy, Crown, Clock, ShieldAlert, Loader 
 } from 'lucide-react';
 
 const ShieldIcon = () => (
@@ -67,7 +67,6 @@ const AdminPanel = () => {
   ];
 
   useEffect(() => {
-    // Hanya fetch data jika user adalah Admin (Role 1)
     if (user && user.role === 1) {
       fetchUsers();
       fetchSettings();
@@ -131,7 +130,7 @@ const AdminPanel = () => {
   };
 
   // ==========================================
-  // TRACKER LOGIC (PERBAIKAN BUG evaluator_id)
+  // TRACKER LOGIC (SUPER SMART TRACKER)
   // ==========================================
   const fetchTrackerData = async () => {
     setTrackerLoading(true);
@@ -145,45 +144,98 @@ const AdminPanel = () => {
       if (['ACTIVE', 'READ_ONLY'].includes(appSettings.voting_status)) {
         setActiveTrackerName('End of Term Evaluation'); 
         
-        const { data: votes } = await supabase.from('end_of_term_votes').select('voter_id');
+        const { data: votes } = await supabase.from('end_of_term_votes').select('voter_id, category');
         const votersTarget = usersList.filter(u => u.role !== 1 && u.is_active === true);
-        const votedSet = new Set(votes?.map(v => v.voter_id) || []);
+        
+        // Mapping voting per user
+        const userVotes = {};
+        votes?.forEach(v => {
+          if (!userVotes[v.voter_id]) userVotes[v.voter_id] = new Set();
+          userVotes[v.voter_id].add(v.category);
+        });
 
         const report = votersTarget.map(user => {
-          const hasVoted = votedSet.has(user.id);
+          const completedCats = userVotes[user.id] || new Set();
+          let requiredCats = [];
+          
+          if (user.role === 5) {
+            requiredCats = user.cohort?.includes('26') ? ['MVP', 'PROJECT', 'FAV_EB'] : ['MVP', 'ROOKIE', 'PROJECT', 'FAV_EB'];
+          } else if (user.role === 3 || user.role === 4) {
+            requiredCats = ['MVP', 'ROOKIE', 'PROJECT'];
+          } else if (user.role === 2) {
+            requiredCats = ['MVP', 'ROOKIE', 'PROJECT', 'EVAL_DEPT', 'EVAL_PROJECT'];
+          }
+
+          const missingCats = requiredCats.filter(cat => !completedCats.has(cat));
+          const totalRequired = requiredCats.length;
+          const totalCompleted = totalRequired - missingCats.length;
+
+          let status = 'PENDING';
+          if (totalCompleted === totalRequired) status = 'COMPLETED';
+          else if (totalCompleted > 0) status = 'IN_PROGRESS';
+
           return {
             ...user,
-            status: hasVoted ? 'COMPLETED' : 'PENDING',
-            detail: hasVoted ? 'Votes submitted successfully' : 'Has not participated yet'
+            status,
+            detail: status === 'COMPLETED' 
+              ? `Completed all ${totalRequired} tasks` 
+              : `Completed ${totalCompleted}/${totalRequired} tasks. Missing: ${missingCats.join(', ')}`
           };
         });
         
-        const sortOrder = { 'PENDING': 1, 'COMPLETED': 2 };
+        const sortOrder = { 'PENDING': 1, 'IN_PROGRESS': 2, 'COMPLETED': 3 };
         setTrackerData(report.sort((a, b) => sortOrder[a.status] - sortOrder[b.status]));
       } 
       else if (activeQuarter) {
         setActiveTrackerName(`${activeQuarter} Assessment`);
-        // FIX BUG: Menggunakan evaluator_id, BUKAN assessor_id
+        
+        // Fetch Assessments
         const { data: assessments } = await supabase.from('assessments').select('evaluator_id').eq('quarter', activeQuarter);
-        
-        const assessorTarget = usersList.filter(u => u.role >= 2 && u.role <= 4 && u.is_active === true);
-        
         const assessCount = {};
         assessments?.forEach(a => {
-          // FIX BUG: Mapping ke evaluator_id
           assessCount[a.evaluator_id] = (assessCount[a.evaluator_id] || 0) + 1;
         });
 
+        // Fetch Attendance (Khusus Sekretaris)
+        const { data: attendance } = await supabase.from('attendance').select('target_id').eq('quarter', activeQuarter);
+        const totalAttendanceFilled = attendance ? attendance.length : 0;
+
+        const assessorTarget = usersList.filter(u => u.role >= 2 && u.role <= 4 && u.is_active === true);
+        const allActiveStaff = usersList.filter(u => u.role === 5 && u.is_active === true);
+        const TOTAL_STAFF = allActiveStaff.length; // 31 Target Mutlak
+
         const report = assessorTarget.map(user => {
-          const count = assessCount[user.id] || 0;
-          return {
-            ...user,
-            status: count > 0 ? 'COMPLETED' : 'PENDING', 
-            detail: count > 0 ? `Assessed ${count} members` : 'No assessments yet'
-          };
+          let targetAssess = 0;
+          if (user.role === 2) targetAssess = TOTAL_STAFF; // BPH & ADV
+          else if (user.role === 3) targetAssess = allActiveStaff.filter(s => s.dept === user.dept).length; // KADEP
+          else if (user.role === 4) targetAssess = allActiveStaff.filter(s => s.dept === user.dept && s.division === user.division).length; // KADIV
+
+          const filledAssess = assessCount[user.id] || 0;
+          let status = 'PENDING';
+          let detail = '';
+
+          // Logika Khusus Sekretaris
+          if (user.role === 2 && user.position === 'Secretary') {
+             const assessDone = filledAssess >= targetAssess;
+             const attendDone = totalAttendanceFilled >= TOTAL_STAFF;
+             
+             if (assessDone && attendDone) status = 'COMPLETED';
+             else if (filledAssess > 0 || totalAttendanceFilled > 0) status = 'IN_PROGRESS';
+             
+             detail = `Assessed: ${filledAssess}/${targetAssess} | Attendance: ${totalAttendanceFilled}/${TOTAL_STAFF}`;
+          } 
+          // Logika Evaluator Normal
+          else {
+             if (filledAssess >= targetAssess && targetAssess > 0) status = 'COMPLETED';
+             else if (filledAssess > 0) status = 'IN_PROGRESS';
+             
+             detail = `Assessed ${filledAssess} / ${targetAssess} members`;
+          }
+
+          return { ...user, status, detail };
         });
 
-        const sortOrder = { 'PENDING': 1, 'COMPLETED': 2 };
+        const sortOrder = { 'PENDING': 1, 'IN_PROGRESS': 2, 'COMPLETED': 3 };
         setTrackerData(report.sort((a, b) => sortOrder[a.status] - sortOrder[b.status]));
       } 
       else {
@@ -935,13 +987,17 @@ const AdminPanel = () => {
                            <div className="font-bold text-tsa-dark">{user.full_name}</div>
                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{user.position} • {user.dept}</div>
                          </td>
-                         <td className="p-4">
+                         <td className="p-4 w-36">
                            {user.status === 'PENDING' ? (
-                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider border border-red-100">
+                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider border border-red-100 w-full justify-center">
                                <AlertTriangle size={12} /> Pending
                              </span>
+                           ) : user.status === 'IN_PROGRESS' ? (
+                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-wider border border-amber-100 w-full justify-center">
+                               <Loader size={12} className="animate-spin" /> In Progress
+                             </span>
                            ) : (
-                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider border border-emerald-100">
+                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider border border-emerald-100 w-full justify-center">
                                <CheckCircle2 size={12} /> Completed
                              </span>
                            )}
@@ -950,7 +1006,7 @@ const AdminPanel = () => {
                            {user.detail}
                          </td>
                          <td className="p-4 text-right">
-                           {user.status === 'PENDING' && (
+                           {user.status !== 'COMPLETED' && (
                              <button 
                                onClick={() => handleCopyReminder(user.full_name, activeTrackerName)}
                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors text-xs font-bold"
